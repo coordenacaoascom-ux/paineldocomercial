@@ -1831,7 +1831,6 @@ const CC_COLABORADORES = [{"id":1,"codigo":"2782","nome":"ELIANE BATISTA SENES",
     var st = document.getElementById('ccStatus');
     st.textContent = results.length ? results.length+' resultado(s)' : 'Nenhum resultado.';
 
-    // Detect first cadastro
     var firstId = null;
     if(results.length>1){
       var best=null;
@@ -1846,31 +1845,35 @@ const CC_COLABORADORES = [{"id":1,"codigo":"2782","nome":"ELIANE BATISTA SENES",
       var isFirst = r.id===firstId;
       var statusColor = r.status&&r.status.toLowerCase().indexOf('inat')>=0 ? '#ff4466' : '#3cffb4';
       var borderStyle = isFirst ? 'border:1.5px solid #3cffb4;box-shadow:0 0 12px rgba(60,255,180,.18);' : 'border:1px solid var(--border2);';
-      var firstBadge = isFirst ? '<span style="background:rgba(60,255,180,.12);border:1px solid rgba(60,255,180,.3);color:#3cffb4;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:1px;margin-left:6px;">&#10003; 1&#186; CADASTRO</span>' : '';
+      var firstBadge = isFirst ? '<span style="background:rgba(60,255,180,.12);border:1px solid rgba(60,255,180,.3);color:#3cffb4;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:1px;">&#10003; 1&#186; CADASTRO</span>' : '';
       var dataColor = isFirst ? 'color:#3cffb4;' : 'color:var(--muted2);';
-      html += '<div onclick="ccOpenModal('+r.id+')" style="cursor:pointer;background:var(--surface2);'+borderStyle+'border-radius:10px;padding:14px 16px;width:340px;transition:border-color .15s;" onmouseover="this.style.borderColor=\''+(isFirst?'#3cffb4':'var(--neon)')+'\'" onmouseout="this.style.borderColor=\''+(isFirst?'#3cffb4':'var(--border2)')+'\'">'+
-        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'+
-          '<span style="font-family:Titillium Web,sans-serif;font-size:17px;font-weight:700;color:var(--neon);">#'+esc(r.codigo)+'</span>'+
-          '<div style="display:flex;align-items:center;gap:6px;">'+
-            '<span style="background:none;border:1px solid '+statusColor+';color:'+statusColor+';border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:1px;">'+esc(r.status||'—')+'</span>'+
-            firstBadge+
-          '</div>'+
-        '</div>'+
-        '<div style="font-family:Titillium Web,sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+esc(r.nome)+'">'+esc(r.nome)+'</div>'+
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-family:Titillium Web,sans-serif;font-size:12px;">'+
-          row2('COMERCIAL', r.comercial)+
-          row2('CPF RESP.', r.cpf_responsavel||r.cpf)+
-          row2('CNPJ', r.cnpj)+
-          row2('E-MAIL', r.email)+
-          '<div style="grid-column:1/-1"><span style="color:var(--muted);font-size:10px;letter-spacing:1px;">CADASTRO&nbsp;</span><span style="font-size:13px;font-weight:600;'+dataColor+'">'+esc(r.data_cadastro||'—')+'</span></div>'+
-        '</div>'+
-      '</div>';
+      html +=
+        '<div onclick="ccOpenModal('+r.id+')" style="cursor:pointer;background:var(--surface2);'+borderStyle+'border-radius:10px;padding:14px 16px;min-width:260px;max-width:360px;flex:1 1 260px;transition:border-color .15s;">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:4px;">' +
+            '<div>' +
+              '<span style="font-family:Titillium Web,sans-serif;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;">CODIGO&nbsp;</span>' +
+              '<span style="font-family:Titillium Web,sans-serif;font-size:17px;font-weight:700;color:var(--neon);">'+esc(r.codigo)+'</span>' +
+            '</div>' +
+            '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">' +
+              '<span style="border:1px solid '+statusColor+';color:'+statusColor+';border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap;">'+esc(r.status||'—')+'</span>' +
+              firstBadge +
+            '</div>' +
+          '</div>' +
+          '<div style="font-family:Titillium Web,sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;line-height:1.3;">'+esc(r.nome)+'</div>' +
+          '<div style="display:flex;flex-direction:column;gap:5px;font-family:Titillium Web,sans-serif;font-size:12px;">' +
+            row2('COMERCIAL', r.comercial) +
+            row2('CPF RESP.', r.cpf_responsavel||r.cpf) +
+            row2('CNPJ', r.cnpj) +
+            row2('E-MAIL', r.email) +
+            '<div style="display:flex;gap:6px;align-items:baseline;"><span style="color:var(--muted);font-size:10px;letter-spacing:1px;white-space:nowrap;flex-shrink:0;">CADASTRO&nbsp;</span><span style="font-size:13px;font-weight:600;'+dataColor+'">'+esc(r.data_cadastro||'—')+'</span></div>' +
+          '</div>' +
+        '</div>';
     });
     document.getElementById('ccResults').innerHTML = html || '<span style="color:var(--muted);font-family:Titillium Web,sans-serif;font-size:14px;">Nenhum resultado encontrado.</span>';
   };
 
   function row2(label, val){
-    return '<div><span style="color:var(--muted);font-size:10px;letter-spacing:1px;">'+label+'&nbsp;</span><span style="color:var(--muted2);font-size:13px;">'+esc(val||'—')+'</span></div>';
+    return '<div style="display:flex;gap:6px;align-items:baseline;"><span style="color:var(--muted);font-size:10px;letter-spacing:1px;white-space:nowrap;flex-shrink:0;">'+label+'&nbsp;</span><span style="color:var(--muted2);font-size:13px;word-break:break-all;">'+esc(val||'—')+'</span></div>';
   }
   function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function parseDate(s){
@@ -1885,27 +1888,26 @@ const CC_COLABORADORES = [{"id":1,"codigo":"2782","nome":"ELIANE BATISTA SENES",
     if(!r) return;
     var statusColor = r.status&&r.status.toLowerCase().indexOf('inat')>=0 ? '#ff4466' : '#3cffb4';
     var html =
-      '<div style="font-family:Titillium Web,sans-serif;">'+
-        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">'+
-          '<span style="font-size:22px;font-weight:900;color:var(--neon);">#'+esc(r.codigo)+'</span>'+
-          '<span style="border:1px solid '+statusColor+';color:'+statusColor+';border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700;">'+esc(r.status||'—')+'</span>'+
-        '</div>'+
-        '<div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:16px;">'+esc(r.nome)+'</div>'+
-        mrow('CNPJ', r.cnpj)+
-        mrow('CPF RESPONSÁVEL', r.cpf_responsavel||r.cpf)+
-        mrow('E-MAIL', r.email)+
-        mrow('COMERCIAL', r.comercial)+
-        mrow('DATA DE CADASTRO', r.data_cadastro)+
-        mrow('STATUS', r.status)+
+      '<div style="font-family:Titillium Web,sans-serif;">' +
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;">CODIGO&nbsp;</span>' +
+          '<span style="font-size:22px;font-weight:900;color:var(--neon);">'+esc(r.codigo)+'</span>' +
+          '<span style="border:1px solid '+statusColor+';color:'+statusColor+';border-radius:4px;padding:2px 10px;font-size:11px;font-weight:700;">'+esc(r.status||'—')+'</span>' +
+        '</div>' +
+        '<div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:16px;line-height:1.3;">'+esc(r.nome)+'</div>' +
+        mrow('CNPJ', r.cnpj) +
+        mrow('CPF RESPONSÁVEL', r.cpf_responsavel||r.cpf) +
+        mrow('E-MAIL', r.email) +
+        mrow('COMERCIAL', r.comercial) +
+        mrow('DATA DE CADASTRO', r.data_cadastro) +
       '</div>';
     document.getElementById('ccModalBody').innerHTML = html;
-    var m = document.getElementById('ccModal');
-    m.style.display='flex';
+    document.getElementById('ccModal').style.display='flex';
   };
   function mrow(label, val){
-    return '<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);">'+
-      '<span style="color:var(--muted);font-size:11px;letter-spacing:1px;width:160px;flex-shrink:0;padding-top:1px;">'+label+'</span>'+
-      '<span style="color:var(--text);font-size:14px;font-weight:600;">'+esc(val||'—')+'</span>'+
+    return '<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);">' +
+      '<span style="color:var(--muted);font-size:11px;letter-spacing:1px;width:160px;flex-shrink:0;padding-top:1px;">'+label+'</span>' +
+      '<span style="color:var(--text);font-size:14px;font-weight:600;word-break:break-all;">'+esc(val||'—')+'</span>' +
     '</div>';
   }
 
