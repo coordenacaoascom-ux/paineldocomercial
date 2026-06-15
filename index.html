@@ -1048,16 +1048,17 @@ function toggleFaseDrill(row,dp,fase,rows){
       var cpKey = (r.cp||'').replace(/^0+/,'')+'|'+(r.b||'');
       var pBtn='', obsRow='';
       if(isPend){
-        pBtn = `<td><button onclick="toggleObs('obs_${idx}')" style="background:rgba(232,255,60,.12);border:1px solid rgba(232,255,60,.3);color:#e8ff3c;border-radius:5px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Titillium Web,sans-serif;">📋 ver</button></td>`;
+        pBtn = `<td><button onclick="toggleObs('obs_${idx}','obs')" style="background:rgba(232,255,60,.12);border:1px solid rgba(232,255,60,.3);color:#e8ff3c;border-radius:5px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Titillium Web,sans-serif;">📋 ver</button></td>`;
         obsRow = `<tr id="obs_${idx}" style="display:none;"><td colspan="8" style="padding:10px 14px;background:rgba(232,255,60,.06);border-left:3px solid #e8ff3c;color:#e8ff3c;font-size:15px;white-space:pre-wrap;" class="obs-cell" data-key="${cpKey}">⟳ carregando...</td></tr>`;
       } else if(isRecus){
-        pBtn = `<td><button onclick="toggleObs('obs_${idx}')" style="background:rgba(255,68,102,.10);border:1px solid rgba(255,68,102,.35);color:#ff4466;border-radius:5px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Titillium Web,sans-serif;">📋 motivo</button></td>`;
+        pBtn = `<td><button onclick="toggleObs('obs_${idx}','motivo')" style="background:rgba(255,68,102,.10);border:1px solid rgba(255,68,102,.35);color:#ff4466;border-radius:5px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Titillium Web,sans-serif;">📋 motivo</button></td>`;
         obsRow = `<tr id="obs_${idx}" style="display:none;"><td colspan="8" style="padding:10px 14px;background:rgba(255,68,102,.06);border-left:3px solid #ff4466;color:#ff4466;font-size:15px;white-space:pre-wrap;" class="obs-cell" data-key="${cpKey}">⟳ carregando...</td></tr>`;
       }
       h+=`<tr><td style="font-size:18px;color:#e8ff3c;font-family:Titillium Web,sans-serif;font-weight:700">${r.cp}</td><td style="font-size:16px;color:var(--text);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.rs}</td><td style="font-size:14px;color:var(--muted)">${r.cnpj}</td><td style="font-size:16px;">${r.b}</td><td><span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;">${r.t==='CADASTRO SUB/INDICADO'?'SUB/IND':'SUB MULT'}</span></td>${extra}${pBtn}</tr>${obsRow}`;
     });
     h+='</tbody></table></div>'; dp.innerHTML=h;
   }
+
 
 window._obsDP = dp; // referência ao painel atual
 
@@ -1684,7 +1685,7 @@ function clearReguaSearch() {
   var r = document.getElementById('reguaSearchResult'); if(r){r.style.display='none';r.innerHTML='';}
 }
 
-function toggleObs(rowId) {
+function toggleObs(rowId, tipo) {
   var row = document.getElementById(rowId);
   if(!row) return;
   if(row.style.display !== 'none') { row.style.display='none'; return; }
@@ -1696,6 +1697,7 @@ function toggleObs(rowId) {
   var parts = (key||'').split('|');
   var cod   = parts[0]||'';
   var banco = parts[1]||'';
+  var isMot = tipo === 'motivo';
 
   function ultimaObs(raw){
     if(!raw) return '';
@@ -1715,8 +1717,44 @@ function toggleObs(rowId) {
     if(cell) cell.textContent = ultimaObs(obs) || 'Sem observação registrada no Pipefy';
   }
 
-  // Busca via query raw (passthrough) — resistente a encoding quebrado no label
-  function fetchObsByQuery(cursor, found){
+  function extractFromFields(fields){
+    // Para RECUSADO: pega MOTIVO DA RECUSA primeiro
+    if(isMot){
+      var motivo = '';
+      fields.forEach(function(fi){
+        var lbl = fi.field.label||'';
+        if(/motivo/i.test(lbl) && fi.value && fi.value.trim() && !motivo) motivo = fi.value.trim();
+      });
+      if(motivo && motivo !== 'Outros:') return motivo;
+    }
+    // Para PENDENTE (ou fallback): pega o ÚLTIMO campo OBSERVAÇÃO não-vazio
+    // (card passa por fases e cada fase cria um campo OBSERVAÇÃO novo — o último é o mais recente)
+    var allObs = [];
+    fields.forEach(function(fi){
+      var lbl = fi.field.label||'';
+      if(/observa/i.test(lbl) && fi.value && fi.value.trim()){
+        allObs.push(fi.value.trim());
+      }
+    });
+    if(allObs.length === 0) return '';
+    // Retorna o último com data mais recente; se nenhum tiver data, retorna o último da lista
+    var comData = allObs.filter(function(s){ return /\b\d{2}\/\d{2}/.test(s); });
+    if(comData.length > 0){
+      comData.sort(function(a,b){
+        function topDate(s){
+          var m = s.match(/(\d{2})\/(\d{2})(?:\/(\d{2,4}))?/);
+          if(!m) return new Date(0);
+          var y = m[3] ? (m[3].length===2?2000+parseInt(m[3]):parseInt(m[3])) : new Date().getFullYear();
+          return new Date(y,parseInt(m[2])-1,parseInt(m[1]));
+        }
+        return topDate(b) - topDate(a);
+      });
+      return comData[0];
+    }
+    return allObs[allObs.length - 1];
+  }
+
+  function fetchObsByQuery(cursor){
     var afterStr = cursor ? ', after: "'+cursor+'"' : '';
     var q = '{ allCards(pipeId: "306955502", first: 50'+afterStr+') { pageInfo { hasNextPage endCursor } edges { node { current_phase { name } fields { field { label } value } } } } }';
     fetch('https://novapromotora-sub.netlify.app/.netlify/functions/pipefy', {
@@ -1726,33 +1764,23 @@ function toggleObs(rowId) {
     .then(function(r){return r.json();})
     .then(function(data){
       var ac = data.data && data.data.allCards;
-      if(!ac) { showObs(''); return; }
-      ac.edges.forEach(function(e){
-        if(found) return;
-        var node = e.node;
+      if(!ac){ showObs(''); return; }
+      var found = null;
+      for(var i=0; i<ac.edges.length; i++){
+        var node = ac.edges[i].node;
         var fields = node.fields||[];
-        // achar cp e banco nos campos (regex para encoding)
-        var cpVal = '', bancoVal = '';
+        var cpVal='', bancoVal='';
         fields.forEach(function(fi){
           var lbl = fi.field.label||'';
-          if(/c.digo\s*parceiro/i.test(lbl) || /codigo\s*parceiro/i.test(lbl)) cpVal = (fi.value||'').replace(/^0+/,'').trim();
-          if(/^banco$/i.test(lbl)) bancoVal = (fi.value||'').trim();
+          if(/c.digo\s*parceiro/i.test(lbl)||/codigo\s*parceiro/i.test(lbl)) cpVal=(fi.value||'').replace(/^0+/,'').trim();
+          if(/^banco$/i.test(lbl)) bancoVal=(fi.value||'').trim();
         });
-        if(cpVal===cod && bancoVal===banco){
-          // encontrou o card — pega obs
-          var obsVal = '', motivoVal = '';
-          fields.forEach(function(fi){
-            var lbl = fi.field.label||'';
-            if(/observa/i.test(lbl) && fi.value && fi.value.trim() && !obsVal) obsVal = fi.value.trim();
-            if(/motivo/i.test(lbl) && fi.value && fi.value.trim() && !motivoVal) motivoVal = fi.value.trim();
-          });
-          found = obsVal || motivoVal || '';
-        }
-      });
+        if(cpVal===cod && bancoVal===banco){ found=fields; break; }
+      }
       if(found){
-        showObs(found);
+        showObs(extractFromFields(found));
       } else if(ac.pageInfo.hasNextPage){
-        fetchObsByQuery(ac.pageInfo.endCursor, found);
+        fetchObsByQuery(ac.pageInfo.endCursor);
       } else {
         showObs('');
       }
@@ -1760,7 +1788,7 @@ function toggleObs(rowId) {
     .catch(function(){ if(cell) cell.textContent='Erro ao carregar — verifique token Pipefy'; });
   }
 
-  fetchObsByQuery(null, null);
+  fetchObsByQuery(null);
 }
 
 
