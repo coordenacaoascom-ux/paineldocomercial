@@ -1039,18 +1039,34 @@ function toggleFaseDrill(row,dp,fase,rows){
 
   // Buscar observações do Pipefy para Pendente
   function buildTableWithObs() {
-    let h=`<div class="scroll-wrap"><table class="dtbl" style="font-size:16px"><thead><tr><th>Cód Parceiro</th><th>Razão Social</th><th>CNPJ</th><th>Banco</th><th>Tipo</th><th>Criado em</th>${isPend?'<th></th>':''}</tr></thead><tbody>`;
+    const isRecus = fase==='Recusado';
+    const colLabel = isRecus ? '<th>MOTIVO</th>' : (isPend ? '<th></th>' : '');
+    let h=`<div class="scroll-wrap"><table class="dtbl" style="font-size:16px"><thead><tr><th>Cód Parceiro</th><th>Razão Social</th><th>CNPJ</th><th>Banco</th><th>Tipo</th><th>Criado em</th>${colLabel}</tr></thead><tbody>`;
     items.forEach(function(r,idx){
-      var pBtn = isPend ? `<td><button onclick="toggleObs('obs_${idx}')" style="background:rgba(232,255,60,.12);border:1px solid rgba(232,255,60,.3);color:#e8ff3c;border-radius:5px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Titillium Web,sans-serif;">📋 ver</button></td>` : '';
       var extra = isConc ? `<td class="date-lbl">${r.fn||'—'}</td><td style="font-size:10px;color:#6b7aa0">${r.cc||'—'}</td>` : `<td class="date-lbl">${r.cr||'—'}</td>`;
-      var cpKey = (r.cp||'').replace(/^0+/,'')+'|'+(r.b||'');
-      var obsRow = isPend ? `<tr id="obs_${idx}" style="display:none;"><td colspan="7" style="padding:10px 14px;background:rgba(232,255,60,.06);border-left:3px solid #e8ff3c;color:#e8ff3c;font-size:15px;white-space:pre-wrap;" class="obs-cell" data-key="${cpKey}">⟳ carregando...</td></tr>` : '';
-      h+=`<tr><td style="font-size:18px;color:#e8ff3c;font-family:Titillium Web,sans-serif;font-weight:700">${r.cp}</td><td style="font-size:16px;color:var(--text);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.rs}</td><td style="font-size:14px;color:var(--muted)">${r.cnpj}</td><td style="font-size:16px;">${r.b}</td><td><span style="font-family:Titillium Web,sans-serif;font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:;color:">${r.t==='CADASTRO SUB/INDICADO'?'SUB/IND':'SUB MULT'}</span></td>${extra}${pBtn}</tr>${obsRow}`;
+      var liveObs = '';
+      if(typeof ROWS !== 'undefined'){
+        var match = ROWS.find(function(row){
+          return (row.cp||'').replace(/^0+/,'')===(r.cp||'').replace(/^0+/,'') && (row.b||'')===(r.b||'');
+        });
+        if(match) liveObs = match.obs||'';
+      }
+      var pBtn='', obsRow='';
+      if(isPend){
+        var obsText = liveObs || 'Sem observação registrada no Pipefy';
+        pBtn = `<td><button onclick="toggleObs('obs_${idx}')" style="background:rgba(232,255,60,.12);border:1px solid rgba(232,255,60,.3);color:#e8ff3c;border-radius:5px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Titillium Web,sans-serif;">📋 ver</button></td>`;
+        obsRow = `<tr id="obs_${idx}" style="display:none;"><td colspan="8" style="padding:10px 14px;background:rgba(232,255,60,.06);border-left:3px solid #e8ff3c;color:#e8ff3c;font-size:15px;white-space:pre-wrap;">${obsText}</td></tr>`;
+      } else if(isRecus){
+        var motivoText = liveObs || '—';
+        pBtn = `<td><button onclick="toggleObs('obs_${idx}')" style="background:rgba(255,68,102,.10);border:1px solid rgba(255,68,102,.35);color:#ff4466;border-radius:5px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Titillium Web,sans-serif;">📋 motivo</button></td>`;
+        obsRow = `<tr id="obs_${idx}" style="display:none;"><td colspan="8" style="padding:10px 14px;background:rgba(255,68,102,.06);border-left:3px solid #ff4466;color:#ff4466;font-size:15px;white-space:pre-wrap;">${motivoText}</td></tr>`;
+      }
+      h+=`<tr><td style="font-size:18px;color:#e8ff3c;font-family:Titillium Web,sans-serif;font-weight:700">${r.cp}</td><td style="font-size:16px;color:var(--text);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.rs}</td><td style="font-size:14px;color:var(--muted)">${r.cnpj}</td><td style="font-size:16px;">${r.b}</td><td><span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;">${r.t==='CADASTRO SUB/INDICADO'?'SUB/IND':'SUB MULT'}</span></td>${extra}${pBtn}</tr>${obsRow}`;
     });
     h+='</tbody></table></div>'; dp.innerHTML=h;
   }
 
-  window._obsDP = dp; // referência ao painel atual
+window._obsDP = dp; // referência ao painel atual
 
   buildTableWithObs();
   if(!isConc && !isPend) {;}
@@ -1680,39 +1696,6 @@ function toggleObs(rowId) {
   if(!row) return;
   if(row.style.display !== 'none') { row.style.display='none'; return; }
   row.style.display='table-row';
-  var cell = row.querySelector('.obs-cell');
-  var key = cell ? cell.getAttribute('data-key') : '';
-  // Sempre busca dado fresco do Pipefy (sem cache)
-  delete _obsCache[key];
-  if(cell) cell.textContent = '⟳ carregando...';
-  var query = '{ phase(id: "341938405") { cards(first: 500) { edges { node { fields { field { label } value } } } } } }';
-  fetch(PIPEFY_GQL, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:query})})
-    .then(function(r){return r.json();})
-    .then(function(data){
-      var edges = (data.data&&data.data.phase&&data.data.phase.cards&&data.data.phase.cards.edges)||[];
-      edges.forEach(function(e){
-        var cp='', banco='', pendObs='', lastObs='';
-        (e.node.fields||[]).forEach(function(fi){
-          if(fi.field.label==='CÓDIGO PARCEIRO') cp=(fi.value||'').replace(/^0+/,'');
-          if(fi.field.label==='BANCO') banco=fi.value||'';
-          var lbl = fi.field.label||'';
-          if((lbl==='OBSERVAÇÃO'||lbl==='OBSERVACAO'||lbl==='OBSERVAÇÕES'||lbl==='OBSERVACOES'||lbl==='MOTIVO'||lbl==='MOTIVO DA PENDÊNCIA'||lbl==='MOTIVO PENDÊNCIA'||lbl==='MOTIVO PENDENCIA') && fi.value && fi.value.trim()) {
-            var v = fi.value.trim();
-            lastObs = v;
-            if(/pendente|pendência|pendencia/i.test(v)) pendObs = v;
-          }
-        });
-        // Usar a ÚLTIMA obs com "pendente/pendência"; se não houver, a última preenchida
-        if(cp) _obsCache[cp+'|'+banco] = pendObs || lastObs || 'Sem observação registrada';
-      });
-      // Atualizar todas as células do painel atual
-      var dp = window._obsDP;
-      if(dp) dp.querySelectorAll('.obs-cell').forEach(function(c){
-        var k=c.getAttribute('data-key');
-        if(_obsCache[k]!==undefined) c.textContent=_obsCache[k];
-      });
-    })
-    .catch(function(){ if(cell) cell.textContent='Erro ao carregar pendência'; });
 }
 
 function switchSubTab(tab) {
@@ -1969,22 +1952,42 @@ const CC_COLABORADORES = [{"id":1,"codigo":"2782","nome":"ELIANE BATISTA SENES",
   };
 })();
 // ─── REFRESH PIPEFY (real-time update) ────────────────────────────────────────
+var _pipefyLastUpdate = null;
+
+function _updateTimestamp(){
+  var el = document.getElementById('refreshPipefyBtn');
+  if(!el || !_pipefyLastUpdate) return;
+  var mins = Math.round((Date.now() - _pipefyLastUpdate) / 60000);
+  var label = mins < 1 ? 'agora mesmo' : mins + ' min atrás';
+  el.textContent = '⟳ Pipefy · ' + label;
+}
+
 window.refreshPipefy = function() {
   var btn = document.getElementById('refreshPipefyBtn');
   if(btn) { btn.textContent = '⟳ Atualizando...'; btn.disabled = true; }
-  // Clear obs cache so next "ver" click fetches fresh
-  for(var k in _obsCache) delete _obsCache[k];
-  // Reload live cards
   if(typeof loadLiveCards === 'function') {
     loadLiveCards().then(function(){
-      if(btn) { btn.textContent = '✓ Atualizado!'; btn.disabled = false; setTimeout(function(){ btn.textContent = '⟳ ATUALIZAR PIPEFY'; }, 2000); }
+      _pipefyLastUpdate = Date.now();
+      if(btn) { btn.textContent = '✓ Atualizado!'; btn.disabled = false; setTimeout(_updateTimestamp, 2000); }
     }).catch(function(){
-      if(btn) { btn.textContent = '✗ Erro'; btn.disabled = false; setTimeout(function(){ btn.textContent = '⟳ ATUALIZAR PIPEFY'; }, 2000); }
+      if(btn) { btn.textContent = '✗ Erro — tente novamente'; btn.disabled = false; }
     });
   } else {
     if(btn) { btn.textContent = '⟳ ATUALIZAR PIPEFY'; btn.disabled = false; }
   }
 };
+
+// Auto-refresh a cada 3 minutos
+setInterval(function(){
+  if(typeof loadLiveCards === 'function'){
+    loadLiveCards().then(function(){ _pipefyLastUpdate = Date.now(); _updateTimestamp(); });
+  }
+}, 3 * 60 * 1000);
+
+// Atualiza o label do botão a cada minuto
+setInterval(_updateTimestamp, 60 * 1000);
+
+
 </script>
 </body>
 </html>
