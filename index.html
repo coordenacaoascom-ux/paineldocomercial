@@ -1715,20 +1715,52 @@ function toggleObs(rowId) {
     if(cell) cell.textContent = ultimaObs(obs) || 'Sem observação registrada no Pipefy';
   }
 
-  // Sempre busca cards frescos do Pipefy para garantir dado em tempo real
-  fetch('https://novapromotora-sub.netlify.app/.netlify/functions/pipefy', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({fetchCards:true})
-  })
-  .then(function(r){return r.json();})
-  .then(function(data){
-    if(data.cards && data.cards.length && typeof ROWS !== 'undefined') ROWS = data.cards;
-    var found = (data.cards||[]).find(function(c){
-      return (c.cp||'').replace(/^0+/,'')===cod && (c.b||'')===banco;
-    });
-    showObs(found ? found.obs : '');
-  })
-  .catch(function(){ if(cell) cell.textContent='Erro ao carregar — verifique token Pipefy'; });
+  // Busca via query raw (passthrough) — resistente a encoding quebrado no label
+  function fetchObsByQuery(cursor, found){
+    var afterStr = cursor ? ', after: "'+cursor+'"' : '';
+    var q = '{ allCards(pipeId: "306955502", first: 50'+afterStr+') { pageInfo { hasNextPage endCursor } edges { node { current_phase { name } fields { field { label } value } } } } }';
+    fetch('https://novapromotora-sub.netlify.app/.netlify/functions/pipefy', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({query:q})
+    })
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var ac = data.data && data.data.allCards;
+      if(!ac) { showObs(''); return; }
+      ac.edges.forEach(function(e){
+        if(found) return;
+        var node = e.node;
+        var fields = node.fields||[];
+        // achar cp e banco nos campos (regex para encoding)
+        var cpVal = '', bancoVal = '';
+        fields.forEach(function(fi){
+          var lbl = fi.field.label||'';
+          if(/c.digo\s*parceiro/i.test(lbl) || /codigo\s*parceiro/i.test(lbl)) cpVal = (fi.value||'').replace(/^0+/,'').trim();
+          if(/^banco$/i.test(lbl)) bancoVal = (fi.value||'').trim();
+        });
+        if(cpVal===cod && bancoVal===banco){
+          // encontrou o card — pega obs
+          var obsVal = '', motivoVal = '';
+          fields.forEach(function(fi){
+            var lbl = fi.field.label||'';
+            if(/observa/i.test(lbl) && fi.value && fi.value.trim() && !obsVal) obsVal = fi.value.trim();
+            if(/motivo/i.test(lbl) && fi.value && fi.value.trim() && !motivoVal) motivoVal = fi.value.trim();
+          });
+          found = obsVal || motivoVal || '';
+        }
+      });
+      if(found){
+        showObs(found);
+      } else if(ac.pageInfo.hasNextPage){
+        fetchObsByQuery(ac.pageInfo.endCursor, found);
+      } else {
+        showObs('');
+      }
+    })
+    .catch(function(){ if(cell) cell.textContent='Erro ao carregar — verifique token Pipefy'; });
+  }
+
+  fetchObsByQuery(null, null);
 }
 
 
