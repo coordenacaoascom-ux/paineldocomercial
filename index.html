@@ -1697,14 +1697,6 @@ function toggleObs(rowId) {
   var cod   = parts[0]||'';
   var banco = parts[1]||'';
 
-  var cardId = '';
-  if(typeof ROWS !== 'undefined'){
-    var m = ROWS.find(function(c){
-      return (c.cp||'').replace(/^0+/,'')===cod && (c.b||'')===banco;
-    });
-    if(m) cardId = m.id||'';
-  }
-
   function ultimaObs(raw){
     if(!raw) return '';
     var entries = raw.split(/(?=\b\d{2}\/\d{2})/g).map(function(s){ return s.trim(); }).filter(Boolean);
@@ -1723,70 +1715,20 @@ function toggleObs(rowId) {
     if(cell) cell.textContent = ultimaObs(obs) || 'Sem observação registrada no Pipefy';
   }
 
-  function queryByCardId(cid){
-    var q = '{ card(id: "'+cid+'") { comments { text created_at } fields { field { label } value } } }';
-    fetch('https://novapromotora-sub.netlify.app/.netlify/functions/pipefy', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({query:q})
-    })
-    .then(function(r){return r.json();})
-    .then(function(data){
-      var card = (data.data&&data.data.card)||{};
-
-      // 1. Tenta pegar de campos (fields) com label "observa*"
-      var fields = card.fields||[];
-      var fieldObs = '';
-      fields.forEach(function(fi){
-        var lbl = fi.field.label||'';
-        if(/observa/i.test(lbl) && fi.value && fi.value.trim()){
-          if(!fieldObs) fieldObs = fi.value.trim();
-        }
-      });
-
-      // 2. Tenta pegar de comentários (atividade do card)
-      var comments = card.comments||[];
-      var best = '';
-      if(comments.length > 0){
-        // Ordena por data decrescente e pega o mais recente com texto
-        var sorted = comments.slice().sort(function(a,b){
-          return new Date(b.created_at) - new Date(a.created_at);
-        });
-        for(var i=0; i<sorted.length; i++){
-          if(sorted[i].text && sorted[i].text.trim()){
-            best = sorted[i].text.trim();
-            break;
-          }
-        }
-      }
-
-      // Prefere campo observação; se vazio, usa comentário mais recente
-      var result = fieldObs || best;
-      showObs(result);
-    })
-    .catch(function(){ if(cell) cell.textContent='Erro ao carregar — verifique token Pipefy'; });
-  }
-
-  if(cardId){
-    queryByCardId(cardId);
-  } else {
-    fetch('https://novapromotora-sub.netlify.app/.netlify/functions/pipefy', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({fetchCards:true})
-    })
-    .then(function(r){return r.json();})
-    .then(function(data){
-      if(data.cards && data.cards.length && typeof ROWS !== 'undefined') ROWS = data.cards;
-      var found = (data.cards||[]).find(function(c){
-        return (c.cp||'').replace(/^0+/,'')===cod && (c.b||'')===banco;
-      });
-      if(found && found.id){
-        queryByCardId(found.id);
-      } else {
-        showObs(found ? found.obs : '');
-      }
-    })
-    .catch(function(){ if(cell) cell.textContent='Erro ao carregar — verifique token Pipefy'; });
-  }
+  // Sempre busca cards frescos do Pipefy para garantir dado em tempo real
+  fetch('https://novapromotora-sub.netlify.app/.netlify/functions/pipefy', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({fetchCards:true})
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if(data.cards && data.cards.length && typeof ROWS !== 'undefined') ROWS = data.cards;
+    var found = (data.cards||[]).find(function(c){
+      return (c.cp||'').replace(/^0+/,'')===cod && (c.b||'')===banco;
+    });
+    showObs(found ? found.obs : '');
+  })
+  .catch(function(){ if(cell) cell.textContent='Erro ao carregar — verifique token Pipefy'; });
 }
 
 
@@ -1941,7 +1883,6 @@ const CC_COLABORADORES = [{"id":1,"codigo":"2782","nome":"ELIANE BATISTA SENES",
             row2('CPF RESP.', r.cpf_responsavel||r.cpf) +
             row2('CNPJ', r.cnpj) +
             row2('E-MAIL', r.email) +
-            '<div style="display:flex;gap:6px;align-items:baseline;"><span style="color:var(--muted);font-size:10px;letter-spacing:1px;white-space:nowrap;flex-shrink:0;">CADASTRO&nbsp;</span><span style="font-size:13px;font-weight:600;'+dataColor+'">'+esc(r.data_cadastro||'—')+'</span></div>' +
           '</div>' +
         '</div>';
     });
