@@ -1891,7 +1891,7 @@ var CC_COLABORADORES = [{"id":1,"codigo":"2782","nome":"ELIANE BATISTA SENES","c
             row2('CPF RESP.', r.cpf_responsavel||r.cpf) +
             row2('CNPJ', r.cnpj) +
             row2('E-MAIL', r.email) +
-            row2('CADASTRO', r.data_criacao) +
+            row2('CADASTRO', fmtDate(r.data_criacao)) +
           '</div>' +
         '</div>';
     });
@@ -1902,6 +1902,13 @@ var CC_COLABORADORES = [{"id":1,"codigo":"2782","nome":"ELIANE BATISTA SENES","c
     return '<div style="display:flex;gap:6px;align-items:baseline;"><span style="color:var(--muted);font-size:10px;letter-spacing:1px;white-space:nowrap;flex-shrink:0;">'+label+'&nbsp;</span><span style="color:var(--muted2);font-size:13px;word-break:break-all;">'+esc(val||'—')+'</span></div>';
   }
   function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function fmtDate(s){
+    if(!s) return '—';
+    // YYYY-MM-DD -> DD/MM/AAAA
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(m) return m[3]+'/'+m[2]+'/'+m[1];
+    return s;
+  }
   function parseDate(s){
     if(!s)return null;
     var p=s.split('/');
@@ -1970,7 +1977,7 @@ var CC_COLABORADORES = [{"id":1,"codigo":"2782","nome":"ELIANE BATISTA SENES","c
         mrow('CPF RESPONSÁVEL', r.cpf_responsavel||r.cpf) +
         mrow('E-MAIL', r.email) +
         mrow('COMERCIAL', r.comercial) +
-        mrow('DATA DE CADASTRO', r.data_criacao) +
+        mrow('DATA DE CADASTRO', fmtDate(r.data_criacao)) +
         pipeSection +
       '</div>';
     document.getElementById('ccModalBody').innerHTML = html;
