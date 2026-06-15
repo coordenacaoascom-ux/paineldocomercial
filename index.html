@@ -1706,12 +1706,28 @@ function toggleObs(rowId) {
     if(m) cardId = m.id||'';
   }
 
+  function ultimaObs(raw){
+    // Se o texto tiver múltiplas entradas com data (dd/mm), retorna a mais recente
+    if(!raw) return '';
+    // Divide por padrões de data no início de linha: "dd/mm" ou "dd/mm/aaaa"
+    var entries = raw.split(/(?=\b\d{2}\/\d{2})/g).map(function(s){ return s.trim(); }).filter(Boolean);
+    if(entries.length <= 1) return raw.trim();
+    // Parseia data do início de cada entrada para achar a mais recente
+    function parseEntryDate(s){
+      var m = s.match(/^(\d{2})\/(\d{2})(?:\/(\d{2,4}))?/);
+      if(!m) return new Date(0);
+      var y = m[3] ? (m[3].length===2 ? 2000+parseInt(m[3]) : parseInt(m[3])) : new Date().getFullYear();
+      return new Date(y, parseInt(m[2])-1, parseInt(m[1]));
+    }
+    entries.sort(function(a,b){ return parseEntryDate(b) - parseEntryDate(a); });
+    return entries[0];
+  }
+
   function showObs(obs){
-    if(cell) cell.textContent = obs || 'Sem observação registrada no Pipefy';
+    if(cell) cell.textContent = ultimaObs(obs) || 'Sem observação registrada no Pipefy';
   }
 
   function queryByCardId(cid){
-    // Busca direta pelo card — mais rápido e preciso
     var q = '{ card(id: "'+cid+'") { fields { field { label } value } } }';
     fetch('https://novapromotora-sub.netlify.app/.netlify/functions/pipefy', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -1720,12 +1736,30 @@ function toggleObs(rowId) {
     .then(function(r){return r.json();})
     .then(function(data){
       var fields = (data.data&&data.data.card&&data.data.card.fields)||[];
-      var obs = '';
+      // Coleta todos os campos de observação e escolhe o com texto mais recente
+      var candidates = [];
       fields.forEach(function(fi){
         var lbl = fi.field.label||'';
-        if(/observa/i.test(lbl) && fi.value && fi.value.trim()) obs = fi.value.trim();
+        if(/observa/i.test(lbl) && fi.value && fi.value.trim()) candidates.push(fi.value.trim());
       });
-      showObs(obs);
+      // Dentre todos os candidatos, pega o que tem a data mais recente
+      var best = '';
+      if(candidates.length === 1){
+        best = candidates[0];
+      } else if(candidates.length > 1){
+        var scored = candidates.map(function(c){ return { text:c, d: ultimaObs(c) }; });
+        best = scored[0].d; // já ordenado internamente
+        // Pega o candidato com a data mais nova no topo
+        function topDate(s){
+          var m = s.match(/(\d{2})\/(\d{2})(?:\/(\d{2,4}))?/);
+          if(!m) return new Date(0);
+          var y = m[3] ? (m[3].length===2?2000+parseInt(m[3]):parseInt(m[3])) : new Date().getFullYear();
+          return new Date(y,parseInt(m[2])-1,parseInt(m[1]));
+        }
+        candidates.sort(function(a,b){ return topDate(b)-topDate(a); });
+        best = ultimaObs(candidates[0]);
+      }
+      showObs(best);
     })
     .catch(function(){ if(cell) cell.textContent='Erro ao carregar — verifique token Pipefy'; });
   }
