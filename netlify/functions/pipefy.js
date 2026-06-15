@@ -35,7 +35,7 @@ async function fetchAllCards(pipeId) {
   var hasNext = true;
   while(hasNext) {
     var afterStr = cursor ? `, after: "${cursor}"` : '';
-    var query = `{ allCards(pipeId: "${pipeId}", first: 50${afterStr}) { pageInfo { hasNextPage endCursor } edges { node { id current_phase { name } created_at fields { field { label } value } } } } }`;
+    var query = `{ allCards(pipeId: "${pipeId}", first: 50${afterStr}) { pageInfo { hasNextPage endCursor } edges { node { id current_phase { name } created_at finished_at fields { field { label } value } } } } }`;
     var result = await pipefyRequest({ query });
     var ac = result.data && result.data.allCards;
     if(!ac) break;
@@ -96,6 +96,7 @@ async function fetchAllCards(pipeId) {
         reg: f['REGIONAL'] || '',
         sup: f['SUPERINTENDENTE'] || '',
         cr: node.created_at ? node.created_at.split('T')[0].split('-').reverse().join('/') : '',
+        fn: node.finished_at ? node.finished_at.split('T')[0].split('-').reverse().join('/') : '',
         obs: obs,
         motivo: motivo
       });

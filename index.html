@@ -1031,7 +1031,15 @@ function toggleFaseDrill(row,dp,fase,rows){
   document.querySelectorAll('.fase-row').forEach(r=>r.classList.remove('expanded'));
   if(open) return;
   row.classList.add('expanded'); dp.classList.add('open');
-  const items=rows.filter(r=>r.f===fase);
+  const curDate=new Date(); const curMY=(curDate.getMonth()+1).toString().padStart(2,'0')+'/'+curDate.getFullYear();
+  const items=rows.filter(function(r){
+    if(r.f!==fase) return false;
+    if(fase==='Concluído'||fase==='Recusado'){
+      var d=r.fn||r.cr||''; var pts=d.split('/');
+      return pts.length===3 && (pts[1]+'/'+pts[2])===curMY;
+    }
+    return true;
+  });
   if(!items.length){dp.innerHTML='<div class="drill-empty">Sem registros</div>';return;}
   const isConc=fase==='Concluído';
   const isPend=fase==='Pendente';
@@ -1044,7 +1052,7 @@ function toggleFaseDrill(row,dp,fase,rows){
     const extraCol = showBtn ? `<th>${isRecus?'MOTIVO':''}</th>` : '';
     let h=`<div class="scroll-wrap"><table class="dtbl" style="font-size:16px"><thead><tr><th>Cód Parceiro</th><th>Razão Social</th><th>CNPJ</th><th>Banco</th><th>Tipo</th><th>Criado em</th>${extraCol}</tr></thead><tbody>`;
     items.forEach(function(r,idx){
-      var extra = isConc ? `<td class="date-lbl">${r.fn||'—'}</td><td style="font-size:10px;color:#6b7aa0">${r.cc||'—'}</td>` : `<td class="date-lbl">${r.cr||'—'}</td>`;
+      var extra = isConc ? `<td class="date-lbl">${r.fn||r.cr||'—'}</td><td style="font-size:10px;color:#6b7aa0">${r.cc||'—'}</td>` : `<td class="date-lbl">${r.cr||'—'}</td>`;
       var cpKey = (r.cp||'').replace(/^0+/,'')+'|'+(r.b||'');
       var pBtn='', obsRow='';
       if(isPend){
