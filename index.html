@@ -1692,27 +1692,68 @@ function toggleObs(rowId) {
   var cell = row.querySelector('.obs-cell');
   var key = cell ? cell.getAttribute('data-key') : '';
   if(cell) cell.textContent = '⟳ carregando...';
-  // Busca todos os cards ao vivo do Pipefy e encontra pelo código+banco
-  fetch('https://novapromotora-sub.netlify.app/.netlify/functions/pipefy', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({fetchCards:true})
-  })
-  .then(function(r){return r.json();})
-  .then(function(data){
-    var cards = data.cards||[];
-    var parts = (key||'').split('|');
-    var cod = parts[0]||'';
-    var banco = parts[1]||'';
-    var match = cards.find(function(c){
+
+  var parts = (key||'').split('|');
+  var cod   = parts[0]||'';
+  var banco = parts[1]||'';
+
+  // Primeiro: tenta achar o card ID no ROWS já carregado
+  var cardId = '';
+  if(typeof ROWS !== 'undefined'){
+    var m = ROWS.find(function(c){
       return (c.cp||'').replace(/^0+/,'')===cod && (c.b||'')===banco;
     });
-    var obs = match ? (match.obs||'') : '';
+    if(m) cardId = m.id||'';
+  }
+
+  function showObs(obs){
     if(cell) cell.textContent = obs || 'Sem observação registrada no Pipefy';
-    // Atualiza ROWS com dados frescos
-    if(data.cards && data.cards.length && typeof ROWS !== 'undefined') ROWS = data.cards;
-  })
-  .catch(function(){ if(cell) cell.textContent='Erro ao carregar — verifique o token Pipefy'; });
+  }
+
+  function queryByCardId(cid){
+    // Busca direta pelo card — mais rápido e preciso
+    var q = '{ card(id: "'+cid+'") { fields { field { label } value } } }';
+    fetch('https://novapromotora-sub.netlify.app/.netlify/functions/pipefy', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({query:q})
+    })
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var fields = (data.data&&data.data.card&&data.data.card.fields)||[];
+      var obs = '';
+      fields.forEach(function(fi){
+        var lbl = fi.field.label||'';
+        if(/observa/i.test(lbl) && fi.value && fi.value.trim()) obs = fi.value.trim();
+      });
+      showObs(obs);
+    })
+    .catch(function(){ if(cell) cell.textContent='Erro ao carregar — verifique token Pipefy'; });
+  }
+
+  if(cardId){
+    // Temos o ID: consulta direto
+    queryByCardId(cardId);
+  } else {
+    // Sem ID em cache: busca todos os cards frescos, acha o ID e consulta
+    fetch('https://novapromotora-sub.netlify.app/.netlify/functions/pipefy', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({fetchCards:true})
+    })
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data.cards && data.cards.length && typeof ROWS !== 'undefined') ROWS = data.cards;
+      var found = (data.cards||[]).find(function(c){
+        return (c.cp||'').replace(/^0+/,'')===cod && (c.b||'')===banco;
+      });
+      if(found && found.id){
+        queryByCardId(found.id);
+      } else {
+        // Fallback: mostra obs do fetchCards mesmo
+        showObs(found ? found.obs : '');
+      }
+    })
+    .catch(function(){ if(cell) cell.textContent='Erro ao carregar — verifique token Pipefy'; });
+  }
 }
 
 function switchSubTab(tab) {

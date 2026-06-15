@@ -41,6 +41,7 @@ async function fetchAllCards(pipeId) {
       var f = {};
       (node.fields||[]).forEach(function(fi){ f[fi.field.label] = fi.value || ''; });
       allCards.push({
+        id: node.id || '',
         f: node.current_phase ? node.current_phase.name : '',
         t: f['TIPO DE SOLICITAÇÃO'] || '',
         b: f['BANCO'] || '',
@@ -51,7 +52,7 @@ async function fetchAllCards(pipeId) {
         reg: f['REGIONAL'] || '',
         sup: f['SUPERINTENDENTE'] || '',
         cr: node.created_at ? node.created_at.split('T')[0].split('-').reverse().join('/') : '',
-        obs: f['OBSERVAÇÃO'] || f['OBSERVACAO'] || ''
+        obs: f['OBSERVAÇÃO'] || f['OBSERVACAO'] || f['OBSERVAÇÕES'] || f['OBSERVACOES'] || ''
       });
     });
     hasNext = ac.pageInfo.hasNextPage;
