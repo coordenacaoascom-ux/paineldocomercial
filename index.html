@@ -405,6 +405,7 @@ body{
       <input id="parcSearchInput" placeholder="Codigo parceiro ou CNPJ..." style="flex:1;max-width:400px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:8px 14px;font-size:16px;font-family:Titillium Web,sans-serif;outline:none;" onkeydown="if(event.key==='Enter')searchParceiro()" />
       <button onclick="searchParceiro()" style="background:rgba(0,200,255,.12);border:1px solid rgba(0,200,255,.3);color:var(--neon);border-radius:6px;padding:8px 16px;font-family:'Titillium Web',sans-serif;font-size:15px;cursor:pointer;letter-spacing:1px;">BUSCAR</button>
       <button onclick="clearParcSearch()" style="background:none;border:1px solid var(--border2);color:var(--muted2);border-radius:6px;padding:7px 12px;font-size:14px;cursor:pointer;">&#x2715;</button>
+      <button onclick="refreshPipefy()" id="refreshPipefyBtn" style="background:rgba(60,255,180,.08);border:1px solid rgba(60,255,180,.3);color:#3cffb4;border-radius:6px;padding:7px 14px;font-size:14px;cursor:pointer;font-family:Titillium Web,sans-serif;letter-spacing:1px;" title="Buscar dados atualizados do Pipefy">&#8635; ATUALIZAR PIPEFY</button>
     </div>
     <div id="parcSearchResult" style="margin-bottom:12px;display:none;"></div>
     <div class="kpi-row" id="kpiRow"></div><div id="kpiExpandArea" style="margin-top:8px;"></div>
@@ -1678,9 +1679,10 @@ function toggleObs(rowId) {
   row.style.display='table-row';
   var cell = row.querySelector('.obs-cell');
   var key = cell ? cell.getAttribute('data-key') : '';
-  if(_obsCache[key] !== undefined) { if(cell) cell.textContent=_obsCache[key]||'Sem observação registrada'; return; }
+  // Sempre busca dado fresco do Pipefy (sem cache)
+  delete _obsCache[key];
   if(cell) cell.textContent = '⟳ carregando...';
-  var query = '{ phase(id: "341938405") { cards(first: 200) { edges { node { fields { field { label } value } } } } } }';
+  var query = '{ phase(id: "341938405") { cards(first: 500) { edges { node { fields { field { label } value } } } } } }';
   fetch(PIPEFY_GQL, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:query})})
     .then(function(r){return r.json();})
     .then(function(data){
@@ -1690,10 +1692,10 @@ function toggleObs(rowId) {
         (e.node.fields||[]).forEach(function(fi){
           if(fi.field.label==='CÓDIGO PARCEIRO') cp=(fi.value||'').replace(/^0+/,'');
           if(fi.field.label==='BANCO') banco=fi.value||'';
-          if((fi.field.label==='OBSERVAÇÃO'||fi.field.label==='OBSERVACAO') && fi.value && fi.value.trim()) {
+          var lbl = fi.field.label||'';
+          if((lbl==='OBSERVAÇÃO'||lbl==='OBSERVACAO'||lbl==='OBSERVAÇÕES'||lbl==='OBSERVACOES'||lbl==='MOTIVO'||lbl==='MOTIVO DA PENDÊNCIA'||lbl==='MOTIVO PENDÊNCIA'||lbl==='MOTIVO PENDENCIA') && fi.value && fi.value.trim()) {
             var v = fi.value.trim();
             lastObs = v;
-            // Guardar SEMPRE a última obs com palavra de pendência
             if(/pendente|pendência|pendencia/i.test(v)) pendObs = v;
           }
         });
@@ -1915,6 +1917,24 @@ const CC_COLABORADORES = [{"id":1,"codigo":"2782","nome":"ELIANE BATISTA SENES",
     document.getElementById('ccStatus').textContent='';
   };
 })();
+
+// ─── REFRESH PIPEFY (real-time update) ────────────────────────────────────────
+window.refreshPipefy = function() {
+  var btn = document.getElementById('refreshPipefyBtn');
+  if(btn) { btn.textContent = '⟳ Atualizando...'; btn.disabled = true; }
+  // Clear obs cache so next "ver" click fetches fresh
+  for(var k in _obsCache) delete _obsCache[k];
+  // Reload live cards
+  if(typeof loadLiveCards === 'function') {
+    loadLiveCards().then(function(){
+      if(btn) { btn.textContent = '✓ Atualizado!'; btn.disabled = false; setTimeout(function(){ btn.textContent = '⟳ ATUALIZAR PIPEFY'; }, 2000); }
+    }).catch(function(){
+      if(btn) { btn.textContent = '✗ Erro'; btn.disabled = false; setTimeout(function(){ btn.textContent = '⟳ ATUALIZAR PIPEFY'; }, 2000); }
+    });
+  } else {
+    if(btn) { btn.textContent = '⟳ ATUALIZAR PIPEFY'; btn.disabled = false; }
+  }
+};
 </script>
 </body>
 </html>
