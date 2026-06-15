@@ -1697,42 +1697,49 @@ function toggleObs(rowId, tipo) {
   var parts = (key||'').split('|');
   var cod   = parts[0]||'';
   var banco = parts[1]||'';
-  var isMot = tipo === 'motivo';
-
-  function ultimaObs(raw){
-    if(!raw) return '';
-    var entries = raw.split(/(?=\b\d{2}\/\d{2})/g).map(function(s){ return s.trim(); }).filter(Boolean);
-    if(entries.length <= 1) return raw.trim();
-    function parseEntryDate(s){
-      var m = s.match(/^(\d{2})\/(\d{2})(?:\/(\d{2,4}))?/);
-      if(!m) return new Date(0);
-      var y = m[3] ? (m[3].length===2 ? 2000+parseInt(m[3]) : parseInt(m[3])) : new Date().getFullYear();
-      return new Date(y, parseInt(m[2])-1, parseInt(m[1]));
-    }
-    entries.sort(function(a,b){ return parseEntryDate(b) - parseEntryDate(a); });
-    return entries[0];
-  }
 
   function showObs(obs){
-    if(cell) cell.textContent = ultimaObs(obs) || 'Sem observação registrada no Pipefy';
+    if(cell) cell.textContent = (obs||'').trim() || 'Sem observação registrada no Pipefy';
   }
 
-  function extractFromFields(fields){
-    // Pega o ÚLTIMO campo OBSERVAÇÃO não-vazio do array
-    // (Pipefy adiciona um novo campo por fase — o último = mais recente)
-    var lastObs = '';
-    fields.forEach(function(fi){
-      var lbl = fi.field.label||'';
-      if(/observa/i.test(lbl) && fi.value && fi.value.trim()){
-        lastObs = fi.value.trim();
+  function cleanBody(body){
+    if(!body) return '';
+    // Remove quoted reply (tudo a partir de "Em [dia]." ou linhas com "> ")
+    var cut = body.search(/\nEm (seg|ter|qua|qui|sex|s[áa]b|dom)\.|--+\s*Forwarded|--+\s*Original/i);
+    if(cut > 0) body = body.substring(0, cut);
+    // Remove linhas vazias excessivas e trim
+    return body.replace(/\n{3,}/g,'\n\n').trim();
+  }
+
+  function getEmailObs(cardId){
+    var q = '{ card(id: "'+cardId+'") { inbox_emails { subject body created_at } } }';
+    fetch('https://novapromotora-sub.netlify.app/.netlify/functions/pipefy', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({query:q})
+    })
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var emails = (data.data&&data.data.card&&data.data.card.inbox_emails)||[];
+      // Filtra emails com "COMUNICADO DE PEND" no assunto, ordena mais recente primeiro
+      var filtered = emails.filter(function(e){ return /comunicado.*pend/i.test(e.subject||''); });
+      if(filtered.length === 0){
+        // fallback: pega qualquer email mais recente
+        filtered = emails.slice();
       }
-    });
-    return lastObs;
+      filtered.sort(function(a,b){ return new Date(b.created_at) - new Date(a.created_at); });
+      if(filtered.length > 0){
+        showObs(cleanBody(filtered[0].body));
+      } else {
+        showObs('');
+      }
+    })
+    .catch(function(){ if(cell) cell.textContent='Erro ao carregar — verifique token Pipefy'; });
   }
 
-  function fetchObsByQuery(cursor){
+  // Pagina allCards para achar o ID real do card pelo cp+banco
+  function findCardId(cursor){
     var afterStr = cursor ? ', after: "'+cursor+'"' : '';
-    var q = '{ allCards(pipeId: "306955502", first: 50'+afterStr+') { pageInfo { hasNextPage endCursor } edges { node { current_phase { name } fields { field { label } value } } } } }';
+    var q = '{ allCards(pipeId: "306955502", first: 50'+afterStr+') { pageInfo { hasNextPage endCursor } edges { node { id fields { field { label } value } } } } }';
     fetch('https://novapromotora-sub.netlify.app/.netlify/functions/pipefy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({query:q})
@@ -1751,12 +1758,12 @@ function toggleObs(rowId, tipo) {
           if(/c.digo\s*parceiro/i.test(lbl)||/codigo\s*parceiro/i.test(lbl)) cpVal=(fi.value||'').replace(/^0+/,'').trim();
           if(/^banco$/i.test(lbl)) bancoVal=(fi.value||'').trim();
         });
-        if(cpVal===cod && bancoVal===banco){ found=fields; break; }
+        if(cpVal===cod && bancoVal===banco){ found=node.id; break; }
       }
       if(found){
-        showObs(extractFromFields(found));
+        getEmailObs(found);
       } else if(ac.pageInfo.hasNextPage){
-        fetchObsByQuery(ac.pageInfo.endCursor);
+        findCardId(ac.pageInfo.endCursor);
       } else {
         showObs('');
       }
@@ -1764,7 +1771,7 @@ function toggleObs(rowId, tipo) {
     .catch(function(){ if(cell) cell.textContent='Erro ao carregar — verifique token Pipefy'; });
   }
 
-  fetchObsByQuery(null);
+  findCardId(null);
 }
 
 
