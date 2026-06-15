@@ -1887,6 +1887,51 @@ const CC_COLABORADORES = [{"id":1,"codigo":"2782","nome":"ELIANE BATISTA SENES",
     var r = getCC().find(function(c){return c.id===id;});
     if(!r) return;
     var statusColor = r.status&&r.status.toLowerCase().indexOf('inat')>=0 ? '#ff4466' : '#3cffb4';
+
+    // ── Pipefy live data ──────────────────────────────────────────────────────
+    var pipeCards = (typeof ROWS !== 'undefined' ? ROWS : []).filter(function(row){
+      var rowCod = (row.cp||'').replace(/^0+/,'').trim();
+      var myCod  = (r.codigo||'').replace(/^0+/,'').trim();
+      return rowCod === myCod;
+    });
+
+    var pipeSection = '';
+    if(pipeCards.length){
+      var phaseColors = {
+        'Concluído':'#3cffb4','Aprovado':'#3cffb4',
+        'Recusado':'#ff4466','Reprovado':'#ff4466',
+        'Pendente':'#e8ff3c',
+        'Aguardando Assinatura':'#ff9f3c','Aguardando assinatura':'#ff9f3c',
+        'Aguardando Banco':'#00c8ff','Aguardando banco':'#00c8ff',
+        'Aguardando Registro':'#c03cff'
+      };
+      var rows = '';
+      pipeCards.forEach(function(pc){
+        var fc = phaseColors[pc.f] || '#8a9fc0';
+        rows +=
+          '<div style="padding:8px 10px;border-radius:6px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);margin-bottom:6px;">' +
+            '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">' +
+              '<span style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;">BANCO</span>' +
+              '<span style="color:var(--text);font-size:13px;font-weight:700;">'+esc(pc.b)+'</span>' +
+              '<span style="margin-left:auto;border:1px solid '+fc+';color:'+fc+';border-radius:4px;padding:2px 9px;font-size:10px;font-weight:700;white-space:nowrap;">'+esc(pc.f)+'</span>' +
+            '</div>' +
+            (pc.t ? '<div style="font-size:11px;color:var(--muted2);margin-bottom:4px;">'+esc(pc.t)+'</div>' : '') +
+            (pc.obs ? '<div style="font-size:12px;color:#e8ff3c;background:rgba(232,255,60,.06);border-left:3px solid #e8ff3c;padding:6px 10px;border-radius:0 4px 4px 0;white-space:pre-wrap;line-height:1.5;">'+esc(pc.obs)+'</div>' : '') +
+          '</div>';
+      });
+      pipeSection =
+        '<div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(0,200,255,.2);">' +
+          '<div style="font-size:9px;letter-spacing:2px;color:var(--neon);font-weight:700;margin-bottom:10px;">&#9679; SITUAÇÃO NO PIPEFY (AO VIVO)</div>' +
+          rows +
+        '</div>';
+    } else {
+      pipeSection =
+        '<div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.06);">' +
+          '<div style="font-size:9px;letter-spacing:2px;color:var(--muted);font-weight:700;margin-bottom:6px;">&#9679; SITUAÇÃO NO PIPEFY</div>' +
+          '<span style="font-size:13px;color:var(--muted);">Nenhum cadastro ativo encontrado no Pipefy. Clique em <b style="color:#3cffb4">&#8635; ATUALIZAR PIPEFY</b> se os dados ainda não carregaram.</span>' +
+        '</div>';
+    }
+
     var html =
       '<div style="font-family:Titillium Web,sans-serif;">' +
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">' +
@@ -1900,6 +1945,7 @@ const CC_COLABORADORES = [{"id":1,"codigo":"2782","nome":"ELIANE BATISTA SENES",
         mrow('E-MAIL', r.email) +
         mrow('COMERCIAL', r.comercial) +
         mrow('DATA DE CADASTRO', r.data_cadastro) +
+        pipeSection +
       '</div>';
     document.getElementById('ccModalBody').innerHTML = html;
     document.getElementById('ccModal').style.display='flex';
@@ -1922,7 +1968,6 @@ const CC_COLABORADORES = [{"id":1,"codigo":"2782","nome":"ELIANE BATISTA SENES",
     document.getElementById('ccStatus').textContent='';
   };
 })();
-
 // ─── REFRESH PIPEFY (real-time update) ────────────────────────────────────────
 window.refreshPipefy = function() {
   var btn = document.getElementById('refreshPipefyBtn');
