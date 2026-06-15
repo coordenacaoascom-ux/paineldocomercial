@@ -1697,7 +1697,6 @@ function toggleObs(rowId) {
   var cod   = parts[0]||'';
   var banco = parts[1]||'';
 
-  // Primeiro: tenta achar o card ID no ROWS já carregado
   var cardId = '';
   if(typeof ROWS !== 'undefined'){
     var m = ROWS.find(function(c){
@@ -1707,12 +1706,9 @@ function toggleObs(rowId) {
   }
 
   function ultimaObs(raw){
-    // Se o texto tiver múltiplas entradas com data (dd/mm), retorna a mais recente
     if(!raw) return '';
-    // Divide por padrões de data no início de linha: "dd/mm" ou "dd/mm/aaaa"
     var entries = raw.split(/(?=\b\d{2}\/\d{2})/g).map(function(s){ return s.trim(); }).filter(Boolean);
     if(entries.length <= 1) return raw.trim();
-    // Parseia data do início de cada entrada para achar a mais recente
     function parseEntryDate(s){
       var m = s.match(/^(\d{2})\/(\d{2})(?:\/(\d{2,4}))?/);
       if(!m) return new Date(0);
@@ -1728,47 +1724,51 @@ function toggleObs(rowId) {
   }
 
   function queryByCardId(cid){
-    var q = '{ card(id: "'+cid+'") { fields { field { label } value } } }';
+    var q = '{ card(id: "'+cid+'") { comments { text created_at } fields { field { label } value } } }';
     fetch('https://novapromotora-sub.netlify.app/.netlify/functions/pipefy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({query:q})
     })
     .then(function(r){return r.json();})
     .then(function(data){
-      var fields = (data.data&&data.data.card&&data.data.card.fields)||[];
-      // Coleta todos os campos de observação e escolhe o com texto mais recente
-      var candidates = [];
+      var card = (data.data&&data.data.card)||{};
+
+      // 1. Tenta pegar de campos (fields) com label "observa*"
+      var fields = card.fields||[];
+      var fieldObs = '';
       fields.forEach(function(fi){
         var lbl = fi.field.label||'';
-        if(/observa/i.test(lbl) && fi.value && fi.value.trim()) candidates.push(fi.value.trim());
-      });
-      // Dentre todos os candidatos, pega o que tem a data mais recente
-      var best = '';
-      if(candidates.length === 1){
-        best = candidates[0];
-      } else if(candidates.length > 1){
-        var scored = candidates.map(function(c){ return { text:c, d: ultimaObs(c) }; });
-        best = scored[0].d; // já ordenado internamente
-        // Pega o candidato com a data mais nova no topo
-        function topDate(s){
-          var m = s.match(/(\d{2})\/(\d{2})(?:\/(\d{2,4}))?/);
-          if(!m) return new Date(0);
-          var y = m[3] ? (m[3].length===2?2000+parseInt(m[3]):parseInt(m[3])) : new Date().getFullYear();
-          return new Date(y,parseInt(m[2])-1,parseInt(m[1]));
+        if(/observa/i.test(lbl) && fi.value && fi.value.trim()){
+          if(!fieldObs) fieldObs = fi.value.trim();
         }
-        candidates.sort(function(a,b){ return topDate(b)-topDate(a); });
-        best = ultimaObs(candidates[0]);
+      });
+
+      // 2. Tenta pegar de comentários (atividade do card)
+      var comments = card.comments||[];
+      var best = '';
+      if(comments.length > 0){
+        // Ordena por data decrescente e pega o mais recente com texto
+        var sorted = comments.slice().sort(function(a,b){
+          return new Date(b.created_at) - new Date(a.created_at);
+        });
+        for(var i=0; i<sorted.length; i++){
+          if(sorted[i].text && sorted[i].text.trim()){
+            best = sorted[i].text.trim();
+            break;
+          }
+        }
       }
-      showObs(best);
+
+      // Prefere campo observação; se vazio, usa comentário mais recente
+      var result = fieldObs || best;
+      showObs(result);
     })
     .catch(function(){ if(cell) cell.textContent='Erro ao carregar — verifique token Pipefy'; });
   }
 
   if(cardId){
-    // Temos o ID: consulta direto
     queryByCardId(cardId);
   } else {
-    // Sem ID em cache: busca todos os cards frescos, acha o ID e consulta
     fetch('https://novapromotora-sub.netlify.app/.netlify/functions/pipefy', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({fetchCards:true})
@@ -1782,13 +1782,14 @@ function toggleObs(rowId) {
       if(found && found.id){
         queryByCardId(found.id);
       } else {
-        // Fallback: mostra obs do fetchCards mesmo
         showObs(found ? found.obs : '');
       }
     })
     .catch(function(){ if(cell) cell.textContent='Erro ao carregar — verifique token Pipefy'; });
   }
 }
+
+
 
 function switchSubTab(tab) {
   var cad = document.getElementById('subContentCad');
