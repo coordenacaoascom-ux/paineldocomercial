@@ -1048,7 +1048,7 @@ function toggleFaseDrill(row,dp,fase,rows){
   // Buscar observações do Pipefy para Pendente
   function buildTableWithObs() {
     const isRecus = fase==='Recusado';
-    const showBtn = isPend || isRecus;
+    const showBtn = false;
     const extraCol = showBtn ? `<th>${isRecus?'MOTIVO':''}</th>` : '';
     let h=`<div class="scroll-wrap"><table class="dtbl" style="font-size:16px"><thead><tr><th>Cód Parceiro</th><th>Razão Social</th><th>CNPJ</th><th>Banco</th><th>Tipo</th><th>Criado em</th>${extraCol}</tr></thead><tbody>`;
     items.forEach(function(r,idx){
@@ -2026,7 +2026,6 @@ var CC_COLABORADORES = [{"id":1,"codigo":"2782","nome":"ELIANE BATISTA SENES","c
         mrow('E-MAIL', r.email) +
         mrow('COMERCIAL', r.comercial) +
         mrow('DATA DE CADASTRO', fmtDate(r.data_criacao)) +
-        pipeSection +
       '</div>';
     document.getElementById('ccModalBody').innerHTML = html;
     document.getElementById('ccModal').style.display='flex';
