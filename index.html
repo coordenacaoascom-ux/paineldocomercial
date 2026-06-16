@@ -1728,12 +1728,9 @@ function toggleObs(rowId, tipo) {
     .then(function(r){return r.json();})
     .then(function(data){
       var emails = (data.data&&data.data.card&&data.data.card.inbox_emails)||[];
-      // Filtra emails com "COMUNICADO DE PEND" no assunto, ordena mais recente primeiro
-      var filtered = emails.filter(function(e){ return /comunicado.*pend/i.test(e.subject||''); });
-      if(filtered.length === 0){
-        // fallback: pega qualquer email mais recente
-        filtered = emails.slice();
-      }
+      var subjectFilter = tipo==='motivo' ? /comunicado.*recus/i : /comunicado.*pend/i;
+      var filtered = emails.filter(function(e){ return subjectFilter.test(e.subject||''); });
+      if(filtered.length === 0){ filtered = emails.slice(); }
       filtered.sort(function(a,b){ return new Date(b.created_at) - new Date(a.created_at); });
       if(filtered.length > 0){
         showObs(cleanBody(filtered[0].body));
