@@ -864,12 +864,12 @@ function renderKPIs(rows,storm){
     var cnt = fases[k.fase]||0;
     if(!cnt) return;
     var pct = total ? Math.round(cnt/total*100) : 0;
-    html += '<div class="kpi" data-fase="'+k.fase+'" onclick="toggleKpiExpand(\''+k.fase.replace(/'/g,"\\'")+'\',' + 'filteredRows())">' +
+    html += '<div class="kpi" data-fase="'+k.fase+'">' +
       '<div class="kpi-bar" style="background:linear-gradient(180deg,'+k.color+',transparent)"></div>' +
       '<span class="kpi-icon">'+k.icon+'</span>' +
       '<div class="kpi-label">'+k.fase+'</div>' +
       '<div class="kpi-value" style="color:'+k.color+'">'+cnt+'</div>' +
-      '<div class="kpi-sub">'+pct+'% · clique para ver ▾</div>' +
+      '<div class="kpi-sub">'+pct+'%</div>' +
     '</div>';
   });
 
