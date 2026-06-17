@@ -1821,6 +1821,8 @@ function switchTab(tab){
     if(sub) sub.style.display='block';
     if(mainSub) mainSub.style.display='block';
     regua.style.display='none';
+    var consulta=document.getElementById('tabContentConsulta');
+    if(consulta)consulta.style.display='none';
     btnSub.style.cssText='background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);border-bottom:2px solid var(--neon);color:var(--neon);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
     btnRegua.style.cssText='background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
   } else if(tab==='regua'){
