@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -1216,8 +1216,8 @@ function renderAll(){
 // renderAll(); // só após login
 
 // ─── PIPEFY REAL-TIME (ESTEIRA DE SUBESTABELECIDO) ────────────────────────
-const PIPEFY_TOKEN = 'eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJQaXBlZnkiLCJpYXQiOjE3Nzk3MTA2MzMsImp0aSI6IjVjY2ZiMDcyLTczMzctNGIyMC05NjBkLWM1NzU5MTg4ZDlmMiIsInN1YiI6MzA3NDU5MDcxLCJ1c2VyIjp7ImlkIjozMDc0NTkwNzEsImVtYWlsIjoiZ2VzdGFvZGVwcm9jZXNzb3NAbm92YXByb21vdG9yYS5jb20ifSwidXNlcl90eXBlIjoiYXV0aGVudGljYXRlZCJ9.TNc4cCANOAs8l-dMbS7s1gcxmfXnJz7TYETF6fEg_3fkLM2PC_u_jdWQO4IjcBBQahyjfZMt4TsQ_ADfp9IYjA';
-const PIPEFY_GQL = 'https://novapromotora-sub.netlify.app/.netlify/functions/pipefy';
+const PIPEFY_TOKEN = 'eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJQaXBlZnkiLCJpYXQiOjE3ODE3MDg5MTksImp0aSI6IjUxOTU0YjU2LTQ1NDItNGQxMy04OGFhLTMxNzgwZjAzZjc4MCIsInN1YiI6MzA3NDU5MDcxLCJ1c2VyIjp7ImlkIjozMDc0NTkwNzEsImVtYWlsIjoiZ2VzdGFvZGVwcm9jZXNzb3NAbm92YXByb21vdG9yYS5jb20ifSwidXNlcl90eXBlIjoiYXV0aGVudGljYXRlZCJ9.MSjvDIbIgn_PjWMyIGUf2dOIyn9hLPZ09NiOljVWTvwm9htuWXUSbR5Ia170iblcUwL0OgxIhcasCmm310SqMg';
+const PIPEFY_GQL = 'https://app.pipefy.com/graphql';
 let pipefyPipeId = null;
 
 // Pipe ID fixo: ESTEIRA DE SUBESTABELECIDO
@@ -1423,14 +1423,32 @@ async function loadLiveCards() {
   var statusEl = document.getElementById('liveCardsStatus');
   if(statusEl) statusEl.innerHTML = '<span style="color:#8a9fc0;font-size:11px;">⟳ carregando cards...</span>';
   try {
-    var r = await fetch('https://novapromotora-sub.netlify.app/.netlify/functions/pipefy', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fetchCards: true })
-    });
-    var data = await r.json();
-    if(data.cards && data.cards.length) {
-      ROWS = data.cards;
+    var allCards = [];
+    var cur = null;
+    var hasNext = true;
+    while(hasNext) {
+      var aft = cur ? ', after: "' + cur + '"' : '';
+      var gq = '{ allCards(pipeId: "306955502", first: 50' + aft + ') { pageInfo { hasNextPage endCursor } edges { node { id current_phase { name } created_at finished_at fields { field { label } value } } } } }';
+      var gr = await fetch(PIPEFY_GQL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + PIPEFY_TOKEN },
+        body: JSON.stringify({ query: gq })
+      });
+      var gd = await gr.json();
+      var ac = gd.data && gd.data.allCards;
+      if(!ac) break;
+      ac.edges.forEach(function(e) {
+        var node = e.node;
+        var f = {};
+        (node.fields||[]).forEach(function(fi){ f[fi.field.label||''] = fi.value||''; });
+        var getF = function(re){ var v=''; Object.keys(f).forEach(function(l){ if(re.test(l)&&f[l]&&!v) v=f[l]; }); return v; };
+        allCards.push({ id: node.id||'', f: node.current_phase?node.current_phase.name:'', t: getF(/tipo\s*de\s*solicit/i), b: getF(/^banco$/i), cp: getF(/c.digo\s*parceiro/i)||getF(/codigo\s*parceiro/i), rs: getF(/raz.o\s*social/i), cnpj: f['CNPJ']||'', cc: getF(/c.digo\s*comercial/i)||getF(/codigo\s*comercial/i), reg: f['REGIONAL']||'', sup: f['SUPERINTENDENTE']||'', cr: node.created_at?node.created_at.split('T')[0].split('-').reverse().join('/'):'', fn: node.finished_at?node.finished_at.split('T')[0].split('-').reverse().join('/'):'', obs: getF(/observa/i), motivo: getF(/motivo/i) });
+      });
+      hasNext = ac.pageInfo.hasNextPage;
+      cur = ac.pageInfo.endCursor;
+    }
+    if(allCards.length) {
+      ROWS = allCards;
       renderAll();
       var el = document.getElementById('liveCardsStatus');
       if(el) el.innerHTML = '<span style="color:#3cffb4;font-size:11px;font-family:Titillium Web,sans-serif;">● cards ao vivo (' + ROWS.length + ')</span>';
@@ -1721,8 +1739,8 @@ function toggleObs(rowId, tipo) {
 
   function getEmailObs(cardId){
     var q = '{ card(id: "'+cardId+'") { inbox_emails { subject body created_at } } }';
-    fetch('https://novapromotora-sub.netlify.app/.netlify/functions/pipefy', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+    fetch(PIPEFY_GQL, {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+PIPEFY_TOKEN},
       body:JSON.stringify({query:q})
     })
     .then(function(r){return r.json();})
@@ -1745,8 +1763,8 @@ function toggleObs(rowId, tipo) {
   function findCardId(cursor){
     var afterStr = cursor ? ', after: "'+cursor+'"' : '';
     var q = '{ allCards(pipeId: "306955502", first: 50'+afterStr+') { pageInfo { hasNextPage endCursor } edges { node { id fields { field { label } value } } } } }';
-    fetch('https://novapromotora-sub.netlify.app/.netlify/functions/pipefy', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+    fetch(PIPEFY_GQL, {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+PIPEFY_TOKEN},
       body:JSON.stringify({query:q})
     })
     .then(function(r){return r.json();})
