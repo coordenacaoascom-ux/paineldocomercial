@@ -399,14 +399,8 @@ body{
 
 <!-- ABA: ACOMPANHAMENTO DE CADASTRO -->
   <div id="subContentCad">
-    <!-- BUSCAR PARCEIRO (no pipefy) -->
-    <div style="display:none;">
-      <span class="filter-label" style="font-size:15px;">&#9672; BUSCAR PARCEIRO</span>
-      <input id="parcSearchInput" placeholder="Codigo parceiro ou CNPJ..." style="flex:1;max-width:400px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:8px 14px;font-size:16px;font-family:Titillium Web,sans-serif;outline:none;" onkeydown="if(event.key==='Enter')searchParceiro()" />
-      <button onclick="searchParceiro()" style="background:rgba(0,200,255,.12);border:1px solid rgba(0,200,255,.3);color:var(--neon);border-radius:6px;padding:8px 16px;font-family:'Titillium Web',sans-serif;font-size:15px;cursor:pointer;letter-spacing:1px;">BUSCAR</button>
-      <button onclick="clearParcSearch()" style="background:none;border:1px solid var(--border2);color:var(--muted2);border-radius:6px;padding:7px 12px;font-size:14px;cursor:pointer;">&#x2715;</button>
-      <button onclick="refreshPipefy()" id="refreshPipefyBtn" style="background:rgba(60,255,180,.08);border:1px solid rgba(60,255,180,.3);color:#3cffb4;border-radius:6px;padding:7px 14px;font-size:14px;cursor:pointer;font-family:Titillium Web,sans-serif;letter-spacing:1px;" title="Buscar dados atualizados do Pipefy">&#8635; ATUALIZAR PIPEFY</button>
-    </div>
+    <input id="parcSearchInput" type="hidden" style="display:none" />
+    <button id="refreshPipefyBtn" style="display:none"></button>
     <div id="parcSearchResult" style="display:none!important;"></div>
     <div class="kpi-row" id="kpiRow" style="display:none"></div><div id="kpiExpandArea" style="margin-top:8px;"></div>
     <div style="padding:0;margin-top:16px;">
