@@ -1354,7 +1354,8 @@ function downloadFasesCSV(){
   document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 function searchParceiro(){
-  var raw=(document.getElementById('parcSearchInput').value||'').trim();
+  var _pi=document.getElementById('parcSearchInput'); if(!_pi||_pi.type==='hidden') return;
+  var raw=(_pi.value||'').trim();
   var el=document.getElementById('parcSearchResult');
   if(!raw){el.style.display='none';return;}
   var q=raw.replace(/[.\-\/\s]/g,'').toLowerCase();
