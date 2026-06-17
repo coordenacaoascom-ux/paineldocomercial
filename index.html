@@ -407,7 +407,7 @@ body{
       <button onclick="clearParcSearch()" style="background:none;border:1px solid var(--border2);color:var(--muted2);border-radius:6px;padding:7px 12px;font-size:14px;cursor:pointer;">&#x2715;</button>
       <button onclick="refreshPipefy()" id="refreshPipefyBtn" style="background:rgba(60,255,180,.08);border:1px solid rgba(60,255,180,.3);color:#3cffb4;border-radius:6px;padding:7px 14px;font-size:14px;cursor:pointer;font-family:Titillium Web,sans-serif;letter-spacing:1px;" title="Buscar dados atualizados do Pipefy">&#8635; ATUALIZAR PIPEFY</button>
     </div>
-    <div id="parcSearchResult" style="margin-bottom:12px;display:none;"></div>
+    <div id="parcSearchResult" style="display:none!important;"></div>
     <div class="kpi-row" id="kpiRow" style="display:none"></div><div id="kpiExpandArea" style="margin-top:8px;"></div>
     <div style="padding:0;margin-top:16px;">
       <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;padding:0 0 12px;"><span><span class="ctdot"></span>FASES DO CADASTRO — PIPEFY<span id="pipefyStatus" style="margin-left:8px;font-size:17px;color:var(--muted);font-family:'Titillium Web',sans-serif"></span></span></div>
@@ -1454,8 +1454,7 @@ async function loadLiveCards() {
       var el = document.getElementById('liveCardsStatus');
       if(el) el.innerHTML = '<span style="color:#3cffb4;font-size:11px;font-family:Titillium Web,sans-serif;">● cards ao vivo (' + ROWS.length + ')</span>';
       // Re-executar buscas ativas com dados atualizados
-      var parcInput = document.getElementById('parcSearchInput');
-      if(parcInput && parcInput.value.trim()) searchParceiro();
+      // parcSearch removido do SUB
       var stormInput = document.getElementById('stormSearch');
       if(stormInput && stormInput.value.trim()) runStormSearch();
     }
