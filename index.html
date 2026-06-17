@@ -1229,7 +1229,8 @@ async function fetchPipefyPhases(pipeId) {
     const r = await fetch(PIPEFY_GQL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + PIPEFY_TOKEN
       },
       body: JSON.stringify({ query })
     });
