@@ -353,9 +353,74 @@ body{
 
 <!-- ABAS -->
 <div style="display:flex;gap:4px;padding:0 40px 0;margin-bottom:0;border-bottom:2px solid var(--border);">
+  <button id="tabPortal" onclick="switchTab('portal')" style="background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">PORTAL COMISSÕES</button>
   <button id="tabSub" onclick="switchTab('sub')" style="background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);border-bottom:2px solid var(--neon);color:var(--neon);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">SUB</button>
   <button id="tabRegua" onclick="switchTab('regua')" style="background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">RÉGUA PARCEIRO</button>
   <button id="tabConsulta" onclick="switchTab('consulta')" style="background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">CONSULTA CADASTRO</button>
+</div>
+
+<!-- CONTEÚDO ABA PORTAL COMISSÕES -->
+<div id="tabContentPortal" style="display:none;">
+  <!-- SUB-ABAS -->
+  <div style="padding:0 40px;display:flex;gap:0;border-bottom:2px solid var(--border);">
+    <button id="portalSubTabConsulta" onclick="portalSwitchSubTab('consulta')" style="background:none;border:none;border-bottom:2px solid var(--neon);color:var(--neon);padding:10px 24px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">CONSULTAR ADE</button>
+    <button id="portalSubTabHier" onclick="portalSwitchSubTab('hierarquia')" style="background:none;border:none;border-bottom:2px solid transparent;color:var(--muted2);padding:10px 24px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">HIERARQUIA COMERCIAL</button>
+  </div>
+
+  <!-- CONSULTAR ADE -->
+  <div id="portalTabConsulta">
+    <div style="display:flex;justify-content:center;padding:24px 40px 12px;">
+      <div class="portal-search-box">
+        <input type="text" id="portalBuscaInput" placeholder="Digite o número ADE da proposta..." onkeydown="if(event.key==='Enter'){clearTimeout(portalDebounce);portalBuscar();}">
+        <button onclick="portalBuscar()">🔍</button>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:center;padding:0 40px 6px;">
+      <div id="portalErroAde" style="display:none;color:#f87171;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:10px 18px;font-size:13px;text-align:center;max-width:480px;width:90%;">❌ Número da ADE incorreto. Verifique e tente novamente.</div>
+    </div>
+    <div style="display:flex;justify-content:center;padding:0 40px 6px;">
+      <div id="portalAlertaSala" style="display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:14px 18px;font-size:13px;color:#fca5a5;max-width:480px;width:90%;"></div>
+    </div>
+    <div class="portal-container">
+      <div id="portalLoading" style="display:none;text-align:center;padding:40px;color:#475569;font-size:14px;"><span class="portal-spinner"></span> Consultando dados...</div>
+      <div id="portalResultado" style="display:none;">
+        <div id="portalStatusBanner"></div>
+        <div class="portal-cards">
+          <div class="portal-card"><label>Total Repassado</label><span id="portalCComissao">—</span></div>
+          <div class="portal-card"><label>% Repassado</label><span id="portalCPercentual">—</span></div>
+          <div class="portal-card"><label>Banco</label><span id="portalCBanco">—</span></div>
+          <div class="portal-card"><label>Situação</label><span id="portalCSituacao">—</span></div>
+        </div>
+        <div class="portal-section" id="portalSecDadosGerais">
+          <h2>📄 Dados Gerais</h2>
+          <div class="portal-grid">
+            <div class="portal-item">Código Contrato <b id="portalDCodigo">—</b></div>
+            <div class="portal-item">ADE <b id="portalDAde">—</b></div>
+            <div class="portal-item">Responsável <b id="portalDResponsavel">—</b></div>
+            <div class="portal-item">Banco / Convênio <b id="portalDBanco">—</b></div>
+            <div class="portal-item">Tipo de Operação <b id="portalDTipo">—</b></div>
+            <div class="portal-item">Data Digitação Banco <b id="portalDDigitacao">—</b></div>
+            <div class="portal-item">Comercial <b id="portalDComercial">—</b></div>
+            <div class="portal-item">Regional <b id="portalDRegional">—</b></div>
+            <div class="portal-item">Multiloja <b id="portalDMultiloja">—</b></div>
+          </div>
+        </div>
+        <div class="portal-section" id="portalSecTabela">
+          <h2>📋 Dados da Tabela</h2>
+          <div class="portal-grid">
+            <div class="portal-item">Nome Tabela <b id="portalDNomeTabela">—</b></div>
+            <div class="portal-item">ID Tabela/Prazo <b id="portalDIdTabela">—</b></div>
+          </div>
+        </div>
+        <div id="portalSecFinanceiro"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HIERARQUIA COMERCIAL -->
+  <div id="portalTabHierarquia" style="display:none;padding:20px 40px 40px;max-height:calc(100vh - 160px);overflow-y:auto;">
+    <div id="portalHierarquiaContainer"></div>
+  </div>
 </div>
 
 <!-- CONTEÚDO ABA SUB -->
@@ -1934,45 +1999,503 @@ function switchTab(tab){
   var sub=document.getElementById('tabContentSub');
   var mainSub=document.getElementById('mainContentSub');
   var regua=document.getElementById('tabContentRegua');
+  var portal=document.getElementById('tabContentPortal');
   var btnSub=document.getElementById('tabSub');
   var btnRegua=document.getElementById('tabRegua');
+  var btnPortal=document.getElementById('tabPortal');
+  var activeS='background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);border-bottom:2px solid var(--neon);color:var(--neon);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
+  var inactS='background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
+  var btnConsulta=document.getElementById('tabConsulta');
+  // Hide all
+  if(sub) sub.style.display='none';
+  if(mainSub) mainSub.style.display='none';
+  if(regua) regua.style.display='none';
+  if(portal) portal.style.display='none';
+  var consulta=document.getElementById('tabContentConsulta');
+  if(consulta) consulta.style.display='none';
+  // Reset all buttons
+  if(btnSub) btnSub.style.cssText=inactS;
+  if(btnRegua) btnRegua.style.cssText=inactS;
+  if(btnConsulta) btnConsulta.style.cssText=inactS;
+  if(btnPortal) btnPortal.style.cssText=inactS;
   if(tab==='sub'){
     if(sub) sub.style.display='block';
     if(mainSub) mainSub.style.display='block';
-    regua.style.display='none';
-    var consulta=document.getElementById('tabContentConsulta');
-    if(consulta)consulta.style.display='none';
-    btnSub.style.cssText='background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);border-bottom:2px solid var(--neon);color:var(--neon);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
-    btnRegua.style.cssText='background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
+    if(btnSub) btnSub.style.cssText=activeS;
   } else if(tab==='regua'){
-    if(sub) sub.style.display='none';
-    if(mainSub) mainSub.style.display='none';
-    regua.style.display='block';
-    var consulta=document.getElementById('tabContentConsulta');
-    if(consulta)consulta.style.display='none';
-    var btnConsulta=document.getElementById('tabConsulta');
-    if(btnConsulta)btnConsulta.style.cssText='background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
-    btnRegua.style.cssText='background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);border-bottom:2px solid var(--neon);color:var(--neon);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
-    btnSub.style.cssText='background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
+    if(regua) regua.style.display='block';
+    if(btnRegua) btnRegua.style.cssText=activeS;
     rSelSuper=null; rSelReg=null; rSelCom=null;
     if(!REGUA_DATA.length) loadReguaData();
     else { renderReguaFilters(); renderReguaTab(); }
   } else if(tab==='consulta'){
-    if(sub) sub.style.display='none';
-    if(mainSub) mainSub.style.display='none';
-    regua.style.display='none';
-    var consulta=document.getElementById('tabContentConsulta');
-    if(consulta)consulta.style.display='block';
-    var btnConsulta=document.getElementById('tabConsulta');
-    var activeS='background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);border-bottom:2px solid var(--neon);color:var(--neon);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
-    var inactS='background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
-    btnSub.style.cssText=inactS; btnRegua.style.cssText=inactS;
-    if(btnConsulta)btnConsulta.style.cssText=activeS;
+    if(consulta) consulta.style.display='block';
+    if(btnConsulta) btnConsulta.style.cssText=activeS;
+  } else if(tab==='portal'){
+    if(portal) portal.style.display='block';
+    if(btnPortal) btnPortal.style.cssText=activeS;
+    // Sync portal user from dashboard session
+    if(CURRENT_USER){
+      var p=CURRENT_USER.perfil;
+      if(p==='comercial'){
+        portalUsuarioLogado={cod:CURRENT_USER.login,nome:CURRENT_USER.login,isAdmin:false};
+      } else {
+        portalUsuarioLogado={cod:'admin',nome:'Administrador',isAdmin:true};
+      }
+    } else {
+      portalUsuarioLogado={cod:'admin',nome:'Administrador',isAdmin:true};
+    }
   }
 }
 
 </script>
 
+<style>
+.portal-search-box{display:flex;background:rgba(255,255,255,0.05);border-radius:50px;overflow:hidden;border:1px solid rgba(255,255,255,0.12);box-shadow:0 4px 24px rgba(0,0,0,0.3);width:100%;max-width:480px;}
+.portal-search-box input{flex:1;padding:14px 20px;background:transparent;border:none;outline:none;color:#e2e8f0;font-size:15px;font-family:'Segoe UI',sans-serif;}
+.portal-search-box input::placeholder{color:#475569;}
+.portal-search-box button{padding:14px 22px;background:#0ea5e9;border:none;color:white;font-size:16px;cursor:pointer;transition:background 0.2s;}
+.portal-search-box button:hover{background:#0284c7;}
+.portal-container{width:92%;max-width:1100px;margin:0 auto;padding-bottom:40px;}
+.portal-spinner{display:inline-block;width:20px;height:20px;border:2px solid #334155;border-top-color:#38bdf8;border-radius:50%;animation:spin 0.7s linear infinite;margin-right:10px;vertical-align:middle;}
+.portal-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:22px;animation:fadeIn 0.5s ease;}
+.portal-card{padding:18px 20px;border-radius:14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);transition:transform 0.2s;}
+.portal-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(56,189,248,0.15);}
+.portal-card label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.6px;display:block;margin-bottom:6px;}
+.portal-card span{font-size:17px;color:#38bdf8;font-weight:600;display:block;}
+.portal-section{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:20px 22px;margin-bottom:18px;animation:fadeIn 0.5s ease;}
+.portal-section h2{font-size:13px;font-weight:600;color:#38bdf8;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(56,189,248,0.15);}
+.portal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;}
+.portal-item{background:rgba(255,255,255,0.04);padding:10px 14px;border-radius:9px;font-size:13px;color:#94a3b8;}
+.portal-item b{color:#e2e8f0;display:block;margin-top:3px;font-size:14px;}
+#tabContentPortal .status-banner{border-radius:14px;padding:18px 22px;margin-bottom:22px;display:flex;align-items:flex-start;gap:14px;animation:fadeIn 0.5s ease;}
+#tabContentPortal .status-banner .icon{font-size:28px;flex-shrink:0;margin-top:2px;}
+#tabContentPortal .status-banner .text h3{font-size:15px;font-weight:700;margin-bottom:4px;}
+#tabContentPortal .status-banner .text p{font-size:13px;line-height:1.6;opacity:0.9;}
+#tabContentPortal .status-banner .text ul{font-size:13px;line-height:1.9;margin-top:6px;padding-left:16px;opacity:0.9;}
+#tabContentPortal .status-pago{background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.35);}
+#tabContentPortal .status-pago .icon::before{content:"✅";}
+#tabContentPortal .status-pago h3{color:#4ade80;}
+#tabContentPortal .status-importado{background:rgba(234,179,8,0.10);border:1px solid rgba(234,179,8,0.35);}
+#tabContentPortal .status-importado .icon::before{content:"📥";}
+#tabContentPortal .status-importado h3{color:#facc15;}
+#tabContentPortal .status-decisao{background:rgba(239,68,68,0.10);border:1px solid rgba(239,68,68,0.35);}
+#tabContentPortal .status-decisao .icon::before{content:"⚖️";}
+#tabContentPortal .status-decisao h3{color:#f87171;}
+#tabContentPortal .status-aguardando{background:rgba(148,163,184,0.08);border:1px solid rgba(148,163,184,0.25);}
+#tabContentPortal .status-aguardando .icon::before{content:"📭";}
+#tabContentPortal .status-aguardando h3{color:#94a3b8;}
+#tabContentPortal .status-fisico{background:rgba(251,146,60,0.10);border:1px solid rgba(251,146,60,0.35);}
+#tabContentPortal .status-fisico .icon::before{content:"📄";}
+#tabContentPortal .status-fisico h3{color:#fb923c;}
+#tabContentPortal .sla-card{display:inline-flex;flex-direction:column;background:rgba(0,0,0,0.25);border-radius:10px;padding:10px 18px;margin-top:12px;border:1px solid rgba(255,255,255,0.08);}
+#tabContentPortal .sla-card .sla-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+#tabContentPortal .sla-card .sla-linha{font-size:15px;font-weight:600;display:flex;align-items:center;flex-wrap:wrap;gap:6px;}
+#tabContentPortal .sla-card .sla-prazo-atuacao{color:#94a3b8;}
+#tabContentPortal .sla-card .sla-prazo-atuacao b{color:#e2e8f0;}
+#tabContentPortal .sla-card .sla-sep{color:#334155;}
+#tabContentPortal .sla-card .sla-prazo-atual b{font-size:16px;}
+#tabContentPortal .sla-card .sla-desc{font-size:12px;margin-top:5px;}
+#tabContentPortal .sla-dentro .sla-prazo-atual b{color:#4ade80;}
+#tabContentPortal .sla-dentro .sla-desc{color:#86efac;}
+#tabContentPortal .sla-atrasado .sla-prazo-atual b{color:#f87171;}
+#tabContentPortal .sla-atrasado .sla-desc{color:#fca5a5;}
+#tabContentPortal .sla-semanal .sla-prazo-atual b{color:#a78bfa;}
+#tabContentPortal .sla-semanal .sla-desc{color:#c4b5fd;}
+#tabContentPortal .dados-op-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:14px;}
+#tabContentPortal .dados-op-item{background:rgba(255,255,255,0.04);border-radius:9px;padding:10px 14px;font-size:13px;color:#94a3b8;}
+#tabContentPortal .dados-op-item b{color:#e2e8f0;display:block;margin-top:3px;font-size:14px;}
+#tabContentPortal .table-wrap{overflow-x:auto;margin-top:4px;}
+#tabContentPortal table{width:100%;border-collapse:collapse;font-size:13px;}
+#tabContentPortal th{background:rgba(56,189,248,0.15);color:#38bdf8;padding:10px 12px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;}
+#tabContentPortal td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.05);color:#cbd5e1;}
+#tabContentPortal tr:last-child td{border-bottom:none;}
+#tabContentPortal tr:hover td{background:rgba(255,255,255,0.03);}
+#tabContentPortal .tag-pago{background:rgba(34,197,94,0.15);color:#4ade80;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+#tabContentPortal .tag-analisada{background:rgba(56,189,248,0.15);color:#38bdf8;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+#tabContentPortal .tag-ativa{background:rgba(234,179,8,0.15);color:#facc15;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+#tabContentPortal .hier-super-bloco{margin-bottom:28px;border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden;}
+#tabContentPortal .hier-super-header{background:rgba(251,146,60,0.1);border-bottom:1px solid rgba(251,146,60,0.2);padding:14px 20px;display:flex;align-items:center;gap:10px;}
+#tabContentPortal .hier-super-header .badge{font-size:11px;background:rgba(251,146,60,0.2);color:#fb923c;padding:3px 10px;border-radius:20px;font-weight:600;}
+#tabContentPortal .hier-super-nome{font-size:15px;font-weight:700;color:#fb923c;}
+#tabContentPortal .hier-super-info{font-size:12px;color:#94a3b8;}
+#tabContentPortal .hier-regional-bloco{border-bottom:1px solid rgba(255,255,255,0.05);}
+#tabContentPortal .hier-regional-header{background:rgba(167,139,250,0.07);padding:10px 20px 10px 36px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(167,139,250,0.1);}
+#tabContentPortal .hier-regional-nome{font-size:13px;font-weight:600;color:#a78bfa;}
+#tabContentPortal .hier-regional-badge{font-size:11px;background:rgba(167,139,250,0.15);color:#a78bfa;padding:2px 8px;border-radius:20px;margin-left:auto;}
+#tabContentPortal .hier-comerciais{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;padding:12px 20px 12px 50px;background:rgba(0,0,0,0.1);}
+#tabContentPortal .hier-com-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px 14px;font-size:12px;}
+#tabContentPortal .hier-com-nome{color:#e2e8f0;font-weight:600;font-size:13px;margin-bottom:4px;}
+#tabContentPortal .hier-com-cod{color:#38bdf8;font-size:11px;font-weight:700;}
+#tabContentPortal .hier-com-info{color:#64748b;line-height:1.7;margin-top:4px;}
+#tabContentPortal .hier-com-info a{color:#38bdf8;text-decoration:none;}
+#tabContentPortal .hier-uf{display:inline-block;background:rgba(56,189,248,0.1);color:#7dd3fc;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;margin-left:6px;}
+#tabContentPortal .hierarquia{display:flex;flex-wrap:wrap;gap:14px;margin-top:4px;align-items:flex-start;}
+#tabContentPortal .hier-card{flex:1;min-width:200px;background:rgba(255,255,255,0.04);border-radius:12px;padding:14px 16px;border:1px solid rgba(255,255,255,0.08);}
+#tabContentPortal .hier-card .hier-role{font-size:10px;text-transform:uppercase;letter-spacing:0.8px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+#tabContentPortal .hier-card .hier-nome{font-size:14px;font-weight:600;color:#e2e8f0;margin-bottom:6px;}
+#tabContentPortal .hier-card .hier-info{font-size:12px;color:#64748b;line-height:1.8;}
+#tabContentPortal .hier-card .hier-info a{color:#38bdf8;text-decoration:none;}
+#tabContentPortal .role-comercial{color:#38bdf8;}
+#tabContentPortal .role-regional{color:#a78bfa;}
+#tabContentPortal .role-super{color:#fb923c;}
+#tabContentPortal .hier-arrow{display:flex;align-items:center;color:#334155;font-size:22px;padding-top:28px;}
+#tabContentPortal .section{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:20px 22px;margin-bottom:18px;animation:fadeIn 0.5s ease;}
+#tabContentPortal .section h2{font-size:13px;font-weight:600;color:#38bdf8;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(56,189,248,0.15);}
+#tabContentPortal .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;}
+#tabContentPortal .item{background:rgba(255,255,255,0.04);padding:10px 14px;border-radius:9px;font-size:13px;color:#94a3b8;}
+#tabContentPortal .item b{color:#e2e8f0;display:block;margin-top:3px;font-size:14px;}
+#tabContentPortal .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:22px;}
+#tabContentPortal .pricing-row{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px 16px;margin-top:12px;display:flex;flex-wrap:wrap;gap:10px 24px;font-size:13px;}
+#tabContentPortal .pricing-row b{color:#38bdf8;}
+</style>
+
+<script>
+var portalUsuarioLogado = null;
+var portalDebounce;
+
+function portalSwitchSubTab(tab) {
+  var consultaTab = document.getElementById('portalTabConsulta');
+  var hierTab = document.getElementById('portalTabHierarquia');
+  var btnC = document.getElementById('portalSubTabConsulta');
+  var btnH = document.getElementById('portalSubTabHier');
+  var actS = 'background:none;border:none;border-bottom:2px solid var(--neon);color:var(--neon);padding:10px 24px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
+  var inactS = 'background:none;border:none;border-bottom:2px solid transparent;color:var(--muted2);padding:10px 24px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
+  if (tab === 'consulta') {
+    consultaTab.style.display = 'block';
+    hierTab.style.display = 'none';
+    btnC.style.cssText = actS; btnH.style.cssText = inactS;
+  } else {
+    consultaTab.style.display = 'none';
+    hierTab.style.display = 'block';
+    btnC.style.cssText = inactS; btnH.style.cssText = actS;
+    portalRenderizarHierarquia();
+  }
+}
+
+function portalGerarMsgCopiar(p) {
+  return '📋 *Consulta de Comissão — NOVA PROMOTORA*\n\n• ADE: ' + (p.ade||'—') + '\n• Código: ' + (p.codigo||'—') + '\n• Responsável: ' + (p.responsavel||'—') + '\n• Banco: ' + (p.banco||'—') + '\n\n⚠️ Comissão ainda não paga. Favor verificar.';
+}
+
+function portalCopiarDados(btn) {
+  var texto = btn.getAttribute('data-texto');
+  navigator.clipboard.writeText(texto).then(function() {
+    btn.innerHTML = '✅ Copiado!';
+    btn.style.background = 'rgba(34,197,94,0.2)';
+    btn.style.borderColor = 'rgba(34,197,94,0.4)';
+    btn.style.color = '#4ade80';
+    setTimeout(function() {
+      btn.innerHTML = '📋 Copiar dados para assistente';
+      btn.style.background = ''; btn.style.borderColor = ''; btn.style.color = '';
+    }, 2500);
+  });
+}
+
+function portalRenderBtnCopiar(p) {
+  var texto = portalGerarMsgCopiar(p).replace(/"/g, '&quot;');
+  return '<div style="margin-top:10px"><button onclick="portalCopiarDados(this)" data-texto="' + texto + '" style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.25);border-radius:10px;color:#bae6fd;font-size:13px;cursor:pointer;transition:all 0.2s;">📋 Copiar dados para assistente</button></div>';
+}
+
+var PORTAL_MSG_EMAIL = '<div style="margin-top:10px;padding:12px 16px;background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.3);border-radius:10px;font-size:13px;color:#fde68a;line-height:1.6;display:flex;align-items:flex-start;gap:10px;"><span style="font-size:22px;flex-shrink:0;">⚠️</span><span>Comissão ainda <b>não paga</b>. Em caso de dúvidas, entre em contato com o seu <b>assistente comercial</b>.</span></div>';
+
+var PORTAL_PROPOSTAS = [
+  { codigo:"FF-10/06/2026-9999", ade:"999999999", responsavel:"4935 - LUAN MATHEUS DE CARVALHO CECHET", banco:"BANCO PAN / INSS", tipo:"Margem Livre (Novo)", digitacao:"02/06/2026", comercial:"4935 - LUAN MATHEUS DE CARVALHO CECHET", regional:"0114 - ARTHUR ROZA NETO", multiloja:"Não", nomeTabela:"INSS | MARGEM LIVRE | NOVO - TAXA 1,80% - CÓD. PAN99 - VENDA DIGITAL", idTabela:"P.9999999", situacaoFinanceiro:"COMISSÃO PAGA AO CORRETOR", linhasComissao:[{valorBase:"R$ 28.450,00",valorBaseBruto:"R$ 28.450,00",comissaoRecebida:"5,00%",comissaoValor:"R$ 1.422,50",adiantamento:"—",importadoPor:"IGOR VALDO CARDOSO",observacoes:"COMISSAO PRODUTO INSS",dataImportacao:"09/06/2026 10:15:30",status:"Analisada"}], comissaoPaga:{dataPagamento:"10/06/2026",valorBase:"R$ 28.450,00",valorComissao:"R$ 1.138,00",totalPercentual:"4,00%",valorTotal:"R$ 1.138,00"} },
+  { codigo:"FF-22/05/2026-1256", ade:"858412629", responsavel:"9814 - CRED MAIS ASSESSORIA", banco:"BANCO PARANÁ / FEDERAL", tipo:"Portabilidade", digitacao:"21/05/2026", comercial:"9768 - MAYARA CRISTINA HATTENHAUER", regional:"0114 - ARTHUR ROZA NETO", multiloja:"Não", nomeTabela:"SIAPE | PORTABILIDADE - TAXA 1,80% - CÓD. 91967", idTabela:"P.6477356", situacaoFinanceiro:"COMISSÃO PAGA AO CORRETOR", linhasComissao:[{valorBase:"R$ 115.761,49",valorBaseBruto:"R$ 115.761,49",comissaoRecebida:"3,00%",comissaoValor:"R$ 3.472,84",adiantamento:"—",importadoPor:"SAVIO DA SILVA",observacoes:"",dataImportacao:"08/06/2026 16:32:55",status:"Analisada"}], comissaoPaga:{dataPagamento:"08/06/2026",valorBase:"R$ 115.761,49",valorComissao:"R$ 2.778,28",totalPercentual:"2,40%",valorTotal:"R$ 2.778,28"} },
+  { codigo:"FF-25/05/2026-2039", ade:"1902772884", responsavel:"4582 - EWELIN SABRINA CARDOSO SCHMIDT", banco:"BRB - CRÉDITO / INSS", tipo:"Margem Livre (Novo)", digitacao:"23/05/2026", comercial:"74354 - RICHARD BIANO DOS REIS", regional:"1292 - RODRIGO VALCI SILVEIRA", multiloja:"Sim - Filiado, Master: 4460 - KARLA MAFRA FERNANDES", nomeTabela:"Não Informado", idTabela:"—", situacaoFinanceiro:"DADOS IMPORTADOS", linhasComissao:[{valorBase:"R$ 19.534,48",valorBaseBruto:"—",comissaoRecebida:"4,20%",comissaoValor:"R$ 820,45",adiantamento:"—",importadoPor:"IGOR VALDO CARDOSO",observacoes:"",dataImportacao:"05/06/2026 11:08:52",status:"Ativa"}] },
+  { codigo:"FF-09/06/2026-552", ade:"34512115", responsavel:"Não Informado", banco:"BANCO CAIXA ECONÔMICA FEDERAL / INSS", tipo:"Margem Livre (Novo)", digitacao:"08/06/2026", comercial:"—", regional:"—", multiloja:"Não", nomeTabela:"—", idTabela:"—", dataPagamento:"10/06/2026", situacaoFinanceiro:"DADOS IMPORTADOS", linhasComissao:[{valorBase:"—",valorBaseBruto:"—",comissaoRecebida:"—",comissaoValor:"—",adiantamento:"—",importadoPor:"—",observacoes:"",dataImportacao:"09/06/2026 08:00:00",status:"Ativa"}] },
+  { codigo:"FF-20/05/2026-4053", ade:"102483", responsavel:"29423 - DRCO NEGOCIOS E SERVICOS-LTDA", banco:"PEGCARD / GOVERNO GO - Cartão Benefício", tipo:"Cartão c/ saque", digitacao:"19/05/2026", comercial:"33855 - GIDEIDES CASEMIRO DA SILVA", regional:"33014 - ALLEF KAYQUE MARQUES BONS OLHOS", multiloja:"Não", nomeTabela:"GOVERNO DE GOIÁS | NORMAL - TAXA 5,99% - CÓD. GO99", idTabela:"P.5887548", situacaoFinanceiro:"AGUARDANDO IMPORTAÇÃO (RELATÓRIO BANCO)", linhasComissao:[], dadosOperacional:{contratoPendente:"—",situacaoContrato:"Pago",dataPgtoCliente:"",historicoSituacao:"Sem Histórico",historicoTrocaAde:"Sem Histórico",historicoPendencia:"Sem Histórico"} },
+  { codigo:"FF-25/03/2026-977", ade:"977614695", responsavel:"99505 - FRANCISCA LEDA MOREIRA LIMA", banco:"BANCO C6 BANK / INSS", tipo:"Margem Livre (Novo)", digitacao:"25/03/2026", comercial:"41090 - VIVIANE MOURA DE SOUSA", regional:"—", multiloja:"Não", nomeTabela:"INSS ML NORMAL - ATE 3K - TAXA 1,85% - CÓD. 210208", idTabela:"P.5961928", situacaoFinanceiro:"COMISSÃO DISPONÍVEL PARA PAGAMENTO", linhasComissao:[{valorBase:"R$ 1.534,66",valorBaseBruto:"R$ 1.534,66",comissaoRecebida:"5,00%",comissaoValor:"R$ 76,73",adiantamento:"—",importadoPor:"LEONARDO ARI OZOL",observacoes:"PRAZO: 96 - TABELA: 210208",dataImportacao:"30/03/2026 15:49:58",status:"Analisada"}], dadosOperacional:{contratoPendente:"Sim",situacaoContrato:"Pago",dataPgtoCliente:"27/03/2026",historicoSituacao:"Sem Histórico",historicoTrocaAde:"Sem Histórico",historicoPendencia:"Sem Histórico"} },
+  { codigo:"FF-22/05/2026-2230", ade:"831456258", responsavel:"4624 - 37.792.982 BRENO ALVES MELO", banco:"BANCO DAYCOVAL / POLÍCIA MILITAR | SP", tipo:"Refinanciamento da Portabilidade", digitacao:"21/05/2026", comercial:"5767 - ROBSON VALENTE DE BARROS (NEXTT)", regional:"6051 - NEXTT PROMOTORA (REGIONAL)", multiloja:"Não", nomeTabela:"POLÍCIA MILITAR | SP | RFN - TAXA 1,95% - VENDA DIGITAL", idTabela:"P.6045117", situacaoFinanceiro:"CONTRATO EM TOMADA DE DECISÃO", linhasComissao:[{valorBase:"R$ 3.059,22",valorBaseBruto:"—",comissaoRecebida:"6,00%",comissaoValor:"R$ 183,55",adiantamento:"—",importadoPor:"IGOR VALDO CARDOSO",observacoes:"",dataImportacao:"02/06/2026 17:48:11",status:"Ativa"}] }
+];
+
+var PORTAL_SLA_BANCOS = {
+  "C6":{tipo:"uteis",dias:2},"PAN":{tipo:"uteis",dias:2},"BMG":{tipo:"uteis",dias:2,obs:"SLA Port e Refin da Port: 7 dias"},"ITAÚ":{tipo:"uteis",dias:2},"ITAU":{tipo:"uteis",dias:2},"BANRISUL":{tipo:"uteis",dias:2},"SAFRA":{tipo:"uteis",dias:2},"PRATA":{tipo:"uteis",dias:2},"DAYCOVAL":{tipo:"uteis",dias:2},"ICRED":{tipo:"uteis",dias:2},"PICPAY":{tipo:"uteis",dias:2},"PEGCARD":{tipo:"uteis",dias:2},"FACTA":{tipo:"uteis",dias:2},"DIGIO":{tipo:"uteis",dias:2},"FINANTO":{tipo:"uteis",dias:2},"MERCANTIL":{tipo:"uteis",dias:3},"CREFISA":{tipo:"uteis",dias:3,obs:"Não envia relatório a partir do dia 25"},"CAPITAL CONSIG":{tipo:"uteis",dias:4},"PRESENÇA BANK":{tipo:"uteis",dias:4},"BRB":{tipo:"semanal",dias:[2,4],label:"Terças e Quintas"},"SANTANDER":{tipo:"semanal",dias:[2],label:"Terças"},"UY3":{tipo:"semanal",dias:[3],label:"Quartas"},"AMIGOZ":{tipo:"semanal",dias:[2,4],label:"Terças e Quintas"},"HAPPY":{tipo:"semanal",dias:[3,5],label:"Quartas e Sextas"},"KOVR":{tipo:"semanal",dias:[4],label:"Quintas"},"PARANÁ BANCO":{tipo:"semanal",dias:[1],label:"Segundas"},"PARANA BANCO":{tipo:"semanal",dias:[1],label:"Segundas"}
+};
+
+function portalIdentificarBanco(s){if(!s)return null;var u=s.toUpperCase();for(var k of Object.keys(PORTAL_SLA_BANCOS)){if(u.includes(k.toUpperCase()))return Object.assign({nome:k},PORTAL_SLA_BANCOS[k]);}return null;}
+
+function portalProximoDiaSemanal(dias){var hoje=new Date();for(var i=1;i<=7;i++){var d=new Date(hoje);d.setDate(hoje.getDate()+i);if(dias.includes(d.getDay()))return d;}return null;}
+
+function portalCalcSLA(banco,dataPgto){
+  var sla=portalIdentificarBanco(banco);
+  if(!sla)return null;
+  var dtBase=null;
+  if(dataPgto){var pts=dataPgto.split('/');if(pts.length===3)dtBase=new Date(pts[2],pts[1]-1,pts[0]);}
+  if(!dtBase)return{semData:true,banco:sla.nome,prazo:sla.tipo==='semanal'?'Semanal — '+sla.label:'D+'+sla.dias,obs:sla.obs||null};
+  if(sla.tipo==='uteis'){
+    var diasU=0,cur=new Date(dtBase);cur.setDate(cur.getDate()+1);
+    while(diasU<sla.dias){var dow=cur.getDay();if(dow!==0&&dow!==6)diasU++;if(diasU<sla.dias)cur.setDate(cur.getDate()+1);}
+    var prazoD=new Date(cur),hoje2=new Date();hoje2.setHours(0,0,0,0);prazoD.setHours(0,0,0,0);
+    var dentro=hoje2<=prazoD,diff=Math.ceil((prazoD-hoje2)/86400000);
+    return{tipo:'uteis',banco:sla.nome,prazo:'D+'+sla.dias,dias:sla.dias,prazoDate:prazoD.toLocaleDateString('pt-BR'),dentroSLA:dentro,diasRestantes:diff,obs:sla.obs||null};
+  }
+  if(sla.tipo==='semanal'){
+    var prox=portalProximoDiaSemanal(sla.dias),hoje3=new Date();hoje3.setHours(0,0,0,0);
+    var diff2=Math.ceil((prox-hoje3)/86400000);
+    return{tipo:'semanal',banco:sla.nome,prazo:'Semanal — '+sla.label,prazoDate:prox?prox.toLocaleDateString('pt-BR'):null,dentroSLA:true,diasRestantes:diff2,obs:sla.obs||null};
+  }
+  return null;
+}
+
+function portalRenderSlaCard(sla){
+  if(!sla)return '<div class="prazo-box" style="margin-top:10px;color:#64748b">⚠️ Banco não mapeado no SLA — consulte o financeiro.</div>';
+  if(sla.semData)return '<div class="sla-card" style="border-color:rgba(148,163,184,0.2)"><span class="sla-label">SLA do Banco</span><div class="sla-linha"><span class="sla-prazo-atuacao">Prazo de atuação <b>'+sla.prazo+'</b></span><span class="sla-sep">—</span><span style="font-size:13px;color:#f87171;font-weight:600">Sem data de pagamento</span></div>'+(sla.obs?'<span style="font-size:11px;opacity:0.7;margin-top:4px">ℹ️ '+sla.obs+'</span>':'')+'</div>';
+  if(sla.tipo==='semanal')return '<div class="sla-card sla-semanal"><span class="sla-label">SLA do Banco</span><div class="sla-linha"><span class="sla-prazo-atuacao">Prazo de atuação <b>'+sla.prazo+'</b></span><span class="sla-sep">—</span><span class="sla-prazo-atual">Próximo pagamento <b>'+sla.prazoDate+'</b></span></div><span class="sla-desc">em '+sla.diasRestantes+' dia(s)</span>'+(sla.obs?'<span style="font-size:11px;color:#a78bfa;margin-top:4px">ℹ️ '+sla.obs+'</span>':'')+'</div>';
+  var cls=sla.dentroSLA?'sla-dentro':'sla-atrasado';
+  var dAtual=(isNaN(sla.dias)||isNaN(sla.diasRestantes))?null:sla.dias-sla.diasRestantes;
+  var prazoAtual=dAtual===null?'Sem data':'D+'+(dAtual<0?0:dAtual);
+  var msg=sla.dentroSLA?'✅ Dentro do prazo — '+sla.diasRestantes+' dia(s) restante(s)':'';
+  return '<div class="sla-card '+cls+'"><span class="sla-label">SLA do Banco</span><div class="sla-linha"><span class="sla-prazo-atuacao">Prazo de atuação <b>'+sla.prazo+'</b></span><span class="sla-sep">—</span><span class="sla-prazo-atual">Prazo atual <b>'+prazoAtual+'</b></span>'+(!sla.dentroSLA?'<span style="background:rgba(234,179,8,0.15);color:#fbbf24;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700">⚠️ PRAZO EXCEDIDO</span>':'')+'</div>'+(msg?'<span class="sla-desc">'+msg+'</span>':'')+(sla.obs?'<span style="font-size:11px;opacity:0.7;margin-top:4px">ℹ️ '+sla.obs+'</span>':'')+'</div>';
+}
+
+function portalDiasUteisDecorridos(dataStr){
+  try{var p=dataStr.trim().split(' '),pts=p[0].split('/'),ini=new Date(pts[2],pts[1]-1,pts[0]),hoje=new Date(),dias=0,cur=new Date(ini);
+  while(cur<=hoje){var dow=cur.getDay();if(dow!==0&&dow!==6)dias++;cur.setDate(cur.getDate()+1);}return dias-1;}catch(e){return null;}
+}
+
+var PORTAL_SHEET_ID = '1m_p92yC-J2bag21aYC9s4oUt8WHOsVDNHp-pWs-b2P0';
+
+async function portalBuscarPlanilha(ade){
+  try{var resp=await fetch('https://docs.google.com/spreadsheets/d/'+PORTAL_SHEET_ID+'/export?format=csv&gid=0');
+  var text=await resp.text(),linhas=text.split('\n').map(function(l){return l.split(',');});
+  for(var i=1;i<linhas.length;i++){var row=linhas[i];if(!row[4])continue;var adeCell=row[4].replace(/"/g,'').trim();
+  if(adeCell===String(ade).trim())return{solicitante:(row[0]||'').replace(/"/g,'').trim(),data:(row[1]||'').replace(/"/g,'').trim(),sla:(row[2]||'').replace(/"/g,'').trim(),banco:(row[3]||'').replace(/"/g,'').trim(),ade:adeCell,tabela:(row[7]||'').replace(/"/g,'').trim(),status:(row[11]||'').replace(/"/g,'').trim(),motivoPendente:(row[12]||'').replace(/"/g,'').trim()};}}catch(e){}return null;
+}
+
+function portalSet(id,val){var el=document.getElementById(id);if(el)el.innerText=val||'—';}
+
+function portalTagStatus(s){if(!s)return '—';s=s.trim();if(s==='Analisada')return '<span class="tag-analisada">Analisada</span>';if(s==='Ativa')return '<span class="tag-ativa">Ativa</span>';if(s==='Pago'||s==='PAGO')return '<span class="tag-pago">Pago</span>';return s;}
+
+function portalBuscarHierarquia(comStr){if(!comStr||comStr==='—'||comStr==='-')return null;var cod=comStr.split(' - ')[0].trim().replace(/^0+/,'');return PORTAL_HIER_PLANILHA.find(function(h){return h.cod.replace(/^0+/,'')===cod;})||null;}
+
+function portalRenderHierarquiaCard(h){
+  if(!h)return '<div style="font-size:13px;color:#64748b;padding:10px 0">Comercial não localizado na hierarquia.</div>';
+  var cc='<div class="hier-card"><div class="hier-role role-comercial">👤 Comercial</div><div class="hier-nome">'+h.nome+'</div><div class="hier-info">📧 <a href="mailto:'+h.email+'">'+h.email+'</a><br>📱 '+h.tel+'</div></div>';
+  var cr=h.regional?'<div class="hier-arrow">→</div><div class="hier-card"><div class="hier-role role-regional">🏢 Regional</div><div class="hier-nome">'+h.regional.split(' - ').slice(1).join(' - ')+'</div></div>':'';
+  var cs=h.super?'<div class="hier-arrow">→</div><div class="hier-card"><div class="hier-role role-super">⭐ Superintendente</div><div class="hier-nome">'+h.super.split(' - ').slice(1).join(' - ')+'</div></div>':'';
+  return '<div class="hierarquia">'+cc+cr+cs+'</div>';
+}
+
+async function portalBuscar(){
+  var valor=document.getElementById('portalBuscaInput').value.trim();
+  var erroEl=document.getElementById('portalErroAde');
+  erroEl.style.display='none';
+  document.getElementById('portalAlertaSala').style.display='none';
+  if(!valor){document.getElementById('portalResultado').style.display='none';document.getElementById('portalLoading').style.display='none';return;}
+  document.getElementById('portalResultado').style.display='none';
+  document.getElementById('portalLoading').style.display='block';
+  await new Promise(function(r){setTimeout(r,400);});
+  var p=PORTAL_PROPOSTAS.find(function(d){return d.ade===valor;});
+  document.getElementById('portalLoading').style.display='none';
+  if(!p){erroEl.style.display='block';return;}
+  // Controle de acesso
+  if(portalUsuarioLogado&&!portalUsuarioLogado.isAdmin){
+    var codProp=p.comercial?p.comercial.split(' - ')[0].trim():null;
+    var naoVinc=!p.comercial||p.comercial==='—'||p.comercial==='-';
+    if(!naoVinc&&codProp!==portalUsuarioLogado.cod){
+      var aS=document.getElementById('portalAlertaSala');
+      aS.style.display='block';
+      aS.innerHTML='<div style="display:flex;align-items:flex-start;gap:12px;"><span style="font-size:24px;flex-shrink:0;">🚫</span><div><b style="font-size:14px;">Acesso não permitido</b><br><span style="font-size:13px;">Esta proposta não pertence à sua sala comercial. Você só pode consultar propostas vinculadas ao código <b>'+portalUsuarioLogado.cod+'</b>.</span></div></div>';
+      return;
+    }
+  }
+  // Reset seções
+  document.querySelector('#portalResultado .portal-cards').style.display='';
+  document.getElementById('portalSecTabela').style.display='';
+  document.getElementById('portalSecDadosGerais').innerHTML='<h2>📄 Dados Gerais</h2><div class="portal-grid"><div class="portal-item">Código Contrato <b id="portalDCodigo">—</b></div><div class="portal-item">ADE <b id="portalDAde">—</b></div><div class="portal-item">Responsável <b id="portalDResponsavel">—</b></div><div class="portal-item">Banco / Convênio <b id="portalDBanco">—</b></div><div class="portal-item">Tipo de Operação <b id="portalDTipo">—</b></div><div class="portal-item">Data Digitação Banco <b id="portalDDigitacao">—</b></div><div class="portal-item">Comercial <b id="portalDComercial">—</b></div><div class="portal-item">Regional <b id="portalDRegional">—</b></div><div class="portal-item">Multiloja <b id="portalDMultiloja">—</b></div></div>';
+  document.getElementById('portalSecTabela').innerHTML='<h2>📋 Dados da Tabela</h2><div class="portal-grid"><div class="portal-item">Nome Tabela <b id="portalDNomeTabela">—</b></div><div class="portal-item">ID Tabela/Prazo <b id="portalDIdTabela">—</b></div></div>';
+  portalSet('portalDCodigo',p.codigo);portalSet('portalDAde',p.ade);portalSet('portalDResponsavel',p.responsavel);
+  portalSet('portalDBanco',p.banco);portalSet('portalDTipo',p.tipo);portalSet('portalDDigitacao',p.digitacao);
+  portalSet('portalDComercial',p.comercial);portalSet('portalDRegional',p.regional);portalSet('portalDMultiloja',p.multiloja);
+  portalSet('portalDNomeTabela',p.nomeTabela);portalSet('portalDIdTabela',p.idTabela);
+  var lc=p.linhasComissao&&p.linhasComissao[0]||{};
+  portalSet('portalCComissao',p.comissaoPaga&&p.comissaoPaga.valorTotal||'—');
+  portalSet('portalCPercentual',p.comissaoPaga&&p.comissaoPaga.totalPercentual||'—');
+  portalSet('portalCBanco',p.banco?p.banco.split('/')[0].trim():'—');
+  portalSet('portalCSituacao',p.situacaoFinanceiro);
+  var sf=p.situacaoFinanceiro;
+  var banner=document.getElementById('portalStatusBanner');
+  var secFin=document.getElementById('portalSecFinanceiro');
+  // Hierarquia card
+  var hCard=portalRenderHierarquiaCard(portalBuscarHierarquia(p.comercial));
+
+  if(sf.includes('PAGA AO CORRETOR')){
+    banner.innerHTML='<div class="status-banner status-pago"><div class="icon"></div><div class="text"><h3>COMISSÃO PAGA AO CORRETOR</h3><p>A comissão desta proposta já foi analisada e o pagamento foi efetuado ao corretor.</p>'+hCard+'</div></div>';
+    var cp=p.comissaoPaga||{};
+    secFin.innerHTML='<div class="section"><h2>✅ Comissão Paga</h2><div class="grid"><div class="item">Data Pagamento <b>'+(cp.dataPagamento||'—')+'</b></div><div class="item">Valor Base <b>'+(cp.valorBase||'—')+'</b></div><div class="item">Valor Comissão <b>'+(cp.valorComissao||'—')+'</b></div><div class="item">Total % Repassado <b>'+(cp.totalPercentual||'—')+'</b></div></div><div style="margin-top:14px;padding:14px 18px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;"><span style="color:#94a3b8;font-size:13px;">💰 Valor Total Pago ao Corretor</span><span style="color:#4ade80;font-size:22px;font-weight:700;">'+(cp.valorTotal||'—')+'</span></div></div>';
+  }
+  else if(sf.includes('DADOS IMPORTADOS')){
+    var temUsuario=p.comercial&&p.comercial!=='—'&&p.comercial!=='-';
+    var dataImp=lc.dataImportacao||'';
+    var diasDec=portalDiasUteisDecorridos(dataImp);
+    var atrasado=diasDec!==null&&diasDec>3;
+    var prazoHtml='';
+    if(dataImp&&diasDec!==null){var diasR=3-diasDec;prazoHtml='<div class="sla-card '+(atrasado?'sla-atrasado':'sla-dentro')+'"><span class="sla-label">SLA Vínculo de Tabela</span><div class="sla-linha"><span class="sla-prazo-atuacao">Prazo de atuação <b>D+3</b></span><span class="sla-sep">—</span><span class="sla-prazo-atual">Prazo atual <b>D+'+diasDec+'</b></span>'+(atrasado?'<span style="background:rgba(234,179,8,0.15);color:#fbbf24;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700">⚠️ PRAZO EXCEDIDO</span>':'')+'</div>'+(!atrasado?'<span class="sla-desc">✅ Dentro do prazo — restam '+diasR+' dia(s) útil(eis)</span>':'')+'</div>';}
+    if(!temUsuario){
+      document.querySelector('#portalResultado .portal-cards').style.display='none';
+      document.getElementById('portalSecTabela').style.display='none';
+      banner.innerHTML='<div class="status-banner status-importado"><div class="icon"></div><div class="text"><h3>DADOS IMPORTADOS — USUÁRIO NÃO VINCULADO</h3><p>Usuário não vinculado na Storm — entrando em processo de vinculação junto ao setor de usuários para repasse de comissão, favor aguardar.</p></div></div>';
+      document.getElementById('portalSecDadosGerais').innerHTML='<div class="section"><h2>📄 Dados da Proposta</h2><div class="grid"><div class="item">Código Contrato <b>'+(p.codigo||'—')+'</b></div><div class="item">ADE <b>'+(p.ade||'—')+'</b></div><div class="item">Banco <b>'+(p.banco||'—')+'</b></div><div class="item">Situação Financeiro <b style="color:#facc15">DADOS IMPORTADOS</b></div><div class="item">Data Digitação Banco <b>'+(p.digitacao||'—')+'</b></div></div></div>';
+      secFin.innerHTML='';
+      document.getElementById('portalResultado').style.display='block';return;
+    }
+    var sheetRow=await portalBuscarPlanilha(p.ade);
+    var statusPricingHtml='';
+    if(sheetRow){var st=(sheetRow.status||'').trim().toUpperCase();var stIcon='🟡',stCor='#facc15',stBg='rgba(234,179,8,0.10)',stBd='rgba(234,179,8,0.3)',stMsg='';
+    if(st==='PENDENTE/BANCO'){stIcon='🏦';stCor='#60a5fa';stBg='rgba(56,130,248,0.08)';stBd='rgba(56,130,248,0.3)';stMsg='Aguardando retorno do banco para vínculo de tabela.';}
+    else if(/resolv|conclu|pago/i.test(st)){stIcon='✅';stCor='#4ade80';stBg='rgba(34,197,94,0.08)';stBd='rgba(34,197,94,0.3)';stMsg='Tabela vinculada/resolvida.';}
+    else if(/aguard/i.test(st)){stIcon='⏳';stMsg='Em análise pelo setor Pricing.';}
+    statusPricingHtml='<div style="margin-top:12px;padding:12px 16px;background:'+stBg+';border:1px solid '+stBd+';border-radius:10px;display:flex;align-items:flex-start;gap:12px;"><span style="font-size:22px;flex-shrink:0;">'+stIcon+'</span><div><div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:4px;">Status Pricing</div><div style="font-size:15px;font-weight:700;color:'+stCor+';">'+sheetRow.status+'</div>'+(stMsg?'<div style="font-size:12px;color:#94a3b8;margin-top:3px;">'+stMsg+'</div>':'')+(sheetRow.tabela&&sheetRow.tabela!=='—'?'<div style="font-size:12px;color:#64748b;margin-top:3px;">Tabela: '+sheetRow.tabela+'</div>':'')+'</div></div>';}
+    else{statusPricingHtml='<div style="margin-top:12px;padding:12px 16px;background:rgba(148,163,184,0.06);border:1px solid rgba(148,163,184,0.2);border-radius:10px;display:flex;align-items:flex-start;gap:12px;"><span style="font-size:22px;flex-shrink:0;">❓</span><div><div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:4px;">Status Pricing</div><div style="font-size:14px;font-weight:600;color:#94a3b8;">ADE não localizada na planilha de Pricing</div><div style="font-size:12px;color:#64748b;margin-top:3px;">Favor enviar e-mail para o seu assistente comercial.</div>'+portalRenderBtnCopiar(p)+'</div></div>';}
+    banner.innerHTML='<div class="status-banner status-importado"><div class="icon"></div><div class="text"><h3>DADOS IMPORTADOS — TABELA NÃO VINCULADA</h3><p>Esta proposta está com situação <b>DADOS IMPORTADOS</b> pois a <b>tabela ainda não foi vinculada na Storm</b>. O setor <b>Pricing</b> tem prazo de <b>D+3</b> (dias úteis) para realizar o vínculo e regularizar a comissão.</p>'+prazoHtml+statusPricingHtml+'</div></div>';
+    secFin.innerHTML='<div class="section"><h2>📥 Linhas de Comissão Importadas</h2><div class="table-wrap"><table><thead><tr><th>Valor Base</th><th>Valor Base Bruto</th><th>Adiantamento</th><th>Importado por</th><th>Data Importação</th><th>Status</th></tr></thead><tbody>'+p.linhasComissao.map(function(l){return '<tr><td>'+l.valorBase+'</td><td>'+l.valorBaseBruto+'</td><td>'+l.adiantamento+'</td><td>'+l.importadoPor+'</td><td>'+l.dataImportacao+'</td><td>'+portalTagStatus(l.status)+'</td></tr>';}).join('')+'</tbody></table></div></div>';
+  }
+  else if(sf.includes('TOMADA DE DECISÃO')||sf.includes('TOMADA DE DECISAO')){
+    var dataImp2=lc.dataImportacao||'',diasDec2=portalDiasUteisDecorridos(dataImp2),atrasado2=diasDec2!==null&&diasDec2>2;
+    var prazoH2='';if(dataImp2&&diasDec2!==null){var r2=2-diasDec2;prazoH2='<div class="sla-card '+(atrasado2?'sla-atrasado':'sla-dentro')+'"><span class="sla-label">SLA Tomada de Decisão</span><div class="sla-linha"><span class="sla-prazo-atuacao">Prazo de atuação <b>D+2</b></span><span class="sla-sep">—</span><span class="sla-prazo-atual">Prazo atual <b>D+'+diasDec2+'</b></span>'+(atrasado2?'<span style="background:rgba(234,179,8,0.15);color:#fbbf24;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700">⚠️ PRAZO EXCEDIDO</span>':'')+'</div>'+(!atrasado2?'<span class="sla-desc">✅ Dentro do prazo — restam '+r2+' dia(s) útil(eis)</span>':'')+'</div>';}
+    banner.innerHTML='<div class="status-banner status-decisao"><div class="icon"></div><div class="text"><h3>CONTRATO EM TOMADA DE DECISÃO</h3><p>As informações desta proposta <b>não batem com o que está precificado na grade</b>. O setor <b>Financeiro</b> tem prazo de <b>D+2</b> (dias úteis) para analisar e efetuar o pagamento.</p>'+prazoH2+PORTAL_MSG_EMAIL+portalRenderBtnCopiar(p)+'</div></div>';
+    secFin.innerHTML='<div class="section"><h2>⚖️ Linhas de Comissão — Tomada de Decisão</h2><div class="table-wrap"><table><thead><tr><th>Valor Base</th><th>Valor Base Bruto</th><th>Adiantamento</th><th>Importado por</th><th>Data Importação</th><th>Status</th></tr></thead><tbody>'+p.linhasComissao.map(function(l){return '<tr><td>'+l.valorBase+'</td><td>'+l.valorBaseBruto+'</td><td>'+l.adiantamento+'</td><td>'+l.importadoPor+'</td><td>'+l.dataImportacao+'</td><td>'+portalTagStatus(l.status)+'</td></tr>';}).join('')+'</tbody></table></div></div>';
+  }
+  else if(sf.includes('AGUARDANDO IMPORTAÇÃO')||sf.includes('AGUARDANDO IMPORTACAO')){
+    var op=p.dadosOperacional||{};
+    var slaI=portalCalcSLA(p.banco,op.dataPgtoCliente);var slaH=portalRenderSlaCard(slaI);
+    banner.innerHTML='<div class="status-banner status-aguardando"><div class="icon"></div><div class="text"><h3>AGUARDANDO IMPORTAÇÃO (RELATÓRIO BANCO)</h3><p>Nenhum relatório de comissão foi importado para esta proposta ainda. O banco <b>'+(p.banco?p.banco.split('/')[0].trim():'—')+'</b> ainda não enviou o arquivo de repasse.</p><div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;">'+slaH+'</div>'+(!slaI||!slaI.semData?PORTAL_MSG_EMAIL+portalRenderBtnCopiar(p):'')+'</div></div>';
+    portalSet('portalCComissao','Aguardando');portalSet('portalCPercentual','—');
+    secFin.innerHTML='<div class="section"><h2>📋 Dados Operacionais</h2><div class="dados-op-grid"><div class="dados-op-item">Contrato Pendente <b>'+(op.contratoPendente||'—')+'</b></div><div class="dados-op-item">Situação Contrato <b>'+(op.situacaoContrato||'—')+'</b></div><div class="dados-op-item">Data Pgto Cliente <b>'+(op.dataPgtoCliente||'—')+'</b></div><div class="dados-op-item">Histórico Situação <b>'+(op.historicoSituacao||'—')+'</b></div></div></div>';
+  }
+  else if(sf.includes('DISPONÍVEL PARA PAGAMENTO')||sf.includes('DISPONIVEL PARA PAGAMENTO')){
+    var op2=p.dadosOperacional||{};var temFis=op2.contratoPendente==='Sim';
+    var msgFis=temFis?'<div style="margin-top:10px;padding:12px 16px;background:rgba(0,0,0,0.2);border:1px solid rgba(251,146,60,0.25);border-radius:10px;display:flex;align-items:flex-start;gap:10px;"><span style="font-size:20px;flex-shrink:0;">📞</span><span style="font-size:13px;color:#fed7aa;line-height:1.6;">Entre em contato com o <b style="color:#fb923c;">setor de Formalização</b> para regularizar a pendência de físico e liberar o pagamento da comissão.</span></div>':'';
+    banner.innerHTML='<div class="status-banner '+(temFis?'status-fisico':'status-importado')+'"><div class="icon"></div><div class="text"><h3>COMISSÃO DISPONÍVEL PARA PAGAMENTO'+(temFis?' — PENDÊNCIA DE FÍSICO':'')+'</h3><p>O relatório de comissão desta proposta foi importado pelo banco. O pagamento ao corretor ainda <b>não foi efetuado</b>'+(temFis?' pois há <b>pendência de documentos físicos</b>':'')+'.</p>'+msgFis+'</div></div>';
+    portalSet('portalCComissao','Aguardando');portalSet('portalCPercentual','—');
+    var lc0=p.linhasComissao&&p.linhasComissao[0]||{};
+    var vbH=lc0.valorBase&&lc0.valorBase!=='—'?'<div class="dados-op-item">Valor Base Importado <b style="color:#38bdf8">'+lc0.valorBase+'</b></div>':'';
+    secFin.innerHTML='<div class="section"><h2>📋 Dados Operacionais</h2><div class="dados-op-grid"><div class="dados-op-item">Contrato Pendente <b style="'+(op2.contratoPendente==='Sim'?'color:#fb923c':'')+'">'+( op2.contratoPendente||'—')+'</b></div><div class="dados-op-item">Situação Contrato <b>'+(op2.situacaoContrato||'—')+'</b></div><div class="dados-op-item">Data Pgto Cliente <b>'+(op2.dataPgtoCliente||'—')+'</b></div>'+vbH+'</div></div>';
+  }
+  document.getElementById('portalResultado').style.display='block';
+}
+
+document.getElementById('portalBuscaInput').addEventListener('input',function(){
+  clearTimeout(portalDebounce);portalDebounce=setTimeout(portalBuscar,500);
+});
+
+var PORTAL_HIER_PLANILHA = [
+  {cod:"23976",nome:"LEANDRO DA SILVA MIZIES (CHECK)",email:"leandro.mizies@checknegocios.com.br",tel:"(11) 97070-4925",regional:null,super:null,uf:""},
+  {cod:"29022",nome:"CRISTIANE APARECIDA NUNES SANTOS (CHECK)",email:"cristiane.nunes@checknegocios.com.br",tel:"(38) 99841-0409",regional:null,super:null,uf:""},
+  {cod:"48826",nome:"STEPHANY DANIELY NASCIMENTO DANTAS",email:"stephany.dantas@novapromotora.com",tel:"(83) 99889-7955",regional:null,super:null,uf:""},
+  {cod:"78325",nome:"BRUNO FURTADO DE MELO (NEXTT)",email:"bruno.melo@nexttpromotora.com",tel:"(48) 99999-999",regional:null,super:null,uf:""},
+  {cod:"86526",nome:"RAYANE DOS SANTOS DE SOUSA (MELHOR CRÉDITO)",email:"ray367695@gmail.com",tel:"(11) 98063-9047",regional:null,super:null,uf:""},
+  {cod:"9288",nome:"ROBERTO DE MOURA LESSA",email:"roberto.lessa@novafinanceira.com",tel:"(35) 99962-3362",regional:"2523 - JHONATHAN ROSSI DA CRUZ",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"AL"},
+  {cod:"5845",nome:"CRISTINA CIANO ARAUJO DE ANDRADE",email:"cristina.andrade@novafinanceira.com",tel:"(71) 99233-6598",regional:"25576 - JOSE DIONISIO ALBUQUERQUE JUNIOR",super:"2389 - FELIPE CUNHA DE JESUS",uf:"BA"},
+  {cod:"60001",nome:"LARYSSA SANTOS DE MELO",email:"laryssa.melo@novapromotora.com",tel:"(73) 98864-1142",regional:"25576 - JOSE DIONISIO ALBUQUERQUE JUNIOR",super:"2389 - FELIPE CUNHA DE JESUS",uf:"BA"},
+  {cod:"62861",nome:"KELI PEREIRA DOS SANTOS",email:"keli.pereira@novapromotora.com",tel:"(71) 98690-3894",regional:"25576 - JOSE DIONISIO ALBUQUERQUE JUNIOR",super:"2389 - FELIPE CUNHA DE JESUS",uf:"BA"},
+  {cod:"2097",nome:"ODAILTON SOUSA MALVEIRA",email:"odailton.sousa@novafinanceira.com",tel:"(88) 99980-1712",regional:"26248 - FELIPE CUNHA DE JESUS",super:"2389 - FELIPE CUNHA DE JESUS",uf:"CE"},
+  {cod:"58528",nome:"LEONARDO GOMES DEUDEGANT",email:"leonardo.deudegant@novapromotora.com",tel:"(61) 98262-9662",regional:"33014 - ALLEF KAYQUE MARQUES BONS OLHOS",super:"7842 - SUPERINTENDENCIA CENTRO OESTE",uf:"DF"},
+  {cod:"33855",nome:"GIDEIDES CASEMIRO DA SILVA",email:"gideides.casemiro@novapromotora.com",tel:"(62) 98667-0507",regional:"33014 - ALLEF KAYQUE MARQUES BONS OLHOS",super:"7842 - SUPERINTENDENCIA CENTRO OESTE",uf:"GO"},
+  {cod:"11446",nome:"ADRIANA APARECIDA GUIMARAES",email:"adriana.guimaraes@novapromotora.com",tel:"(32) 99136-4500",regional:"2523 - JHONATHAN ROSSI DA CRUZ",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"MG"},
+  {cod:"45292",nome:"WILSON ELIAS CAETANO AMIM",email:"wilsonamim@consultoriaecredito.com.br",tel:"(37) 99937-9679",regional:"2523 - JHONATHAN ROSSI DA CRUZ",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"MG"},
+  {cod:"73806",nome:"CRISTIANE APARECIDA NUNES SANTOS (CHECK)",email:"cristiane.nunes@checknegocios.com.br",tel:"(38) 99841-0409",regional:"17890 - RENAN LELES DOS SANTOS (CHECK)",super:"7722 - DINHO SILVA",uf:"MG"},
+  {cod:"80226",nome:"SABRINA SANTANA QUEIROZ MOREIRA (CHECK)",email:"sabrina.queiroz@checknegocios.com.br",tel:"(31) 98278-2874",regional:"17890 - RENAN LELES DOS SANTOS (CHECK)",super:"7722 - DINHO SILVA",uf:"MG"},
+  {cod:"92538",nome:"ALLEF KAYQUE MARQUES BONS OLHOS",email:"allef.bonsolhos@novapromotora.com",tel:"(62) 98253-2808",regional:"33014 - ALLEF KAYQUE MARQUES BONS OLHOS",super:"7842 - SUPERINTENDENCIA CENTRO OESTE",uf:"MT"},
+  {cod:"41090",nome:"VIVIANE MOURA DE SOUSA",email:"vivane.sousa@novapromotora.com",tel:"(86) 98882-6181",regional:"26248 - FELIPE CUNHA DE JESUS",super:"2389 - FELIPE CUNHA DE JESUS",uf:"PI"},
+  {cod:"84816",nome:"PATRICIA ARBAITER SOARES DA SILVA",email:"patricia.arbaiter@novapromotora.com",tel:"(41) 98901-1327",regional:"1292 - RODRIGO VALCI SILVEIRA",super:"4457 - CASSIO LEMOS NETO",uf:"PR"},
+  {cod:"0060",nome:"AMANDA DA SILVA MARINS BARROS",email:"amanda.barros@novafinanceira.com",tel:"(21) 99370-8056",regional:"2523 - JHONATHAN ROSSI DA CRUZ",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"RJ"},
+  {cod:"0314",nome:"JAMIL SAAD SEOUD (SIMPLES)",email:"apoiocomercial@simplescredito.com.br",tel:"(21) 99785-5494",regional:"3474 - BRUNO SANTANA FERREIRA",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"RJ"},
+  {cod:"13438",nome:"ANTONIO JOSE DOS SANTOS AMARO (WEPAY)",email:"antonio.amaro2013@hotmail.com",tel:"(21) 97514-9354",regional:"3474 - BRUNO SANTANA FERREIRA",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"RJ"},
+  {cod:"1579",nome:"WEPAY 1",email:"suporte@wepaypromotora.com.br",tel:"(21) 99976-0742",regional:"3474 - BRUNO SANTANA FERREIRA",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"RJ"},
+  {cod:"3911",nome:"WEPAY",email:"marcelo@wepaypromotora.com.br",tel:"(21) 99765-2601",regional:"3474 - BRUNO SANTANA FERREIRA",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"RJ"},
+  {cod:"7265",nome:"WEPAY",email:"graziela@wepaypromotora.com.br",tel:".",regional:"3474 - BRUNO SANTANA FERREIRA",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"RJ"},
+  {cod:"7600",nome:"DANIELLE SIQUEIRA COUTO",email:"danielle.couto@novafinanceira.com",tel:"(21) 97637-2314",regional:"2523 - JHONATHAN ROSSI DA CRUZ",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"RJ"},
+  {cod:"8758",nome:"MELHOR CRÉDITO (COMERCIAL)",email:"fabricio.bomfim@live.com",tel:"(11) 94272-991",regional:"0769 - MELHOR CRÉDITO (REGIONAL)",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"RJ"},
+  {cod:"9656",nome:"BRUNO SANTANA FERREIRA",email:"bruno.ferreira@novafinanceira.com",tel:"(21) 99622-2943",regional:"3474 - BRUNO SANTANA FERREIRA",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"RJ"},
+  {cod:"71284",nome:"ALVARO BEZERRA ARAUJO",email:"alvaro.araujo@novapromotora.com",tel:"(84) 98834-5534",regional:"26248 - FELIPE CUNHA DE JESUS",super:"2389 - FELIPE CUNHA DE JESUS",uf:"RN"},
+  {cod:"23181",nome:"ERIS GREIDON HARDEN VIEIRA FILHO (NEXTT)",email:"erishfilho@gmail.com",tel:"(55) 96021-232",regional:"6051 - NEXTT PROMOTORA (REGIONAL)",super:"7722 - DINHO SILVA",uf:"RS"},
+  {cod:"4637",nome:"MYRIAN DREHER",email:"myrian.dreher@novafinanceira.com",tel:"(51) 99135-8976",regional:"1784 - GEANDERSON LOCKS NAZARIO DE OLIVEIRA",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"RS"},
+  {cod:"5257",nome:"AMINES ALBERNAZ CAMARGO",email:"amines.camargo@novafinanceira.com",tel:"(51) 98240-8345",regional:"1784 - GEANDERSON LOCKS NAZARIO DE OLIVEIRA",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"RS"},
+  {cod:"75452",nome:"FIDELIZE SERVIÇOS CORPORATIVOS",email:"douglas@fidelizepromotorars.com.br",tel:"(54) 99948-8604",regional:"1784 - GEANDERSON LOCKS NAZARIO DE OLIVEIRA",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"RS"},
+  {cod:"2301",nome:"GRAZIELLI MACHADO DA SILVA",email:"grazielli.machado@nexxopromotora.com.br",tel:"(48) 99180-1799",regional:"0114 - ARTHUR ROZA NETO",super:"1803 - JESSICA COUTINHO DE AZEVEDO",uf:"SC"},
+  {cod:"2561",nome:"TIAGO DA SILVA CERQUEIRA",email:"tiago.cerqueira@nexxopromotora.com.br",tel:"(48) 99179-4598",regional:"0114 - ARTHUR ROZA NETO",super:"1803 - JESSICA COUTINHO DE AZEVEDO",uf:"SC"},
+  {cod:"2961",nome:"DINHO SILVA",email:"dinho.silva@novafinanceira.com",tel:"(48) 91286-835",regional:"0604 - DINHO SILVA",super:"7722 - DINHO SILVA",uf:"SC"},
+  {cod:"3042",nome:"ANDERSON HIROSHI OYE (NEXTT)",email:"and.hiroshi2012@gmail.com",tel:"(48) 96969-696",regional:"6051 - NEXTT PROMOTORA (REGIONAL)",super:"7722 - DINHO SILVA",uf:"SC"},
+  {cod:"31665",nome:"KARINE LOYANE MALHEIRO SILVA",email:"karine.loyane@nexxopromotora.com.br",tel:"(48) 99171-0828",regional:"0114 - ARTHUR ROZA NETO",super:"1803 - JESSICA COUTINHO DE AZEVEDO",uf:"SC"},
+  {cod:"3495",nome:"MARIA EDUARDA BOGONI BRUSTOLIN",email:"maria.eduarda@nexxopromotora.com.br",tel:"(48) 99969-9778",regional:"1784 - GEANDERSON LOCKS NAZARIO DE OLIVEIRA",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"SC"},
+  {cod:"3554",nome:"LUIS FERNANDO BERTHOLDO",email:"fernando.bertholdo@nexxopromotora.com.br",tel:"(48) 99637-5431",regional:"0114 - ARTHUR ROZA NETO",super:"1803 - JESSICA COUTINHO DE AZEVEDO",uf:"SC"},
+  {cod:"39526",nome:"IZADORA GERALDO DE MEDEIROS",email:"izadora.medeiros@novapromotora.com",tel:"(48) 99604-0729",regional:"98233 - ARTHUR CAETANO FLORIANI",super:"7722 - DINHO SILVA",uf:"SC"},
+  {cod:"40281",nome:"PEDRO HENRIQUE DOS SANTOS ARAUJO (MELHOR CRÉDITO)",email:"pedroaraujonews@outlook.com",tel:"(11) 96416-785",regional:"0769 - MELHOR CRÉDITO (REGIONAL)",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"SC"},
+  {cod:"42113",nome:"RAFAELLY NUNES ALVES",email:"rafaelly.nunes@novapromotora.com",tel:"(47) 99628-2250",regional:"98233 - ARTHUR CAETANO FLORIANI",super:"7722 - DINHO SILVA",uf:"SC"},
+  {cod:"44692",nome:"EDUARDA MANUELA PADOIN CASANOVA (NEXTT)",email:"eduarda.casanova@nexttpromotora.com",tel:"(49) 99129-2705",regional:"6051 - NEXTT PROMOTORA (REGIONAL)",super:"7722 - DINHO SILVA",uf:"SC"},
+  {cod:"4513",nome:"FABIANO NETO",email:"fabiano.neto@novafinanceira.com",tel:"(48) 99947-0058",regional:"1292 - RODRIGO VALCI SILVEIRA",super:"4457 - CASSIO LEMOS NETO",uf:"SC"},
+  {cod:"4935",nome:"LUAN MATHEUS DE CARVALHO CECHET",email:"luan.carvalho@nexxopromotora.com.br",tel:"(48) 98833-1903",regional:"0114 - ARTHUR ROZA NETO",super:"1803 - JESSICA COUTINHO DE AZEVEDO",uf:"SC"},
+  {cod:"5118",nome:"SERGIO SCHMITT FRANCA",email:"sergio.franca@nexxopromotora.com.br",tel:"(48) 99916-9939",regional:"0114 - ARTHUR ROZA NETO",super:"1803 - JESSICA COUTINHO DE AZEVEDO",uf:"SC"},
+  {cod:"5320",nome:"CRISTIANO MURILO (NEXTT)",email:"cristiano.murilo@nexttpromotora.com",tel:"(48) 99604-6435",regional:"6051 - NEXTT PROMOTORA (REGIONAL)",super:"7722 - DINHO SILVA",uf:"SC"},
+  {cod:"54201",nome:"EVANDRO FERNANDO MACHADO MARCZINSKI",email:"evandro.marczinski@novapromotora.com",tel:"(48) 98816-4242",regional:"98233 - ARTHUR CAETANO FLORIANI",super:"7722 - DINHO SILVA",uf:"SC"},
+  {cod:"5494",nome:"ARIANE JANDIRA ASSUNCAO",email:"ariane.assuncao@novafinanceira.com",tel:"(48) 99664-9056",regional:"1292 - RODRIGO VALCI SILVEIRA",super:"4457 - CASSIO LEMOS NETO",uf:"SC"},
+  {cod:"5507",nome:"THAYSE DO LIVRAMENTO PEREIRA",email:"thayse.pereira@novafinanceira.com",tel:"(48) 99695-0083",regional:"1784 - GEANDERSON LOCKS NAZARIO DE OLIVEIRA",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"SC"},
+  {cod:"5767",nome:"ROBSON VALENTE DE BARROS (NEXTT)",email:"robson.valente@nexttpromotora.com",tel:"(48) 88117-939",regional:"6051 - NEXTT PROMOTORA (REGIONAL)",super:"7722 - DINHO SILVA",uf:"SC"},
+  {cod:"59955",nome:"DIEGO DE MORAES SUBTIL",email:"diego.subtil@novapromotora.com",tel:"(48) 98403-1828",regional:"98233 - ARTHUR CAETANO FLORIANI",super:"7722 - DINHO SILVA",uf:"SC"},
+  {cod:"64558",nome:"GABRIELA CRISTINA BORGES",email:"gabriela.borges@nexxopromotora.com.br",tel:"(48) 99212-4688",regional:"0114 - ARTHUR ROZA NETO",super:"1803 - JESSICA COUTINHO DE AZEVEDO",uf:"SC"},
+  {cod:"73019",nome:"FERNANDA GOMES FARINHA QUADROS",email:"fernanda.quadros@novapromotora.com",tel:"(48) 99656-0503",regional:"98233 - ARTHUR CAETANO FLORIANI",super:"7722 - DINHO SILVA",uf:"SC"},
+  {cod:"74354",nome:"RICHARD BIANO DOS REIS",email:"richard.biano@novapromotora.com",tel:"(48) 99363-532",regional:"1292 - RODRIGO VALCI SILVEIRA",super:"4457 - CASSIO LEMOS NETO",uf:"SC"},
+  {cod:"75171",nome:"LUANA BOSSLE RIBEIRO (NEXTT)",email:"luana.bossle@nexttpromotora.com",tel:"(48) 99999-999",regional:"6051 - NEXTT PROMOTORA (REGIONAL)",super:"7722 - DINHO SILVA",uf:"SC"},
+  {cod:"81061",nome:"ROBERTA CASCAES",email:"roberta.cascaes@novapromotora.com",tel:"(48) 99120-2594",regional:"98233 - ARTHUR CAETANO FLORIANI",super:"7722 - DINHO SILVA",uf:"SC"},
+  {cod:"82716",nome:"MARIANE DA SILVA (NEXTT)",email:"mariane.will@nexttpromotora.com",tel:"(48) 91945-089",regional:"6051 - NEXTT PROMOTORA (REGIONAL)",super:"7722 - DINHO SILVA",uf:"SC"},
+  {cod:"8475",nome:"LETICIA MAZIERO MENESES",email:"leticia.maziero@nexxopromotora.com.br",tel:"(48) 99149-2101",regional:"0114 - ARTHUR ROZA NETO",super:"1803 - JESSICA COUTINHO DE AZEVEDO",uf:"SC"},
+  {cod:"86345",nome:"JHONATHAN ROSSI DA CRUZ",email:"jhonathan.cruz@novafinanceira.com",tel:"(48) 99944-9905",regional:"2523 - JHONATHAN ROSSI DA CRUZ",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"SC"},
+  {cod:"86864",nome:"ANDRE LUIZ MAZZOLA (NEXTT)",email:"andre.mazzola@nexttpromotora.com",tel:"(48) 91396-479",regional:"6051 - NEXTT PROMOTORA (REGIONAL)",super:"7722 - DINHO SILVA",uf:"SC"},
+  {cod:"8890",nome:"ALINE ROSE DE MELO",email:"aline.melo@nexxopromotora.com.br",tel:"(48) 98462-0399",regional:"0114 - ARTHUR ROZA NETO",super:"1803 - JESSICA COUTINHO DE AZEVEDO",uf:"SC"},
+  {cod:"91825",nome:"JULIANA DE MATOS",email:"juliana.matos@novapromotora.com",tel:"(47) 98488-4468",regional:"98233 - ARTHUR CAETANO FLORIANI",super:"7722 - DINHO SILVA",uf:"SC"},
+  {cod:"9482",nome:"GABRIELA GRASSO STIVAL",email:"gabriela.grasso@nexxopromotora.com.br",tel:"(11) 95481-3784",regional:"0114 - ARTHUR ROZA NETO",super:"1803 - JESSICA COUTINHO DE AZEVEDO",uf:"SC"},
+  {cod:"9768",nome:"MAYARA CRISTINA HATTENHAUER",email:"mayara.hattenhauer@nexxopromotora.com.br",tel:"(48) 99630-7011",regional:"0114 - ARTHUR ROZA NETO",super:"1803 - JESSICA COUTINHO DE AZEVEDO",uf:"SC"},
+  {cod:"97819",nome:"GEANDERSON LOCKS NAZARIO DE OLIVEIRA",email:"junior.telelab@gmaill.com",tel:"(48) 99111-7080",regional:"1784 - GEANDERSON LOCKS NAZARIO DE OLIVEIRA",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"SC"},
+  {cod:"98718",nome:"GUSTAVO JEFFERSON SOUSA",email:"gustavo.sousa@novapromotora.com",tel:"(48) 98421-0956",regional:"98233 - ARTHUR CAETANO FLORIANI",super:"7722 - DINHO SILVA",uf:"SC"},
+  {cod:"2282",nome:"ALEX DA PAIXAO MARTINS",email:"alex.martins@novafinanceira.com",tel:"(11) 93384-8152",regional:"1595 - STELA PESSOA DOMINGOS",super:"4457 - CASSIO LEMOS NETO",uf:"SP"},
+  {cod:"38226",nome:"RENAN LELES DOS SANTOS (CHECK)",email:"renan@checknegocios.com.br",tel:"(11) 93313-3066",regional:"17890 - RENAN LELES DOS SANTOS (CHECK)",super:"7722 - DINHO SILVA",uf:"SP"},
+  {cod:"4682",nome:"CAMILA MATOS AGUIAR RIBEIRO",email:"camila.aguiar@novafinanceira.com",tel:"(11) 94079-6521",regional:"1595 - STELA PESSOA DOMINGOS",super:"4457 - CASSIO LEMOS NETO",uf:"SP"},
+  {cod:"51744",nome:"STELA PESSOA DOMINGOS",email:"stella.domingos@novafinanceira.com",tel:"(11) 94017-1739",regional:"1595 - STELA PESSOA DOMINGOS",super:"4457 - CASSIO LEMOS NETO",uf:"SP"},
+  {cod:"52754",nome:"VALERIA DA ROCHA GASPARIDIS (MELHOR CREDITO)",email:"valeria.gaspardis@melhorcredito.com.br",tel:"(11) 99212-6344",regional:"0769 - MELHOR CRÉDITO (REGIONAL)",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"SP"},
+  {cod:"5312",nome:"ANDREIA REGINA DE SOUZA BASTIDA",email:"andreia.bastida@novafinanceira.com",tel:"(11) 97252-6446",regional:"8211 - ALLAN MONTEIRO DE LIMA",super:"4457 - CASSIO LEMOS NETO",uf:"SP"},
+  {cod:"6528",nome:"ELIZABETE REGODANSO BARBOSA OKAMOTO",email:"elizabete.regodanso@novafinanceira.com",tel:"(19) 97126-0452",regional:"8211 - ALLAN MONTEIRO DE LIMA",super:"4457 - CASSIO LEMOS NETO",uf:"SP"},
+  {cod:"7984",nome:"BERNARDO DE OLIVEIRA (MELHOR CRÉDITO)",email:"oliveirabernardo22@yahoo.com.br",tel:"(47) 98480-2556",regional:"0769 - MELHOR CRÉDITO (REGIONAL)",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"SP"},
+  {cod:"82828",nome:"DANILO FELIX SANTOS (MELHOR CRÉDITO)",email:"danilo@danilofelix.com.br",tel:"(11) 98890-4342",regional:"0769 - MELHOR CRÉDITO (REGIONAL)",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"SP"},
+  {cod:"91526",nome:"ROBERT FERNANDO MARIA (MELHOR CRÉDITO)",email:"robertfmaria7@gmail.com",tel:"(11) 98487-4609",regional:"0769 - MELHOR CRÉDITO (REGIONAL)",super:"1003 - JHONATHAN ROSSI DA CRUZ",uf:"SP"},
+  {cod:"9313",nome:"LUDMILA KARINA SILVA LOPES",email:"ludmila.lopes@novafinanceira.com",tel:"(17) 98197-8393",regional:"8211 - ALLAN MONTEIRO DE LIMA",super:"4457 - CASSIO LEMOS NETO",uf:"SP"},
+  {cod:"95941",nome:"FILIPE JONATAS SILVA SOUZA (CHECK)",email:"filipeconsig@gmail.com",tel:"(31) 98236-9389",regional:"17890 - RENAN LELES DOS SANTOS (CHECK)",super:"7722 - DINHO SILVA",uf:"SP"}
+];
+
+function portalRenderizarHierarquia(){
+  var container=document.getElementById('portalHierarquiaContainer');
+  if(!container||container.dataset.rendered)return;
+  container.dataset.rendered='1';
+  var superMap={};
+  PORTAL_HIER_PLANILHA.forEach(function(c){
+    var sk=c.super||'SEM SUPERINTENDENTE';
+    if(!superMap[sk])superMap[sk]={};
+    var rk=c.regional||'SEM REGIONAL';
+    if(!superMap[sk][rk])superMap[sk][rk]=[];
+    superMap[sk][rk].push(c);
+  });
+  var html='';
+  Object.keys(superMap).sort().forEach(function(superNome){
+    var regionais=superMap[superNome];
+    var superCod=superNome.split(' - ')[0];
+    var superNomeClean=superNome.split(' - ').slice(1).join(' - ')||superNome;
+    var total=Object.values(regionais).reduce(function(a,v){return a+v.length;},0);
+    html+='<div class="hier-super-bloco"><div class="hier-super-header"><span>⭐</span><div><div class="hier-super-nome">'+superNomeClean+' <span style="font-size:12px;color:#94a3b8;font-weight:400">('+superCod+')</span></div><div class="hier-super-info">'+total+' comercial(ais)</div></div><span class="badge" style="margin-left:auto">Superintendente</span></div>';
+    Object.keys(regionais).sort().forEach(function(regNome){
+      var coms=regionais[regNome];
+      var regCod=regNome.split(' - ')[0];
+      var regNomeClean=regNome.split(' - ').slice(1).join(' - ')||regNome;
+      html+='<div class="hier-regional-bloco"><div class="hier-regional-header"><span>🏢</span><div><div class="hier-regional-nome">'+regNomeClean+' <span style="font-size:11px;color:#64748b;font-weight:400">('+regCod+')</span></div></div><span class="hier-regional-badge">'+coms.length+' comercial(ais)</span></div><div class="hier-comerciais">';
+      coms.forEach(function(c){
+        html+='<div class="hier-com-card"><div class="hier-com-nome">'+c.nome+' <span class="hier-com-cod">'+c.cod+'</span>'+(c.uf?'<span class="hier-uf">'+c.uf+'</span>':'')+'</div><div class="hier-com-info">📧 <a href="mailto:'+c.email+'">'+c.email+'</a><br>📱 '+c.tel+'</div></div>';
+      });
+      html+='</div></div>';
+    });
+    html+='</div>';
+  });
+  container.innerHTML=html;
+}
+</script>
 
 <script>
 if('serviceWorker' in navigator) {
