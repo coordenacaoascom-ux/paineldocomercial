@@ -2392,9 +2392,8 @@ async function portalBuscar(){
   try{
     var resp=await fetch(STORM_PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ade:valor})});
     var data=await resp.json();
-    if(Array.isArray(data)&&data.length>0){p=stormMapContrato(data[0],valor);}
-    else if(Array.isArray(data)&&data.length===0){/* not found */}
-    else if(data&&data.detail){/* API error */}
+    if(Array.isArray(data)&&data.length>0){p=data[0];}
+    else if(data&&data.error){/* API error */}
   }catch(e){/* network error */}
   document.getElementById('portalLoading').style.display='none';
   if(!p){erroEl.style.display='block';return;}
