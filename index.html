@@ -453,9 +453,14 @@ body{
   </div>
   <div id="reguaSearchResult" style="padding:10px 40px;display:none;"></div>
 
+  <!-- SUB-ABAS ATIVAS / INATIVAS -->
+  <div style="padding:0 40px;display:flex;gap:0;border-bottom:2px solid var(--border);">
+    <button id="subTabAtivas" onclick="switchReguaTab('ativas')" style="background:none;border:none;border-bottom:2px solid var(--neon);color:var(--neon);padding:10px 24px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">RÉGUAS ATIVAS</button>
+    <button id="subTabInativas" onclick="switchReguaTab('inativas')" style="background:none;border:none;border-bottom:2px solid transparent;color:var(--muted2);padding:10px 24px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">RÉGUAS INATIVAS</button>
+  </div>
+
   <!-- TABELA RÉGUA -->
   <div style="padding:0 40px 40px;">
-    <div style="font-family:Titillium Web,sans-serif;font-size:13px;color:var(--muted);letter-spacing:1px;padding:12px 0 8px;">RÉGUA DE PARCEIROS</div>
     <div id="reguaList" style="font-size:16px;color:var(--muted);font-family:Titillium Web,sans-serif;">Carregando...</div>
   </div>
 
@@ -1567,13 +1572,15 @@ function mkReguaFilterRow(label, items, selected, fn) {
   return html;
 }
 
-function rSetSuper(s){ rSelSuper=s; rSelReg=null; rSelCom=null; renderReguaFilters(); renderReguaTable(REGUA_DATA); }
-function rSetReg(r){ rSelReg=r; rSelCom=null; renderReguaFilters(); renderReguaTable(REGUA_DATA); }
-function rSetCom(c){ rSelCom=c; renderReguaFilters(); renderReguaTable(REGUA_DATA); }
+function rSetSuper(s){ rSelSuper=s; rSelReg=null; rSelCom=null; renderReguaFilters(); renderReguaTab(); }
+function rSetReg(r){ rSelReg=r; rSelCom=null; renderReguaFilters(); renderReguaTab(); }
+function rSetCom(c){ rSelCom=c; renderReguaFilters(); renderReguaTab(); }
 
 // ─── RÉGUA PARCEIRO ───────────────────────────────────────────────────────────
 var REGUA_URL = 'https://script.google.com/macros/s/AKfycbxQHY_lk9lTku4s9udv-8q1gKETzrOTHtbo50jsY3eOu9SaX9HknXisKhx-VfxenomnkA/exec?token=npreg2026xk9';
 var REGUA_DATA = [];
+var RETIRADA_DATA = [];
+var _reguaSubTab = 'ativas';
 
 async function loadReguaData() {
   var statusEl = document.getElementById('reguaStatus');
@@ -1583,14 +1590,29 @@ async function loadReguaData() {
     var json = await r.json();
     if(json.data) {
       REGUA_DATA = json.data;
+      RETIRADA_DATA = json.retirada || [];
       buildReguaMaps();
       renderReguaFilters();
-      renderReguaTable(REGUA_DATA);
-      if(statusEl) statusEl.innerHTML = '<span style="color:#3cffb4">● ' + REGUA_DATA.length + ' registros</span>';
+      renderReguaTab();
+      if(statusEl) statusEl.innerHTML = '<span style="color:#3cffb4">● ' + REGUA_DATA.length + ' ativas · ' + RETIRADA_DATA.length + ' inativas</span>';
     }
   } catch(e) {
     if(statusEl) statusEl.innerHTML = '<span style="color:#ff4466">● erro ao carregar</span>';
   }
+}
+
+function switchReguaTab(tab) {
+  _reguaSubTab = tab;
+  var btnA = document.getElementById('subTabAtivas');
+  var btnI = document.getElementById('subTabInativas');
+  if(btnA) { btnA.style.borderBottomColor = tab==='ativas' ? 'var(--neon)' : 'transparent'; btnA.style.color = tab==='ativas' ? 'var(--neon)' : 'var(--muted2)'; }
+  if(btnI) { btnI.style.borderBottomColor = tab==='inativas' ? '#ff6b6b' : 'transparent'; btnI.style.color = tab==='inativas' ? '#ff6b6b' : 'var(--muted2)'; }
+  renderReguaTab();
+}
+
+function renderReguaTab() {
+  if(_reguaSubTab === 'ativas') renderReguaTable(REGUA_DATA);
+  else renderReguaInativas();
 }
 
 // Mapa reverso: com -> reg -> sup usando HIERARCHY
@@ -1682,21 +1704,67 @@ function renderReguaTable(data) {
   el.innerHTML = html;
 }
 
+function renderReguaInativas() {
+  var el = document.getElementById('reguaList');
+  if(!el) return;
+  var filtered = RETIRADA_DATA.filter(function(r){
+    if(!CURRENT_USER) return true;
+    // scope check: inativas só filtram por cod presente em REGUA_DATA scope?
+    // Simples: sem filtro de hierarquia para inativas (não têm comercial no dado)
+    return true;
+  });
+  var stEl = document.getElementById('reguaStatus');
+  if(stEl) stEl.innerHTML = '<span style="color:#ff6b6b">● ' + filtered.length + ' inativa(s)</span>';
+  if(!filtered.length) { el.innerHTML='<div style="color:var(--muted);padding:20px;font-family:Titillium Web,sans-serif;">Sem registros de retirada</div>'; return; }
+  var html = '<div style="overflow-x:auto;margin-top:12px;">';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:16px;">';
+  html += '<thead><tr style="background:rgba(255,107,107,.06);">';
+  html += '<th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Titillium Web,sans-serif;letter-spacing:1px;font-size:13px;">CÓD</th>';
+  html += '<th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Titillium Web,sans-serif;letter-spacing:1px;font-size:13px;">NOME PARCEIRO</th>';
+  html += '<th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Titillium Web,sans-serif;letter-spacing:1px;font-size:13px;">RÉGUA INATIVADA DESDE</th>';
+  html += '</tr></thead><tbody>';
+  filtered.forEach(function(r) {
+    var pNome = getReguaNome(r.cod);
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,.04);">';
+    html += '<td style="padding:9px 14px;color:#e8ff3c;font-family:Titillium Web,sans-serif;font-weight:700;font-size:14px;">' + r.cod + '</td>';
+    html += '<td style="padding:9px 14px;color:var(--text);font-size:15px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+pNome+'">' + (pNome||'—') + '</td>';
+    html += '<td style="padding:9px 14px;"><span style="background:rgba(255,107,107,.15);border:1px solid rgba(255,107,107,.4);color:#ff6b6b;border-radius:5px;padding:3px 10px;font-family:Titillium Web,sans-serif;font-size:13px;font-weight:700;">INATIVADA DESDE: ' + (r.data||'—') + '</span></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  el.innerHTML = html;
+}
+
 function searchRegua() {
   var q = (document.getElementById('reguaSearch').value || '').trim();
   var resEl = document.getElementById('reguaSearchResult');
   if(!q) { resEl.style.display='none'; return; }
-  var found = REGUA_DATA.filter(function(r){ return reguaInScope(r) && (r.cod === q || r.cod.replace(/^0+/,'') === q.replace(/^0+/,'')); });
-  if(!found.length) { resEl.style.display='block'; resEl.innerHTML='<div style="color:var(--muted);font-size:11px;">Nenhum resultado para "'+q+'"</div>'; return; }
-  var html = '<div style="font-family:Titillium Web,sans-serif;font-size:9px;color:var(--neon);letter-spacing:1px;margin-bottom:8px;">'+found.length+' RESULTADO(S)</div>';
+  var qNorm = q.replace(/^0+/,'');
+  var found = REGUA_DATA.filter(function(r){ return reguaInScope(r) && (r.cod === q || r.cod.replace(/^0+/,'') === qNorm); });
+  var retirada = RETIRADA_DATA.filter(function(r){ return r.cod === q || r.cod.replace(/^0+/,'') === qNorm; });
+  if(!found.length && !retirada.length) {
+    resEl.style.display='block';
+    resEl.innerHTML='<div style="color:var(--muted);font-size:11px;padding:4px 0;">Nenhum resultado para "'+q+'"</div>';
+    return;
+  }
+  var html = '';
   found.forEach(function(r) {
     var pn = getReguaNome(r.cod);
-    html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:4px;flex-wrap:wrap;">';
+    html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border:1px solid rgba(60,255,180,.25);border-radius:6px;margin-bottom:4px;flex-wrap:wrap;">';
     html += '<span style="font-family:Titillium Web,sans-serif;font-size:14px;color:#e8ff3c;font-weight:700;min-width:60px;">'+r.cod+'</span>';
     html += '<span style="font-size:14px;color:var(--text);min-width:160px;font-weight:600;">'+pn+'</span>';
+    html += '<span style="background:rgba(60,255,180,.12);border:1px solid rgba(60,255,180,.3);color:#3cffb4;border-radius:4px;padding:2px 8px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;margin-right:4px;">RÉGUA ATIVA</span>';
     html += '<span style="font-size:14px;color:#3cffb4;flex:1;min-width:150px;">'+r.regua+'</span>';
     html += '<span style="font-size:14px;color:#7ba4e8;min-width:120px;">'+r.banco+'</span>';
     html += '<span style="font-size:14px;color:var(--muted2);min-width:80px;">'+formatReguaDate(r.data)+'</span>';
+    html += '</div>';
+  });
+  retirada.forEach(function(r) {
+    var pn = getReguaNome(r.cod);
+    html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border:1px solid rgba(255,107,107,.25);border-radius:6px;margin-bottom:4px;flex-wrap:wrap;">';
+    html += '<span style="font-family:Titillium Web,sans-serif;font-size:14px;color:#e8ff3c;font-weight:700;min-width:60px;">'+r.cod+'</span>';
+    html += '<span style="font-size:14px;color:var(--text);min-width:160px;font-weight:600;">'+pn+'</span>';
+    html += '<span style="background:rgba(255,107,107,.15);border:1px solid rgba(255,107,107,.4);color:#ff6b6b;border-radius:4px;padding:2px 8px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;">RÉGUA INATIVADA DESDE: '+(r.data||'—')+'</span>';
     html += '</div>';
   });
   resEl.style.display='block'; resEl.innerHTML=html;
@@ -1837,7 +1905,7 @@ function switchTab(tab){
     btnSub.style.cssText='background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
     rSelSuper=null; rSelReg=null; rSelCom=null;
     if(!REGUA_DATA.length) loadReguaData();
-    else { renderReguaFilters(); renderReguaTable(REGUA_DATA); }
+    else { renderReguaFilters(); renderReguaTab(); }
   } else if(tab==='consulta'){
     if(sub) sub.style.display='none';
     if(mainSub) mainSub.style.display='none';
