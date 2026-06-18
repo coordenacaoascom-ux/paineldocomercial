@@ -2364,6 +2364,22 @@ function portalRenderHierarquiaCard(h){
   return '<div class="hierarquia">'+cc+cr+cs+'</div>';
 }
 
+var STORM_PROXY='https://novapromotora-sub.netlify.app/.netlify/functions/storm';
+function stormFmt(n){if(!n&&n!==0)return '—';return 'R$ '+Number(n).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
+function stormFmtDate(s){if(!s)return null;var d=s.split('T')[0].split('-');return d.length===3?d[2]+'/'+d[1]+'/'+d[0]:null;}
+function stormMapContrato(c,adeSearch){
+  var corStr='—';
+  if(c.corretor){var cu=c.corretor.usuario||'',cn=c.corretor.razao_social||c.corretor.nome||'';corStr=cu&&cn?cu+' - '+cn:cn||cu||'—';}
+  var sf=(c.status&&c.status.descricao?c.status.descricao:'').toUpperCase();
+  var pct='—';
+  if(c.producao_liquida&&c.valor_operacao&&c.valor_operacao>0)pct=(c.producao_liquida/c.valor_operacao*100).toFixed(2)+'%';
+  var linhas=[];
+  if(c.producao_bruta||c.producao_liquida){linhas.push({valorBase:stormFmt(c.valor_operacao),valorBaseBruto:stormFmt(c.producao_bruta),comissaoRecebida:pct,comissaoValor:stormFmt(c.producao_liquida),adiantamento:'—',importadoPor:'—',observacoes:c.observacao||'',dataImportacao:stormFmtDate(c.ultima_modificao_situacao)||'—',status:'Analisada'});}
+  var cp=null;
+  if(sf.includes('PAGA')||sf.includes('PAGO')){cp={dataPagamento:stormFmtDate(c.data_pagamento)||'—',valorBase:stormFmt(c.valor_operacao),valorComissao:stormFmt(c.producao_liquida),totalPercentual:pct,valorTotal:stormFmt(c.producao_liquida)};}
+  return{codigo:c.codigo||'—',ade:c.ade||adeSearch,responsavel:corStr,banco:c.banco_nome||'—',tipo:c.operacao_nome||c.tabela_produto||'—',digitacao:stormFmtDate(c.data_cadastro)||'—',comercial:corStr,regional:'—',multiloja:c.cod_loja?'Sim':'Não',nomeTabela:c.tabela_nome||'—',idTabela:c.tabela_codigo||'—',situacaoFinanceiro:sf,linhasComissao:linhas,comissaoPaga:cp,dataPagamento:stormFmtDate(c.data_pagamento),dadosOperacional:{contratoPendente:'—',situacaoContrato:c.status?c.status.descricao:'—',dataPgtoCliente:stormFmtDate(c.data_pagamento)||'',historicoSituacao:'—',historicoTrocaAde:'—',historicoPendencia:'—'}};
+}
+
 async function portalBuscar(){
   var valor=document.getElementById('portalBuscaInput').value.trim();
   var erroEl=document.getElementById('portalErroAde');
@@ -2372,8 +2388,14 @@ async function portalBuscar(){
   if(!valor){document.getElementById('portalResultado').style.display='none';document.getElementById('portalLoading').style.display='none';return;}
   document.getElementById('portalResultado').style.display='none';
   document.getElementById('portalLoading').style.display='block';
-  await new Promise(function(r){setTimeout(r,400);});
-  var p=PORTAL_PROPOSTAS.find(function(d){return d.ade===valor;});
+  var p=null;
+  try{
+    var resp=await fetch(STORM_PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ade:valor})});
+    var data=await resp.json();
+    if(Array.isArray(data)&&data.length>0){p=stormMapContrato(data[0],valor);}
+    else if(Array.isArray(data)&&data.length===0){/* not found */}
+    else if(data&&data.detail){/* API error */}
+  }catch(e){/* network error */}
   document.getElementById('portalLoading').style.display='none';
   if(!p){erroEl.style.display='block';return;}
   // Controle de acesso por hierarquia
