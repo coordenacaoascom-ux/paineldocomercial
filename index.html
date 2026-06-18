@@ -361,15 +361,24 @@ body{
 
 <!-- CONTEÚDO ABA PORTAL COMISSÕES -->
 <div id="tabContentPortal" style="display:none;">
-  <!-- SUB-ABAS -->
-  <div style="padding:0 40px;display:flex;gap:0;border-bottom:2px solid var(--border);">
-    <button id="portalSubTabConsulta" onclick="portalSwitchSubTab('consulta')" style="background:none;border:none;border-bottom:2px solid var(--neon);color:var(--neon);padding:10px 24px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">CONSULTAR ADE</button>
-    <button id="portalSubTabHier" onclick="portalSwitchSubTab('hierarquia')" style="background:none;border:none;border-bottom:2px solid transparent;color:var(--muted2);padding:10px 24px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">HIERARQUIA COMERCIAL</button>
+
+  <!-- FILTROS HIERARQUIA PORTAL -->
+  <div class="filter-section" id="portalFilterSection">
+    <div class="filter-row">
+      <span class="filter-label">&#9672; SUPERINTENDENTE</span>
+      <div class="filter-btns" id="portalSuperBtns"></div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">&#9672; REGIONAL</span>
+      <div class="filter-btns" id="portalRegBtns"></div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">&#9672; COMERCIAL</span>
+      <div class="filter-btns" id="portalComBtns"></div>
+    </div>
   </div>
 
-  <!-- CONSULTAR ADE -->
-  <div id="portalTabConsulta">
-    <div style="display:flex;justify-content:center;padding:24px 40px 12px;">
+  <div style="display:flex;justify-content:center;padding:24px 40px 12px;">
       <div class="portal-search-box">
         <input type="text" id="portalBuscaInput" placeholder="Digite o número ADE da proposta..." onkeydown="if(event.key==='Enter'){clearTimeout(portalDebounce);portalBuscar();}">
         <button onclick="portalBuscar()">🔍</button>
@@ -415,12 +424,6 @@ body{
         <div id="portalSecFinanceiro"></div>
       </div>
     </div>
-  </div>
-
-  <!-- HIERARQUIA COMERCIAL -->
-  <div id="portalTabHierarquia" style="display:none;padding:20px 40px 40px;max-height:calc(100vh - 160px);overflow-y:auto;">
-    <div id="portalHierarquiaContainer"></div>
-  </div>
 </div>
 
 <!-- CONTEÚDO ABA SUB -->
@@ -2034,17 +2037,7 @@ function switchTab(tab){
   } else if(tab==='portal'){
     if(portal) portal.style.display='block';
     if(btnPortal) btnPortal.style.cssText=activeS;
-    // Sync portal user from dashboard session
-    if(CURRENT_USER){
-      var p=CURRENT_USER.perfil;
-      if(p==='comercial'){
-        portalUsuarioLogado={cod:CURRENT_USER.login,nome:CURRENT_USER.login,isAdmin:false};
-      } else {
-        portalUsuarioLogado={cod:'admin',nome:'Administrador',isAdmin:true};
-      }
-    } else {
-      portalUsuarioLogado={cod:'admin',nome:'Administrador',isAdmin:true};
-    }
+    portalRenderFilters();
   }
 }
 
@@ -2153,24 +2146,119 @@ function switchTab(tab){
 <script>
 var portalUsuarioLogado = null;
 var portalDebounce;
+var portalSelSuper = null, portalSelReg = null, portalSelCom = null;
 
-function portalSwitchSubTab(tab) {
-  var consultaTab = document.getElementById('portalTabConsulta');
-  var hierTab = document.getElementById('portalTabHierarquia');
-  var btnC = document.getElementById('portalSubTabConsulta');
-  var btnH = document.getElementById('portalSubTabHier');
-  var actS = 'background:none;border:none;border-bottom:2px solid var(--neon);color:var(--neon);padding:10px 24px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
-  var inactS = 'background:none;border:none;border-bottom:2px solid transparent;color:var(--muted2);padding:10px 24px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
-  if (tab === 'consulta') {
-    consultaTab.style.display = 'block';
-    hierTab.style.display = 'none';
-    btnC.style.cssText = actS; btnH.style.cssText = inactS;
-  } else {
-    consultaTab.style.display = 'none';
-    hierTab.style.display = 'block';
-    btnC.style.cssText = inactS; btnH.style.cssText = actS;
-    portalRenderizarHierarquia();
+// Constrói os botões de filtro de hierarquia na aba portal
+function portalRenderFilters() {
+  var perfil = CURRENT_USER ? CURRENT_USER.perfil : 'admin';
+  var escopo = CURRENT_USER ? (CURRENT_USER.escopo || '') : '';
+  var parts = escopo.split('/');
+
+  // Monta superMap a partir de PORTAL_HIER_PLANILHA
+  var superMap = {}, regMap = {};
+  PORTAL_HIER_PLANILHA.forEach(function(c) {
+    var sup = c.super ? c.super.split(' - ').slice(1).join(' - ') : null;
+    var reg = c.regional ? c.regional.split(' - ').slice(1).join(' - ') : null;
+    if (sup) { superMap[sup] = true; }
+    if (sup && reg) { if (!regMap[sup]) regMap[sup] = {}; regMap[sup][reg] = true; }
+  });
+
+  function renderBtn(container, label, active, onClick) {
+    var btn = document.createElement('button');
+    btn.className = 'filter-btn' + (active ? ' active' : '');
+    btn.textContent = label;
+    btn.onclick = onClick;
+    container.appendChild(btn);
   }
+
+  var sBtns = document.getElementById('portalSuperBtns');
+  var rBtns = document.getElementById('portalRegBtns');
+  var cBtns = document.getElementById('portalComBtns');
+  if (!sBtns) return;
+  sBtns.innerHTML = ''; rBtns.innerHTML = ''; cBtns.innerHTML = '';
+
+  if (perfil === 'admin') {
+    // Todos os supers + Todos
+    renderBtn(sBtns, 'Todos', !portalSelSuper, function() { portalSelSuper=null; portalSelReg=null; portalSelCom=null; portalRenderFilters(); });
+    Object.keys(superMap).sort().forEach(function(sup) {
+      renderBtn(sBtns, sup.split(' ')[0], portalSelSuper===sup, function() { portalSelSuper=sup; portalSelReg=null; portalSelCom=null; portalRenderFilters(); });
+    });
+  } else if (perfil === 'super') {
+    sBtns.innerHTML = '<span style="font-size:13px;color:var(--neon)">'+parts[0]+'</span>';
+    portalSelSuper = parts[0];
+  } else if (perfil === 'regional') {
+    sBtns.innerHTML = '<span style="font-size:13px;color:var(--neon)">'+parts[0]+'</span>';
+    rBtns.innerHTML = '<span style="font-size:13px;color:var(--neon)">'+parts[1]+'</span>';
+    portalSelSuper = parts[0]; portalSelReg = parts[1];
+  } else {
+    sBtns.innerHTML = '<span style="font-size:13px;color:var(--neon)">'+parts[0]+'</span>';
+    rBtns.innerHTML = '<span style="font-size:13px;color:var(--neon)">'+parts[1]+'</span>';
+    cBtns.innerHTML = '<span style="font-size:13px;color:var(--neon)">'+CURRENT_USER.login+'</span>';
+    portalSelSuper = parts[0]; portalSelReg = parts[1]; portalSelCom = CURRENT_USER.login;
+    return;
+  }
+
+  // Regionais do super selecionado
+  if (portalSelSuper && regMap[portalSelSuper] && perfil === 'admin') {
+    renderBtn(rBtns, '— todos —', !portalSelReg, function() { portalSelReg=null; portalSelCom=null; portalRenderFilters(); });
+    Object.keys(regMap[portalSelSuper]).sort().forEach(function(reg) {
+      renderBtn(rBtns, reg.split(' ')[0], portalSelReg===reg, function() { portalSelReg=reg; portalSelCom=null; portalRenderFilters(); });
+    });
+  } else if (!portalSelSuper) {
+    rBtns.innerHTML = '<span style="font-size:12px;color:var(--muted2)">— selecione um superintendente —</span>';
+    cBtns.innerHTML = '<span style="font-size:12px;color:var(--muted2)">— selecione um regional —</span>';
+    return;
+  }
+
+  // Comerciais do regional selecionado
+  if (portalSelReg && perfil === 'admin') {
+    var comsNoReg = PORTAL_HIER_PLANILHA.filter(function(c) {
+      var sup = c.super ? c.super.split(' - ').slice(1).join(' - ') : null;
+      var reg = c.regional ? c.regional.split(' - ').slice(1).join(' - ') : null;
+      return sup === portalSelSuper && reg === portalSelReg;
+    });
+    renderBtn(cBtns, '— todos —', !portalSelCom, function() { portalSelCom=null; portalRenderFilters(); });
+    comsNoReg.forEach(function(c) {
+      var label = c.nome.split(' ')[0];
+      renderBtn(cBtns, label, portalSelCom===c.cod, function() { portalSelCom=c.cod; portalRenderFilters(); });
+    });
+  } else if (!portalSelReg) {
+    cBtns.innerHTML = '<span style="font-size:12px;color:var(--muted2)">— selecione um regional —</span>';
+  }
+}
+
+// Verifica se uma proposta está no escopo do usuário logado + filtros manuais
+function portalInScope(proposta) {
+  var sf = proposta.situacaoFinanceiro || '';
+  var semUsuario = !proposta.comercial || proposta.comercial === '—' || proposta.comercial === '-';
+  // Único cenário que aparece para todos
+  if (semUsuario && sf.includes('DADOS IMPORTADOS')) return true;
+
+  var codProp = semUsuario ? null : proposta.comercial.split(' - ')[0].trim().replace(/^0+/, '');
+  var hierEntry = codProp ? PORTAL_HIER_PLANILHA.find(function(h){ return h.cod.replace(/^0+/,'')===codProp; }) : null;
+
+  var perfil = CURRENT_USER ? CURRENT_USER.perfil : 'admin';
+  if (perfil === 'admin') {
+    // Respeita filtros manuais
+    if (portalSelCom) return hierEntry && hierEntry.cod.replace(/^0+/,'') === portalSelCom.replace(/^0+/,'');
+    if (portalSelReg) return hierEntry && hierEntry.regional && normAccent(hierEntry.regional.split(' - ').slice(1).join(' - ')) === normAccent(portalSelReg);
+    if (portalSelSuper) return hierEntry && hierEntry.super && normAccent(hierEntry.super.split(' - ').slice(1).join(' - ')) === normAccent(portalSelSuper);
+    return true;
+  }
+  if (perfil === 'super') {
+    if (!hierEntry || !hierEntry.super) return false;
+    var supName = (CURRENT_USER.escopo||'').split('/')[0];
+    return normAccent(hierEntry.super.split(' - ').slice(1).join(' - ')) === normAccent(supName);
+  }
+  if (perfil === 'regional') {
+    if (!hierEntry || !hierEntry.regional) return false;
+    var regName = (CURRENT_USER.escopo||'').split('/')[1] || '';
+    return normAccent(hierEntry.regional.split(' - ').slice(1).join(' - ')) === normAccent(regName);
+  }
+  if (perfil === 'comercial') {
+    return codProp && codProp === (CURRENT_USER.login||'').replace(/^0+/,'');
+  }
+  return false;
 }
 
 function portalGerarMsgCopiar(p) {
@@ -2288,16 +2376,12 @@ async function portalBuscar(){
   var p=PORTAL_PROPOSTAS.find(function(d){return d.ade===valor;});
   document.getElementById('portalLoading').style.display='none';
   if(!p){erroEl.style.display='block';return;}
-  // Controle de acesso
-  if(portalUsuarioLogado&&!portalUsuarioLogado.isAdmin){
-    var codProp=p.comercial?p.comercial.split(' - ')[0].trim():null;
-    var naoVinc=!p.comercial||p.comercial==='—'||p.comercial==='-';
-    if(!naoVinc&&codProp!==portalUsuarioLogado.cod){
-      var aS=document.getElementById('portalAlertaSala');
-      aS.style.display='block';
-      aS.innerHTML='<div style="display:flex;align-items:flex-start;gap:12px;"><span style="font-size:24px;flex-shrink:0;">🚫</span><div><b style="font-size:14px;">Acesso não permitido</b><br><span style="font-size:13px;">Esta proposta não pertence à sua sala comercial. Você só pode consultar propostas vinculadas ao código <b>'+portalUsuarioLogado.cod+'</b>.</span></div></div>';
-      return;
-    }
+  // Controle de acesso por hierarquia
+  if(!portalInScope(p)){
+    var aS=document.getElementById('portalAlertaSala');
+    aS.style.display='block';
+    aS.innerHTML='<div style="display:flex;align-items:flex-start;gap:12px;"><span style="font-size:24px;flex-shrink:0;">🚫</span><div><b style="font-size:14px;">Acesso não permitido</b><br><span style="font-size:13px;">Esta proposta está fora do seu escopo de hierarquia.</span></div></div>';
+    return;
   }
   // Reset seções
   document.querySelector('#portalResultado .portal-cards').style.display='';
