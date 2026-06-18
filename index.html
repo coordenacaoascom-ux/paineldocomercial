@@ -1718,15 +1718,51 @@ function renderReguaTable(data) {
   el.innerHTML = html;
 }
 
+function getRetiradaHierarquia(cod) {
+  var cNorm = String(cod||'').replace(/^0+/,'');
+  // Tenta encontrar no BANK_PARTNERS
+  if(typeof BANK_PARTNERS !== 'undefined') {
+    for(var banco in BANK_PARTNERS) {
+      var lista = BANK_PARTNERS[banco];
+      for(var i=0; i<lista.length; i++) {
+        var cp = String(lista[i].cod_parceiro||'').replace(/^0+/,'');
+        if(cp === cNorm) {
+          var com = (lista[i].com||'').toUpperCase();
+          var reg = (lista[i].reg||'').toUpperCase();
+          var sup = SUP_OF_COM_R[com] || '';
+          return { com: com, reg: reg, sup: sup };
+        }
+      }
+    }
+  }
+  // Tenta encontrar no REGUA_DATA (ativo)
+  for(var j=0; j<REGUA_DATA.length; j++) {
+    var rc = String(REGUA_DATA[j].cod||'').replace(/^0+/,'');
+    if(rc === cNorm) {
+      return { com: getReguaCom(REGUA_DATA[j]), reg: getReguaReg(REGUA_DATA[j]), sup: getReguaSup(REGUA_DATA[j]) };
+    }
+  }
+  return { com: '', reg: '', sup: '' };
+}
+
+function retiradaInScope(cod) {
+  if(!CURRENT_USER) return true;
+  var h = getRetiradaHierarquia(cod);
+  var parts = CURRENT_USER.escopo.split('|');
+  var perfil = CURRENT_USER.perfil;
+  if(perfil==='super' && normAccent(h.sup)!==normAccent(parts[0])) return false;
+  if(perfil==='regional' && normAccent(h.reg)!==normAccent(parts[1])) return false;
+  if(perfil==='comercial' && normAccent(h.com)!==normAccent(parts[2])) return false;
+  if(rSelSuper && normAccent(h.sup)!==normAccent(rSelSuper)) return false;
+  if(rSelReg && normAccent(h.reg)!==normAccent(rSelReg)) return false;
+  if(rSelCom && normAccent(h.com)!==normAccent(rSelCom)) return false;
+  return true;
+}
+
 function renderReguaInativas() {
   var el = document.getElementById('reguaList');
   if(!el) return;
-  var filtered = RETIRADA_DATA.filter(function(r){
-    if(!CURRENT_USER) return true;
-    // scope check: inativas só filtram por cod presente em REGUA_DATA scope?
-    // Simples: sem filtro de hierarquia para inativas (não têm comercial no dado)
-    return true;
-  });
+  var filtered = RETIRADA_DATA.filter(function(r){ return retiradaInScope(r.cod); });
   var stEl = document.getElementById('reguaStatus');
   if(stEl) stEl.innerHTML = '<span style="color:#ff6b6b">● ' + filtered.length + ' inativa(s)</span>';
   if(!filtered.length) { el.innerHTML='<div style="color:var(--muted);padding:20px;font-family:Titillium Web,sans-serif;">Sem registros de retirada</div>'; return; }
