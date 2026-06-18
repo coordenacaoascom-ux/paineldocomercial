@@ -2364,7 +2364,8 @@ function portalRenderHierarquiaCard(h){
   return '<div class="hierarquia">'+cc+cr+cs+'</div>';
 }
 
-var STORM_PROXY='https://novapromotora-sub.netlify.app/.netlify/functions/storm';
+var STORM_PROXY=''; // Preencher com a URL do Apps Script após publicar (veja apps-script-storm.js)
+var STORM_GAS_TOKEN='stormportal2026np';
 function stormFmt(n){if(!n&&n!==0)return '—';return 'R$ '+Number(n).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
 function stormFmtDate(s){if(!s)return null;var d=s.split('T')[0].split('-');return d.length===3?d[2]+'/'+d[1]+'/'+d[0]:null;}
 function stormMapContrato(c,adeSearch){
@@ -2390,7 +2391,8 @@ async function portalBuscar(){
   document.getElementById('portalLoading').style.display='block';
   var p=null;
   try{
-    var resp=await fetch(STORM_PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ade:valor})});
+    if(!STORM_PROXY){document.getElementById('portalLoading').style.display='none';erroEl.style.display='block';return;}
+    var resp=await fetch(STORM_PROXY+'?token='+STORM_GAS_TOKEN+'&ade='+encodeURIComponent(valor));
     var data=await resp.json();
     if(Array.isArray(data)&&data.length>0){p=data[0];}
     else if(data&&data.error){/* API error */}
