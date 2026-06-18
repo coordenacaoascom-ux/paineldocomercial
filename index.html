@@ -2364,7 +2364,7 @@ function portalRenderHierarquiaCard(h){
   return '<div class="hierarquia">'+cc+cr+cs+'</div>';
 }
 
-var STORM_PROXY='https://script.google.com/macros/s/AKfycbwaXOIIppXwga1dnUyJihv3ai6N2NKIrqJoClDRTpAfgsio6iylbohtPhN-Zh-54a46/exec';
+var STORM_PROXY='https://script.google.com/macros/s/AKfycbyD88HBwLchDU2VMd2q8naVl7rsz-Od3OU84RP7vaaQGxFHVuswifbXRVfYC157bAk/exec';
 var STORM_GAS_TOKEN='stormportal2026np';
 function stormFmt(n){if(!n&&n!==0)return '—';return 'R$ '+Number(n).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
 function stormFmtDate(s){if(!s)return null;var d=s.split('T')[0].split('-');return d.length===3?d[2]+'/'+d[1]+'/'+d[0]:null;}
