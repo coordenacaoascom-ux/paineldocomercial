@@ -2389,23 +2389,28 @@ async function portalBuscar(){
   if(!valor){document.getElementById('portalResultado').style.display='none';document.getElementById('portalLoading').style.display='none';return;}
   document.getElementById('portalResultado').style.display='none';
   document.getElementById('portalLoading').style.display='block';
-  var p=null;
+  var _allContratos=[];
   try{
     if(!STORM_PROXY){document.getElementById('portalLoading').style.display='none';erroEl.style.display='block';return;}
     var resp=await fetch(STORM_PROXY+'?token='+STORM_GAS_TOKEN+'&ade='+encodeURIComponent(valor));
     var data=await resp.json();
-    if(Array.isArray(data)&&data.length>0){p=data[0];}
-    else if(data&&data.error){/* API error */}
+    _allContratos=Array.isArray(data)?data.filter(portalInScope):[];
   }catch(e){/* network error */}
   document.getElementById('portalLoading').style.display='none';
-  if(!p){erroEl.style.display='block';return;}
-  // Controle de acesso por hierarquia
-  if(!portalInScope(p)){
+  if(_allContratos.length===0){erroEl.style.display='block';return;}
+  if(_allContratos.length>1){
+    _PORTAL_CONTRATOS_MULTI=_allContratos;
+    var bankCards=_allContratos.map(function(c,i){return '<button onclick="_portalRenderContrato(_PORTAL_CONTRATOS_MULTI['+i+'])" style="width:100%;text-align:left;background:rgba(30,41,59,0.8);border:1px solid rgba(99,102,241,0.3);border-radius:10px;padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;color:#e2e8f0;transition:border-color 0.2s;" onmouseover="this.style.borderColor=\'rgba(99,102,241,0.7)\'" onmouseout="this.style.borderColor=\'rgba(99,102,241,0.3)\'"><div><div style="font-size:15px;font-weight:700;color:#a5b4fc;margin-bottom:4px;">🏦 '+c.banco+'</div><div style="font-size:13px;color:#94a3b8;">'+c.codigo+' &nbsp;·&nbsp; '+c.tipo+'</div></div><span style="color:#6366f1;font-size:20px;">›</span></button>';}).join('');
     var aS=document.getElementById('portalAlertaSala');
     aS.style.display='block';
-    aS.innerHTML='<div style="display:flex;align-items:flex-start;gap:12px;"><span style="font-size:24px;flex-shrink:0;">🚫</span><div><b style="font-size:14px;">Acesso não permitido</b><br><span style="font-size:13px;">Esta proposta está fora do seu escopo de hierarquia.</span></div></div>';
+    aS.innerHTML='<div style="background:rgba(15,23,42,0.95);border:1px solid rgba(99,102,241,0.3);border-radius:14px;padding:20px;"><h3 style="color:#e2e8f0;margin:0 0 10px;font-size:15px;">🏦 Múltiplos contratos encontrados</h3><p style="color:#94a3b8;font-size:13px;margin:0 0 14px;">Esta ADE possui '+_allContratos.length+' contratos no seu escopo. Selecione o banco para ver a comissão:</p><div style="display:flex;flex-direction:column;gap:8px;">'+bankCards+'</div></div>';
     return;
   }
+  await _portalRenderContrato(_allContratos[0]);
+}
+var _PORTAL_CONTRATOS_MULTI=[];
+async function _portalRenderContrato(p){
+  document.getElementById('portalAlertaSala').style.display='none';
   // Reset seções
   document.querySelector('#portalResultado .portal-cards').style.display='';
   document.getElementById('portalSecTabela').style.display='';

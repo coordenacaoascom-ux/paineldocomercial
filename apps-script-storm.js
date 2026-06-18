@@ -137,6 +137,29 @@ function normalizeContrato(c) {
   };
 }
 
+function buscarTotalRepassado(token, usuario, dataPgtoBc) {
+  var parts = dataPgtoBc.split('T')[0].split('-');
+  if (parts.length < 3) return null;
+  var mes = parseInt(parts[1], 10);
+  var ano = parseInt(parts[0], 10);
+  var pgtoMs = new Date(ano, mes - 1, parseInt(parts[2], 10)).getTime();
+  try {
+    var resp = UrlFetchApp.fetch(
+      STORM_BASE + '/conta_corrente/consulta_lancamentos?usuario=' + encodeURIComponent(usuario) + '&mes=' + mes + '&ano=' + ano,
+      { method: 'get', headers: { 'Authorization': 'Bearer ' + token }, muteHttpExceptions: true }
+    );
+    var data = JSON.parse(resp.getContentText());
+    var lancamentos = (data && data.lancamentos) ? data.lancamentos : [];
+    var matches = lancamentos.filter(function(l) {
+      if (l.categoria !== 'Comissão paga ao Parceiro') return false;
+      var ldMs = new Date(l.data_lancamento + 'T00:00:00').getTime();
+      return Math.abs(ldMs - pgtoMs) <= 3 * 24 * 3600 * 1000;
+    });
+    if (matches.length >= 1) return matches[0].valor;
+  } catch(ex) {}
+  return null;
+}
+
 function doGet(e) {
   var output = ContentService.createTextOutput();
   output.setMimeType(ContentService.MimeType.JSON);
@@ -163,7 +186,17 @@ function doGet(e) {
 
     var raw = JSON.parse(resp.getContentText());
     var items = (raw && raw.data) ? raw.data : (Array.isArray(raw) ? raw : []);
-    var contratos = items.map(normalizeContrato);
+    var contratos = items.map(function(c) {
+      var norm = normalizeContrato(c);
+      if (norm.situacaoFinanceiro.indexOf('PAGA AO CORRETOR') >= 0 &&
+          c.corretor && c.corretor.usuario && c.data_pgto_bc) {
+        var total = buscarTotalRepassado(stormToken, c.corretor.usuario, c.data_pgto_bc);
+        if (total !== null && norm.comissaoPaga) {
+          norm.comissaoPaga.valorTotal = fmtBRL(total);
+        }
+      }
+      return norm;
+    });
 
     output.setContent(JSON.stringify(contratos));
   } catch(e) {
