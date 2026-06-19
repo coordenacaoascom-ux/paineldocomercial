@@ -86,6 +86,14 @@ function normalizeContrato(c) {
 
   var responsavelStr = cor.nome || '—';
 
+  // Multiloja: parent_id > 0 indica corretor filiado; master fica em loja_sala.nome
+  var multilojaStr = 'Não';
+  var masterNome = '';
+  if (cor.parent_id && parseInt(cor.parent_id, 10) > 0 && sala.nome) {
+    masterNome = sala.nome;
+    multilojaStr = 'Sim - Filiado, Master: ' + masterNome;
+  }
+
   var tcc = c.tabela_coeficiente_comissao || {};
   var statusNome = (c.status_contrato && c.status_contrato.nome) || '';
   var sf = deriveSituacao(c);
@@ -132,11 +140,12 @@ function normalizeContrato(c) {
     responsavel: responsavelStr,
     banco: (c.banco && c.banco.nome) || '—',
     tipo: (c.operacao && c.operacao.nome) || '—',
-    digitacao: fmtDate(c.data_pgto_bc) || '—',
+    digitacao: fmtDate(c.data_cadastro) || fmtDate(c.data_pgto_bc) || '—',
     comercial: comercialStr,
     comercialCod: comercialCod,
     regional: regionalStr,
-    multiloja: cor.corretor_multilojas ? 'Sim' : 'Não',
+    multiloja: multilojaStr,
+    masterNome: masterNome,
     nomeTabela: (tcc.orgao_tabela && tcc.orgao_tabela.nome_tabela) || '—',
     idTabela: tcc.id ? 'P.' + tcc.id : '—',
     situacaoFinanceiro: sf,
@@ -240,11 +249,26 @@ function doGet(e) {
           c.corretor && c.corretor.usuario && c.data_pgto_bc) {
         var tcc = c.tabela_coeficiente_comissao || {};
         var repPct = parseFloat(tcc.comissao_repassada) || 0;
-        var repVal = (c.valor_bruto || 0) * repPct / 100;
-        var result = buscarTotalRepassado(stormToken, c.corretor.usuario, c.data_pgto_bc, repVal);
-        if (result !== null && norm.comissaoPaga) {
-          norm.comissaoPaga.valorTotal = fmtBRL(result.valor);
-          if (result.data) norm.comissaoPaga.dataPagamento = fmtDate(result.data) || norm.comissaoPaga.dataPagamento;
+        var repVal = (c.valor_liquido || c.valor_bruto || 0) * repPct / 100;
+        if (norm.masterNome) {
+          // Multiloja: busca lançamento do filiado e do master separadamente
+          var masterCod = norm.masterNome.split(' - ')[0].trim();
+          var filRes = buscarTotalRepassado(stormToken, c.corretor.usuario, c.data_pgto_bc, repVal);
+          var masRes = buscarTotalRepassado(stormToken, masterCod, c.data_pgto_bc, null);
+          if (norm.comissaoPaga) {
+            if (filRes) {
+              norm.comissaoPaga.valorFiliado = fmtBRL(filRes.valor);
+              norm.comissaoPaga.valorTotal = fmtBRL(filRes.valor);
+              if (filRes.data) norm.comissaoPaga.dataPagamento = fmtDate(filRes.data) || norm.comissaoPaga.dataPagamento;
+            }
+            if (masRes) norm.comissaoPaga.valorMaster = fmtBRL(masRes.valor);
+          }
+        } else {
+          var result = buscarTotalRepassado(stormToken, c.corretor.usuario, c.data_pgto_bc, repVal);
+          if (result !== null && norm.comissaoPaga) {
+            norm.comissaoPaga.valorTotal = fmtBRL(result.valor);
+            if (result.data) norm.comissaoPaga.dataPagamento = fmtDate(result.data) || norm.comissaoPaga.dataPagamento;
+          }
         }
       }
       return norm;
