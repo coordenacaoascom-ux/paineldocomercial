@@ -64,6 +64,8 @@ function deriveSituacao(c) {
   var temData = isValidDate(c.data_pgto_bc);
   if (!cor || !cor.usuario) return 'DADOS IMPORTADOS — USUÁRIO NÃO VINCULADO';
   if (/TOMAD/i.test(statusNome)) return 'CONTRATO EM TOMADA DE DECISÃO';
+  // "Pago ao Cliente-Com Pendência ou Sem Físico" → commission on hold pending docs
+  if (/Pend|Sem F/i.test(statusNome) && temData) return 'COMISSÃO DISPONÍVEL PARA PAGAMENTO (PENDENTE DE FÍSICO)';
   if (!tcc) return temData ? 'DADOS IMPORTADOS' : 'AGUARDANDO IMPORTAÇÃO (RELATÓRIO BANCO)';
   return temData ? 'COMISSÃO PAGA AO CORRETOR' : 'COMISSÃO DISPONÍVEL PARA PAGAMENTO';
 }
@@ -84,6 +86,7 @@ function normalizeContrato(c) {
   var responsavelStr = (cor.usuario && cor.nome) ? cor.usuario + ' - ' + cor.nome : '—';
 
   var tcc = c.tabela_coeficiente_comissao || {};
+  var statusNome = (c.status_contrato && c.status_contrato.nome) || '';
   var sf = deriveSituacao(c);
   var vb = c.valor_bruto || 0;
   var recPct     = parseFloat(tcc.comissao_recebida) || 0;
@@ -139,7 +142,7 @@ function normalizeContrato(c) {
     comissaoPaga: comissaoPaga,
     dataPagamento: fmtDate(c.data_pgto_bc),
     dadosOperacional: {
-      contratoPendente: '—',
+      contratoPendente: /Pend|Sem F/i.test(statusNome) ? 'Sim' : '—',
       situacaoContrato: (c.status_contrato && c.status_contrato.nome) || '—',
       dataPgtoCliente: fmtDate(c.data_pgto_bc) || '',
       historicoSituacao: '—',
