@@ -225,7 +225,6 @@ function doGet(e) {
         if (result !== null && norm.comissaoPaga) {
           norm.comissaoPaga.valorTotal = fmtBRL(result.valor);
           if (result.data) norm.comissaoPaga.dataPagamento = fmtDate(result.data) || norm.comissaoPaga.dataPagamento;
-          if (result.valorBase) norm.comissaoPaga.valorBase = fmtBRL(result.valorBase);
         }
       }
       return norm;
