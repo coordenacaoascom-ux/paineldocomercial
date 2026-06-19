@@ -214,6 +214,13 @@ function doGet(e) {
 
     var raw = JSON.parse(resp.getContentText());
     var items = (raw && raw.data) ? raw.data : (Array.isArray(raw) ? raw : []);
+
+    // Modo debug: retorna campos brutos do primeiro contrato para inspecao
+    if (e.parameter.debug === '1' && items.length > 0) {
+      output.setContent(JSON.stringify({ _debug_keys: Object.keys(items[0]), _raw: items[0] }));
+      return output;
+    }
+
     var contratos = items.map(function(c) {
       var norm = normalizeContrato(c);
       if (norm.situacaoFinanceiro.indexOf('PAGA AO CORRETOR') >= 0 &&
