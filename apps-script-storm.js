@@ -215,9 +215,22 @@ function doGet(e) {
     var raw = JSON.parse(resp.getContentText());
     var items = (raw && raw.data) ? raw.data : (Array.isArray(raw) ? raw : []);
 
-    // Modo debug: retorna campos brutos do primeiro contrato para inspecao
+    // Modo debug: retorna campos brutos do contrato e lançamentos da conta corrente
     if (e.parameter.debug === '1' && items.length > 0) {
-      output.setContent(JSON.stringify({ _debug_keys: Object.keys(items[0]), _raw: items[0] }));
+      var c0 = items[0];
+      var debugResult = { _contrato_keys: Object.keys(c0), _contrato: c0 };
+      if (c0.corretor && c0.corretor.usuario && c0.data_pgto_bc) {
+        var stk = getStormToken();
+        var dp = c0.data_pgto_bc.split('T')[0].split('-');
+        var mes = parseInt(dp[1], 10), ano = parseInt(dp[0], 10);
+        try {
+          var lr = UrlFetchApp.fetch(STORM_BASE + '/conta_corrente/consulta_lancamentos?usuario=' + encodeURIComponent(c0.corretor.usuario) + '&mes=' + mes + '&ano=' + ano,
+            { method: 'get', headers: { 'Authorization': 'Bearer ' + stk }, muteHttpExceptions: true });
+          var ld = JSON.parse(lr.getContentText());
+          debugResult._lancamentos = (ld && ld.lancamentos) ? ld.lancamentos : ld;
+        } catch(ex) { debugResult._lancamentos_erro = ex.message; }
+      }
+      output.setContent(JSON.stringify(debugResult));
       return output;
     }
 
