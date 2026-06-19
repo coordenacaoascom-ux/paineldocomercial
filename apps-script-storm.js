@@ -86,19 +86,23 @@ function normalizeContrato(c) {
   var tcc = c.tabela_coeficiente_comissao || {};
   var sf = deriveSituacao(c);
   var vb = c.valor_bruto || 0;
-  var pct = parseFloat(tcc.comissao_recebida) || 0;
-  var comissaoVal = vb * pct / 100;
-  var adiantamentoPct = parseFloat(tcc.comissao_recebida_adiantamento) || 0;
+  var recPct     = parseFloat(tcc.comissao_recebida) || 0;
+  var repPct     = parseFloat(tcc.comissao_repassada) || 0;
+  var repVal     = vb * repPct / 100;
+  var adtRecPct  = parseFloat(tcc.comissao_recebida_adiantamento) || 0;
+  var adtRepPct  = parseFloat(tcc.comissao_repassada_adiantamento) || 0;
+  var adtRepVal  = vb * adtRepPct / 100;
+  var totalRep   = repVal + adtRepVal;
 
   var linhas = [];
   if (tcc.id) {
     linhas.push({
       valorBase: fmtBRL(vb),
       valorBaseBruto: '—',
-      comissaoRecebida: pct.toFixed(2) + '%',
-      comissaoValor: fmtBRL(comissaoVal),
-      adiantamento: adiantamentoPct > 0 ? fmtBRL(vb * adiantamentoPct / 100) : '—',
-      adiantamentoPct: adiantamentoPct > 0 ? adiantamentoPct.toFixed(2) + '%' : '—',
+      comissaoRecebida: recPct.toFixed(2) + '%',
+      comissaoValor: fmtBRL(repVal),
+      adiantamento: adtRepPct > 0 ? fmtBRL(adtRepVal) : '—',
+      adiantamentoPct: adtRepPct > 0 ? adtRepPct.toFixed(2) + '%' : '—',
       importadoPor: '—',
       observacoes: '',
       dataImportacao: fmtDate(c.data_pgto_bc) || '—',
@@ -111,9 +115,10 @@ function normalizeContrato(c) {
     comissaoPaga = {
       dataPagamento: fmtDate(c.data_pgto_bc) || '—',
       valorBase: fmtBRL(vb),
-      valorComissao: fmtBRL(comissaoVal),
-      totalPercentual: pct.toFixed(2) + '%',
-      valorTotal: fmtBRL(comissaoVal)
+      valorComissao: fmtBRL(repVal),
+      valorAdiantamento: adtRepPct > 0 ? fmtBRL(adtRepVal) : '—',
+      totalPercentual: (repPct + adtRepPct).toFixed(2) + '%',
+      valorTotal: fmtBRL(totalRep)
     };
   }
 
