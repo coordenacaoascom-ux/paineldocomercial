@@ -40,8 +40,14 @@ function getStormToken() {
   return data.access_token;
 }
 
+function isValidDate(s) {
+  if (!s) return false;
+  var base = s.split('T')[0];
+  return base !== '0000-00-00' && base.replace(/[-0]/g, '') !== '';
+}
+
 function fmtDate(s) {
-  if (!s) return null;
+  if (!isValidDate(s)) return null;
   var d = s.split('T')[0].split('-');
   return d.length === 3 ? d[2] + '/' + d[1] + '/' + d[0] : null;
 }
@@ -55,10 +61,11 @@ function deriveSituacao(c) {
   var tcc = c.tabela_coeficiente_comissao;
   var cor = c.corretor;
   var statusNome = (c.status_contrato && c.status_contrato.nome) || '';
+  var temData = isValidDate(c.data_pgto_bc);
   if (!cor || !cor.usuario) return 'DADOS IMPORTADOS — USUÁRIO NÃO VINCULADO';
   if (/TOMAD/i.test(statusNome)) return 'CONTRATO EM TOMADA DE DECISÃO';
-  if (!tcc) return c.data_pgto_bc ? 'DADOS IMPORTADOS' : 'AGUARDANDO IMPORTAÇÃO (RELATÓRIO BANCO)';
-  return c.data_pgto_bc ? 'COMISSÃO PAGA AO CORRETOR' : 'COMISSÃO DISPONÍVEL PARA PAGAMENTO';
+  if (!tcc) return temData ? 'DADOS IMPORTADOS' : 'AGUARDANDO IMPORTAÇÃO (RELATÓRIO BANCO)';
+  return temData ? 'COMISSÃO PAGA AO CORRETOR' : 'COMISSÃO DISPONÍVEL PARA PAGAMENTO';
 }
 
 function normalizeContrato(c) {
@@ -155,7 +162,7 @@ function buscarTotalRepassado(token, usuario, dataPgtoBc) {
       var ldMs = new Date(l.data_lancamento + 'T00:00:00').getTime();
       return Math.abs(ldMs - pgtoMs) <= 3 * 24 * 3600 * 1000;
     });
-    if (matches.length >= 1) return matches[0].valor;
+    if (matches.length === 1) return matches[0].valor;
   } catch(ex) {}
   return null;
 }
