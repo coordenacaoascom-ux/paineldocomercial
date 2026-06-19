@@ -77,13 +77,14 @@ function normalizeContrato(c) {
   var regionalInfo = sala.regional || {};
 
   var comercialStr = '—';
-  if (comercialInfo.usuario && comercialInfo.nome) comercialStr = comercialInfo.usuario + ' - ' + comercialInfo.nome;
-  else if (cor.usuario && cor.nome) comercialStr = cor.usuario + ' - ' + cor.nome;
+  var comercialCod = '';
+  if (comercialInfo.nome) { comercialStr = comercialInfo.nome; comercialCod = comercialInfo.usuario || ''; }
+  else if (cor.nome)      { comercialStr = cor.nome;           comercialCod = cor.usuario || ''; }
 
   var regionalStr = '—';
-  if (regionalInfo.usuario && regionalInfo.nome) regionalStr = regionalInfo.usuario + ' - ' + regionalInfo.nome;
+  if (regionalInfo.nome) regionalStr = regionalInfo.nome;
 
-  var responsavelStr = (cor.usuario && cor.nome) ? cor.usuario + ' - ' + cor.nome : '—';
+  var responsavelStr = cor.nome || '—';
 
   var tcc = c.tabela_coeficiente_comissao || {};
   var statusNome = (c.status_contrato && c.status_contrato.nome) || '';
@@ -133,6 +134,7 @@ function normalizeContrato(c) {
     tipo: (c.operacao && c.operacao.nome) || '—',
     digitacao: fmtDate(c.data_pgto_bc) || '—',
     comercial: comercialStr,
+    comercialCod: comercialCod,
     regional: regionalStr,
     multiloja: cor.corretor_multilojas ? 'Sim' : 'Não',
     nomeTabela: (tcc.orgao_tabela && tcc.orgao_tabela.nome_tabela) || '—',
@@ -164,20 +166,23 @@ function buscarTotalRepassado(token, usuario, dataPgtoBc, hintVal) {
       STORM_BASE + '/conta_corrente/consulta_lancamentos?usuario=' + encodeURIComponent(usuario) + '&mes=' + mes + '&ano=' + ano,
       { method: 'get', headers: { 'Authorization': 'Bearer ' + token }, muteHttpExceptions: true }
     );
-    var data = JSON.parse(resp.getContentText());
-    var lancamentos = (data && data.lancamentos) ? data.lancamentos : [];
+    var json = JSON.parse(resp.getContentText());
+    var lancamentos = (json && json.lancamentos) ? json.lancamentos : [];
     var matches = lancamentos.filter(function(l) {
       if (l.categoria !== 'Comissão paga ao Parceiro') return false;
       var ldMs = new Date(l.data_lancamento + 'T00:00:00').getTime();
       return Math.abs(ldMs - pgtoMs) <= 3 * 24 * 3600 * 1000;
     });
-    if (matches.length === 1) return matches[0].valor;
-    // Múltiplos lançamentos no mesmo dia: escolhe o mais próximo do valor base de comissão
-    if (matches.length > 1 && hintVal != null && hintVal > 0) {
-      var best = matches.reduce(function(a, b) {
+    var pick = null;
+    if (matches.length === 1) {
+      pick = matches[0];
+    } else if (matches.length > 1 && hintVal != null && hintVal > 0) {
+      pick = matches.reduce(function(a, b) {
         return Math.abs(a.valor - hintVal) <= Math.abs(b.valor - hintVal) ? a : b;
       });
-      return best.valor;
+    }
+    if (pick) {
+      return { valor: pick.valor, data: pick.data_lancamento, valorBase: pick.valor_base || null };
     }
   } catch(ex) {}
   return null;
@@ -216,9 +221,11 @@ function doGet(e) {
         var tcc = c.tabela_coeficiente_comissao || {};
         var repPct = parseFloat(tcc.comissao_repassada) || 0;
         var repVal = (c.valor_bruto || 0) * repPct / 100;
-        var total = buscarTotalRepassado(stormToken, c.corretor.usuario, c.data_pgto_bc, repVal);
-        if (total !== null && norm.comissaoPaga) {
-          norm.comissaoPaga.valorTotal = fmtBRL(total);
+        var result = buscarTotalRepassado(stormToken, c.corretor.usuario, c.data_pgto_bc, repVal);
+        if (result !== null && norm.comissaoPaga) {
+          norm.comissaoPaga.valorTotal = fmtBRL(result.valor);
+          if (result.data) norm.comissaoPaga.dataPagamento = fmtDate(result.data) || norm.comissaoPaga.dataPagamento;
+          if (result.valorBase) norm.comissaoPaga.valorBase = fmtBRL(result.valorBase);
         }
       }
       return norm;
