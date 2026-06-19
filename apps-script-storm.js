@@ -89,7 +89,7 @@ function normalizeContrato(c) {
   var tcc = c.tabela_coeficiente_comissao || {};
   var statusNome = (c.status_contrato && c.status_contrato.nome) || '';
   var sf = deriveSituacao(c);
-  var vb = c.valor_bruto || 0;
+  var vb = c.valor_liquido || c.valor_bruto || 0;
   var recPct     = parseFloat(tcc.comissao_recebida) || 0;
   var repPct     = parseFloat(tcc.comissao_repassada) || 0;
   var repVal     = vb * repPct / 100;
