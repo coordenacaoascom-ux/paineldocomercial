@@ -152,8 +152,9 @@ function normalizeContrato(c) {
   };
 }
 
-function buscarTotalRepassado(token, usuario, dataPgtoBc) {
-  var parts = dataPgtoBc.split('T')[0].split('-');
+function buscarTotalRepassado(token, usuario, dataPgtoBc, hintVal) {
+  var base = dataPgtoBc.split('T')[0];
+  var parts = base.split('-');
   if (parts.length < 3) return null;
   var mes = parseInt(parts[1], 10);
   var ano = parseInt(parts[0], 10);
@@ -171,6 +172,13 @@ function buscarTotalRepassado(token, usuario, dataPgtoBc) {
       return Math.abs(ldMs - pgtoMs) <= 3 * 24 * 3600 * 1000;
     });
     if (matches.length === 1) return matches[0].valor;
+    // Múltiplos lançamentos no mesmo dia: escolhe o mais próximo do valor base de comissão
+    if (matches.length > 1 && hintVal != null && hintVal > 0) {
+      var best = matches.reduce(function(a, b) {
+        return Math.abs(a.valor - hintVal) <= Math.abs(b.valor - hintVal) ? a : b;
+      });
+      return best.valor;
+    }
   } catch(ex) {}
   return null;
 }
@@ -205,7 +213,10 @@ function doGet(e) {
       var norm = normalizeContrato(c);
       if (norm.situacaoFinanceiro.indexOf('PAGA AO CORRETOR') >= 0 &&
           c.corretor && c.corretor.usuario && c.data_pgto_bc) {
-        var total = buscarTotalRepassado(stormToken, c.corretor.usuario, c.data_pgto_bc);
+        var tcc = c.tabela_coeficiente_comissao || {};
+        var repPct = parseFloat(tcc.comissao_repassada) || 0;
+        var repVal = (c.valor_bruto || 0) * repPct / 100;
+        var total = buscarTotalRepassado(stormToken, c.corretor.usuario, c.data_pgto_bc, repVal);
         if (total !== null && norm.comissaoPaga) {
           norm.comissaoPaga.valorTotal = fmtBRL(total);
         }
