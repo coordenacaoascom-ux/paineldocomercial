@@ -2364,8 +2364,8 @@ function portalRenderHierarquiaCard(h){
   return '<div class="hierarquia">'+cc+cr+cs+'</div>';
 }
 
-var STORM_PROXY='https://script.google.com/macros/s/AKfycbyD88HBwLchDU2VMd2q8naVl7rsz-Od3OU84RP7vaaQGxFHVuswifbXRVfYC157bAk/exec';
-var STORM_GAS_TOKEN='stormportal2026np';
+var STORM_PROXY='https://novapromotora-sub.netlify.app/.netlify/functions/storm';
+var STORM_GAS_TOKEN='';
 function stormFmt(n){if(!n&&n!==0)return '—';return 'R$ '+Number(n).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
 function stormFmtDate(s){if(!s)return null;var d=s.split('T')[0].split('-');return d.length===3?d[2]+'/'+d[1]+'/'+d[0]:null;}
 function stormMapContrato(c,adeSearch){
@@ -2392,7 +2392,7 @@ async function portalBuscar(){
   var _allContratos=[];
   try{
     if(!STORM_PROXY){document.getElementById('portalLoading').style.display='none';erroEl.style.display='block';return;}
-    var resp=await fetch(STORM_PROXY+'?token='+STORM_GAS_TOKEN+'&ade='+encodeURIComponent(valor));
+    var resp=await fetch(STORM_PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ade:valor})});
     var data=await resp.json();
     _allContratos=Array.isArray(data)?data.filter(portalInScope):[];
   }catch(e){/* network error */}
@@ -2414,7 +2414,8 @@ async function _portalRenderContrato(p){
   // Reset seções
   document.querySelector('#portalResultado .portal-cards').style.display='';
   document.getElementById('portalSecTabela').style.display='';
-  document.getElementById('portalSecDadosGerais').innerHTML='<h2>📄 Dados Gerais</h2><div class="portal-grid"><div class="portal-item">Código Contrato <b id="portalDCodigo">—</b></div><div class="portal-item">ADE <b id="portalDAde">—</b></div><div class="portal-item">Responsável <b id="portalDResponsavel">—</b></div><div class="portal-item">Banco / Convênio <b id="portalDBanco">—</b></div><div class="portal-item">Tipo de Operação <b id="portalDTipo">—</b></div><div class="portal-item">Data Digitação Banco <b id="portalDDigitacao">—</b></div><div class="portal-item">Data Pagamento do Contrato <b id="portalDDataPgto">—</b></div><div class="portal-item">Comercial <b id="portalDComercial">—</b></div><div class="portal-item">Regional <b id="portalDRegional">—</b></div><div class="portal-item">Multiloja <b id="portalDMultiloja">—</b></div></div>';
+  var rateioItem=p.rateio?'<div class="portal-item">Rateio <b id="portalDRateio" style="color:#a5b4fc;">'+p.rateio+'</b></div>':'';
+  document.getElementById('portalSecDadosGerais').innerHTML='<h2>📄 Dados Gerais</h2><div class="portal-grid"><div class="portal-item">Código Contrato <b id="portalDCodigo">—</b></div><div class="portal-item">ADE <b id="portalDAde">—</b></div><div class="portal-item">Responsável <b id="portalDResponsavel">—</b></div><div class="portal-item">Banco / Convênio <b id="portalDBanco">—</b></div><div class="portal-item">Tipo de Operação <b id="portalDTipo">—</b></div><div class="portal-item">Data Digitação Banco <b id="portalDDigitacao">—</b></div><div class="portal-item">Data Pagamento do Contrato <b id="portalDDataPgto">—</b></div><div class="portal-item">Comercial <b id="portalDComercial">—</b></div><div class="portal-item">Regional <b id="portalDRegional">—</b></div><div class="portal-item">Multiloja <b id="portalDMultiloja">—</b></div>'+rateioItem+'</div>';
   document.getElementById('portalSecTabela').innerHTML='<h2>📋 Dados da Tabela</h2><div class="portal-grid"><div class="portal-item">Nome Tabela <b id="portalDNomeTabela">—</b></div><div class="portal-item">ID Tabela/Prazo <b id="portalDIdTabela">—</b></div></div>';
   portalSet('portalDCodigo',p.codigo);portalSet('portalDAde',p.ade);portalSet('portalDResponsavel',p.responsavel);
   portalSet('portalDBanco',p.banco);portalSet('portalDTipo',p.tipo);portalSet('portalDDigitacao',p.digitacao);
@@ -2423,7 +2424,7 @@ async function _portalRenderContrato(p){
   portalSet('portalDNomeTabela',p.nomeTabela);portalSet('portalDIdTabela',p.idTabela);
   var lc=p.linhasComissao&&p.linhasComissao[0]||{};
   portalSet('portalCComissao',p.comissaoPaga&&p.comissaoPaga.valorTotal||'—');
-  portalSet('portalCPercentual',p.comissaoPaga&&p.comissaoPaga.totalPercentual||'—');
+  portalSet('portalCPercentual',p.comissaoPaga&&(p.comissaoPaga.totalPctRepassado||p.comissaoPaga.totalPercentual)||'—');
   portalSet('portalCBanco',p.banco?p.banco.split('/')[0].trim():'—');
   portalSet('portalCSituacao',p.situacaoFinanceiro);
   var sf=p.situacaoFinanceiro;
@@ -2435,15 +2436,17 @@ async function _portalRenderContrato(p){
   if(sf.includes('PAGA AO CORRETOR')){
     banner.innerHTML='<div class="status-banner status-pago"><div class="icon"></div><div class="text"><h3>COMISSÃO PAGA AO CORRETOR</h3><p>A comissão desta proposta já foi analisada e o pagamento foi efetuado ao corretor.</p></div></div>';
     var cp=p.comissaoPaga||{};
-    var adtHtml=cp.valorAdiantamento&&cp.valorAdiantamento!=='—'?'<div class="item">Adiantamento Repassado <b>'+cp.valorAdiantamento+'</b></div>':'';
+    var totalPct=cp.totalPctRepassado||cp.totalPercentual||'—';
+    var adtHtml=cp.valorAdiantamento&&cp.valorAdiantamento!=='—'&&cp.valorAdiantamento!=='R$ 0,00'?'<div class="item">Adiantamento Repassado <b>'+cp.valorAdiantamento+'</b></div>':'';
     var multilojaComHtml='';
-    if(p.masterNome&&(cp.valorFiliado||cp.valorMaster)){
+    if(cp.valorFiliado&&cp.valorFiliado!=='—'&&cp.valorMaster&&cp.valorMaster!=='—'){
+      var masterLabel=p.masterNome?'COMISSÃO MASTER ('+p.masterNome+')':'COMISSÃO MASTER';
       multilojaComHtml='<div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;">'
-        +'<div style="flex:1;min-width:140px;padding:12px 16px;background:rgba(99,102,241,0.10);border:1px solid rgba(99,102,241,0.3);border-radius:10px;text-align:center"><div style="font-size:11px;color:#a5b4fc;margin-bottom:4px;font-weight:600;">COMISSÃO FILIADO</div><div style="font-size:18px;font-weight:700;color:#c7d2fe;">'+(cp.valorFiliado||'—')+'</div></div>'
-        +'<div style="flex:1;min-width:140px;padding:12px 16px;background:rgba(234,179,8,0.10);border:1px solid rgba(234,179,8,0.3);border-radius:10px;text-align:center"><div style="font-size:11px;color:#fde68a;margin-bottom:4px;font-weight:600;">COMISSÃO MASTER</div><div style="font-size:18px;font-weight:700;color:#fef08a;">'+(cp.valorMaster||'—')+'</div></div>'
+        +'<div style="flex:1;min-width:140px;padding:12px 16px;background:rgba(99,102,241,0.10);border:1px solid rgba(99,102,241,0.3);border-radius:10px;text-align:center"><div style="font-size:11px;color:#a5b4fc;margin-bottom:4px;font-weight:600;">COMISSÃO FILIADO</div><div style="font-size:18px;font-weight:700;color:#c7d2fe;">'+cp.valorFiliado+'</div></div>'
+        +'<div style="flex:1;min-width:140px;padding:12px 16px;background:rgba(234,179,8,0.10);border:1px solid rgba(234,179,8,0.3);border-radius:10px;text-align:center"><div style="font-size:11px;color:#fde68a;margin-bottom:4px;font-weight:600;">'+masterLabel+'</div><div style="font-size:18px;font-weight:700;color:#fef08a;">'+cp.valorMaster+'</div></div>'
         +'</div>';
     }
-    secFin.innerHTML='<div class="section"><h2>✅ Comissão Paga</h2><div class="grid"><div class="item">Data Pagamento <b>'+(cp.dataPagamento||'—')+'</b></div><div class="item">Valor Base <b>'+(cp.valorBase||'—')+'</b></div>'+adtHtml+'<div class="item">Total % Repassado <b>'+(cp.totalPercentual||'—')+'</b></div></div>'+multilojaComHtml+'<div style="margin-top:14px;padding:14px 18px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;"><span style="color:#94a3b8;font-size:13px;">💰 Total Repassado ao Corretor</span><span style="color:#4ade80;font-size:22px;font-weight:700;">'+(cp.valorTotal||'—')+'</span></div></div>';
+    secFin.innerHTML='<div class="section"><h2>✅ Comissão Paga</h2><div class="grid"><div class="item">Data Pagamento <b>'+(cp.dataPagamento||'—')+'</b></div><div class="item">Valor Base <b>'+(cp.valorBase||'—')+'</b></div><div class="item">% Comissão Repassada <b>'+(cp.comissaoRepassadaPct||'—')+'</b></div><div class="item">Valor Comissão <b>'+(cp.valorComissao||'—')+'</b></div>'+adtHtml+'<div class="item">Total % Repassado <b>'+totalPct+'</b></div></div>'+multilojaComHtml+'<div style="margin-top:14px;padding:14px 18px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;"><span style="color:#94a3b8;font-size:13px;">💰 Total Repassado ao Corretor</span><span style="color:#4ade80;font-size:22px;font-weight:700;">'+(cp.valorTotal||'—')+'</span></div></div>';
   }
   else if(sf.includes('DADOS IMPORTADOS')){
     var temUsuario=p.comercial&&p.comercial!=='—'&&p.comercial!=='-';
