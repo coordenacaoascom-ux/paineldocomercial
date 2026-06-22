@@ -50,7 +50,7 @@ function getNFCookie() {
   var cached = cache.get(NF_COOKIE_KEY);
   if (cached) return cached;
 
-  var payload = 'usuario=' + encodeURIComponent(NF_USER) + '&senha=' + encodeURIComponent(NF_PASS);
+  var payload = 'usuario=' + encodeURIComponent(NF_USER) + '&senha=' + encodeURIComponent(NF_PASS) + '&forceLogout=1&logar=Entrar';
   var resp = UrlFetchApp.fetch(NF_BASE + '/index.php', {
     method: 'post',
     contentType: 'application/x-www-form-urlencoded',
@@ -215,23 +215,25 @@ function normalizeApi(c) {
   var adtP = parseFloat(tcc.comissao_repassada_adiantamento) || 0;
   var repV = vb * repP / 100, adtV = vb * adtP / 100;
 
-  var masterNome = '', multilojaStr = 'Não';
-  if (sala.nome && sala.nome !== cor.nome) {
-    masterNome  = sala.nome;
-    multilojaStr = 'Sim - Filiado, Master: ' + masterNome;
-  }
+  // Multiloja: só marcar se API tiver flag explícita (c.multiloja ou similar)
+  // Não derivar de sala.nome vs cor.nome — gera falso positivo
+  var multilojaApi = c.multiloja || (c.corretor && c.corretor.multiloja) || null;
+  var masterNome = '', multilojaStr = multilojaApi ? String(multilojaApi) : 'Não';
+
+  function fmtPct(n) { return n ? n.toFixed(2).replace('.', ',') + ' %' : '—'; }
 
   var comissaoPaga = null;
   if (sf.includes('PAGA AO CORRETOR')) {
+    var dataPgto = fmtDate(c.data_pagamento || c.data_pgto_comissao || c.data_pgto_bc) || '—';
     comissaoPaga = {
-      dataPagamento:        fmtDate(c.data_pgto_bc) || '—',
+      dataPagamento:        dataPgto,
       valorBase:            fmtBRL(vb),
       valorBaseBruto:       '—',
-      comissaoRepassadaPct: repP.toFixed(2) + ' %',
+      comissaoRepassadaPct: fmtPct(repP),
       valorComissao:        fmtBRL(repV),
-      adiantamentoPct:      adtP > 0 ? adtP.toFixed(2)+' %' : '—',
+      adiantamentoPct:      adtP > 0 ? fmtPct(adtP) : '—',
       valorAdiantamento:    adtP > 0 ? fmtBRL(adtV) : '—',
-      totalPctRepassado:    (repP + adtP).toFixed(2) + ' %',
+      totalPctRepassado:    fmtPct(repP + adtP),
       valorFiliado:         null,
       valorMaster:          null,
       valorTotal:           fmtBRL(repV + adtV)
@@ -254,7 +256,7 @@ function normalizeApi(c) {
     situacaoFinanceiro: sf,
     linhasComissao: tcc.id ? [{
       valorBase: fmtBRL(vb), valorBaseBruto: '—',
-      comissaoRecebida: recP.toFixed(2)+' %', adiantamentoPct: '—',
+      comissaoRecebida: fmtPct(recP), adiantamentoPct: '—',
       importadoPor: '—', dataImportacao: fmtDate(c.data_pgto_bc)||'—', status: 'Analisada'
     }] : [],
     comissaoPaga: comissaoPaga,
