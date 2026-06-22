@@ -1,283 +1,319 @@
 // ════════════════════════════════════════════════════════════════
-//  Google Apps Script — Proxy Storm API (Portal Comissões)
-//  Como publicar:
-//    1. Abrir script.google.com → Novo projeto
-//    2. Colar este código
-//    3. Implantar > Nova implantação > App da Web
-//       - Executar como: Eu mesmo
-//       - Quem tem acesso: Qualquer pessoa
-//    4. Copiar a URL gerada e colar em STORM_GAS_URL no index.html
+//  Google Apps Script — Proxy Storm (Portal Comissões)
+//  Como publicar/atualizar:
+//    1. script.google.com → abrir projeto existente
+//    2. Substituir todo o código por este
+//    3. Implantar > Gerenciar implantações > editar (lápis) > nova versão → Implantar
+//    4. A URL continua a mesma — não precisa atualizar o dashboard
 // ════════════════════════════════════════════════════════════════
 
-var STORM_TOKEN_KEY = 'STORM_TOKEN';
-var STORM_TOKEN_EXP_KEY = 'STORM_TOKEN_EXP';
-var GAS_SECRET = 'stormportal2026np';
+var GAS_SECRET      = 'stormportal2026np';
 
-var STORM_USER = '3504';
-var STORM_PASS = 'Promotoraaaa@@2405';
+// Storm OpenAPI
+var STORM_USER      = '3504';
+var STORM_PASS      = 'Promotoraaaa@@2405';
 var STORM_CLIENT_ID = 'KxF2YZGcLTjk3WpaxEE7';
-var STORM_BASE = 'https://openapi.stormfin.com.br';
+var STORM_BASE      = 'https://openapi.stormfin.com.br';
 
+// Nova Financeira web system
+var NF_BASE         = 'https://sistema.novafinanceira.com';
+var NF_USER         = 'admin.kelly';
+var NF_PASS         = 'Novapromotora@2026';
+
+// ── Cache keys ────────────────────────────────────────────────
+var STORM_TOKEN_KEY = 'STORM_TOKEN_V2';
+var NF_COOKIE_KEY   = 'NF_COOKIE_V2';
+
+// ── Storm auth ────────────────────────────────────────────────
 function getStormToken() {
   var cache = CacheService.getScriptCache();
-  var token = cache.get(STORM_TOKEN_KEY);
-  if (token) return token;
-
+  var t = cache.get(STORM_TOKEN_KEY);
+  if (t) return t;
   var resp = UrlFetchApp.fetch(STORM_BASE + '/token', {
     method: 'post',
     contentType: 'application/x-www-form-urlencoded',
     payload: 'grant_type=password&username=' + encodeURIComponent(STORM_USER)
-      + '&password=' + encodeURIComponent(STORM_PASS)
-      + '&client_id=' + encodeURIComponent(STORM_CLIENT_ID),
+           + '&password='   + encodeURIComponent(STORM_PASS)
+           + '&client_id='  + encodeURIComponent(STORM_CLIENT_ID),
+    muteHttpExceptions: true
+  });
+  var d = JSON.parse(resp.getContentText());
+  if (!d.access_token) throw new Error('Storm auth failed: ' + resp.getContentText());
+  var ttl = Math.min((d.expires_in || 3600) - 60, 21600);
+  cache.put(STORM_TOKEN_KEY, d.access_token, ttl);
+  return d.access_token;
+}
+
+// ── Nova Financeira login ─────────────────────────────────────
+function getNFCookie() {
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get(NF_COOKIE_KEY);
+  if (cached) return cached;
+
+  var payload = 'usuario=' + encodeURIComponent(NF_USER) + '&senha=' + encodeURIComponent(NF_PASS);
+  var resp = UrlFetchApp.fetch(NF_BASE + '/index.php', {
+    method: 'post',
+    contentType: 'application/x-www-form-urlencoded',
+    payload: payload,
+    followRedirects: false,
     muteHttpExceptions: true
   });
 
-  var data = JSON.parse(resp.getContentText());
-  if (!data.access_token) throw new Error('Storm auth failed: ' + resp.getContentText());
+  var body = resp.getContentText();
+  if (body.indexOf('mfaLogin') !== -1) throw new Error('MFA_REQUIRED');
 
-  var ttl = data.expires_in ? Math.min(data.expires_in - 60, 21600) : 3540;
-  cache.put(STORM_TOKEN_KEY, data.access_token, ttl);
-  return data.access_token;
+  var headers    = resp.getAllHeaders();
+  var setCookie  = headers['Set-Cookie'] || headers['set-cookie'];
+  if (!setCookie) throw new Error('LOGIN_FAILED');
+
+  var cookieArr  = Array.isArray(setCookie) ? setCookie : [setCookie];
+  var cookie     = cookieArr.map(function(c) { return c.split(';')[0]; }).join('; ');
+  cache.put(NF_COOKIE_KEY, cookie, 3300);
+  return cookie;
 }
 
+// ── Scrape ContratoInfo ───────────────────────────────────────
+function scrapeNF(ade) {
+  try {
+    var cookie = getNFCookie();
+    var resp = UrlFetchApp.fetch(
+      NF_BASE + '/E2D/ContratoInfo/visualizar&cod=' + encodeURIComponent(ade),
+      { method: 'get', headers: { 'Cookie': cookie, 'User-Agent': 'Mozilla/5.0' }, muteHttpExceptions: true }
+    );
+    var html = resp.getContentText();
+    if (html.indexOf('form_login') !== -1 || html.indexOf('mfaLogin') !== -1) {
+      CacheService.getScriptCache().remove(NF_COOKIE_KEY);
+      throw new Error('SESSION_EXPIRED');
+    }
+    return parseNFHtml(html);
+  } catch(ex) {
+    return { _erro: ex.message };
+  }
+}
+
+function stripTags(s) {
+  return (s || '').replace(/<[^>]+>/g, '').replace(/&amp;/g,'&').replace(/&#37;/g,'%').replace(/\s+/g,' ').trim();
+}
+
+function extractField(html, label) {
+  var re = new RegExp(label + '[^<]*<\\/[^>]+>\\s*<[^>]+>([^<]*)', 'i');
+  var m  = html.match(re);
+  return m ? m[1].trim() : null;
+}
+
+function parseTdValues(html, sectionLabel) {
+  var idx = html.search(new RegExp(sectionLabel, 'i'));
+  if (idx < 0) return [];
+  var chunk = html.slice(idx, idx + 10000);
+  var vals  = [], re = /<td[^>]*>([\s\S]*?)<\/td>/gi, m;
+  while ((m = re.exec(chunk)) !== null) {
+    var v = stripTags(m[1]);
+    if (v) vals.push(v);
+  }
+  return vals;
+}
+
+function parseNFHtml(html) {
+  var r = {};
+  r.codigo      = extractField(html, 'C.digo Contrato') || extractField(html, 'Código Contrato');
+  r.ade         = extractField(html, 'ADE');
+  r.responsavel = extractField(html, 'Respons.vel') || extractField(html, 'Responsável');
+  r.banco       = extractField(html, 'Banco\\/Conv.nio') || extractField(html, 'Banco');
+  r.multiloja   = extractField(html, 'Multiloja');
+  r.tipo        = extractField(html, 'Tipo de Opera..o') || extractField(html, 'Tipo de Operação');
+  r.digitacao   = extractField(html, 'Data Digita..o Banco') || extractField(html, 'Data Digitação Banco');
+  r.rateio      = extractField(html, 'Rateio');
+  r.comercial   = extractField(html, 'Comercial');
+  r.regional    = extractField(html, 'Regional');
+  r.nomeTabela  = extractField(html, 'Nome Tabela');
+  r.idTabela    = extractField(html, 'Id da tabela\\/prazo') || extractField(html, 'Id da tabela');
+  r.situacaoFinanceiro = extractField(html, 'Situa..o Financeiro') || extractField(html, 'Situação Financeiro');
+
+  // Linhas de comissão importadas (8 headers)
+  var linhasVals = parseTdValues(html, 'Linhas de comiss');
+  r.linhasComissao = [];
+  if (linhasVals.length > 8) {
+    var d = linhasVals.slice(8, 16);
+    r.linhasComissao.push({
+      valorBase:        d[0] || '—', valorBaseBruto:  d[1] || '—',
+      comissaoRecebida: d[2] || '—', adiantamentoPct: d[3] || '—',
+      importadoPor:     d[4] || '—', observacoes:     d[5] || '',
+      dataImportacao:   d[6] || '—', status:          d[7] || '—'
+    });
+  }
+
+  // Comissão paga (11 headers)
+  var cpVals = parseTdValues(html, 'Comiss.o paga');
+  r.comissaoPaga = null;
+  if (cpVals.length > 11) {
+    var row = cpVals.slice(11, 22);
+    r.comissaoPaga = {
+      dataPagamento:        row[0]  || '—',
+      valorBase:            row[1]  || '—',
+      valorBaseBruto:       row[2]  || '—',
+      comissaoRepassadaPct: row[3]  || '—',
+      valorComissao:        row[4]  || '—',
+      adiantamentoPct:      row[5]  || '—',
+      valorAdiantamento:    row[6]  || '—',
+      totalPctRepassado:    row[7]  || '—',
+      valorFiliado:         row[8]  || null,
+      valorMaster:          row[9]  || null,
+      valorTotal:           row[10] || '—'
+    };
+  }
+
+  // Dados Operacional
+  r.contratoPendente = extractField(html, 'Contrato Pendente');
+  r.situacaoContrato = extractField(html, 'Situa..o Contrato') || extractField(html, 'Situação Contrato');
+  r.dataPgtoCliente  = extractField(html, 'Data Pgto Cliente');
+  r.historicoSit     = extractField(html, 'Hist.rico Situa..o') || extractField(html, 'Histórico Situação');
+
+  // Master nome
+  r.masterNome = null;
+  if (r.multiloja) {
+    var mm = r.multiloja.match(/Master\s*[:\-]?\s*\d+\s*-\s*(.+)/i);
+    if (mm) r.masterNome = mm[1].trim();
+  }
+
+  return r;
+}
+
+// ── OpenAPI normalize (fallback) ──────────────────────────────
 function isValidDate(s) {
   if (!s) return false;
-  var base = s.split('T')[0];
-  return base !== '0000-00-00' && base.replace(/[-0]/g, '') !== '';
+  var b = s.split('T')[0];
+  return b !== '0000-00-00' && b.replace(/[-0]/g,'') !== '';
 }
-
 function fmtDate(s) {
   if (!isValidDate(s)) return null;
   var d = s.split('T')[0].split('-');
-  return d.length === 3 ? d[2] + '/' + d[1] + '/' + d[0] : null;
+  return d.length === 3 ? d[2]+'/'+d[1]+'/'+d[0] : null;
 }
-
 function fmtBRL(n) {
   if (!n && n !== 0) return '—';
-  return 'R$ ' + Number(n).toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+,)/g, '$1.');
+  return 'R$ ' + Number(n).toFixed(2).replace('.',',').replace(/(\d)(?=(\d{3})+,)/g,'$1.');
 }
 
 function deriveSituacao(c) {
-  var tcc = c.tabela_coeficiente_comissao;
-  var cor = c.corretor;
-  var statusNome = (c.status_contrato && c.status_contrato.nome) || '';
+  var tcc = c.tabela_coeficiente_comissao, cor = c.corretor;
+  var st  = (c.status_contrato && c.status_contrato.nome) || '';
   var temData = isValidDate(c.data_pgto_bc);
   if (!cor || !cor.usuario) return 'DADOS IMPORTADOS — USUÁRIO NÃO VINCULADO';
-  if (/TOMAD/i.test(statusNome)) return 'CONTRATO EM TOMADA DE DECISÃO';
-  // "Pago ao Cliente-Com Pendência ou Sem Físico" → commission on hold pending docs
-  if (/Pend|Sem F/i.test(statusNome) && temData) return 'COMISSÃO DISPONÍVEL PARA PAGAMENTO (PENDENTE DE FÍSICO)';
+  if (/TOMAD/i.test(st))    return 'CONTRATO EM TOMADA DE DECISÃO';
   if (!tcc) return temData ? 'DADOS IMPORTADOS' : 'AGUARDANDO IMPORTAÇÃO (RELATÓRIO BANCO)';
   return temData ? 'COMISSÃO PAGA AO CORRETOR' : 'COMISSÃO DISPONÍVEL PARA PAGAMENTO';
 }
 
-function normalizeContrato(c) {
-  var cor = c.corretor || {};
-  var sala = cor.loja_sala || {};
-  var comercialInfo = sala.responsavel || {};
-  var regionalInfo = sala.regional || {};
+function normalizeApi(c) {
+  var cor  = c.corretor || {}, sala = cor.loja_sala || {};
+  var com  = sala.responsavel || {}, reg = sala.regional || {};
+  var tcc  = c.tabela_coeficiente_comissao || {};
+  var sf   = deriveSituacao(c);
+  var vb   = c.valor_liquido || c.valor_bruto || 0;
+  var recP = parseFloat(tcc.comissao_recebida)             || 0;
+  var repP = parseFloat(tcc.comissao_repassada)            || 0;
+  var adtP = parseFloat(tcc.comissao_repassada_adiantamento) || 0;
+  var repV = vb * repP / 100, adtV = vb * adtP / 100;
 
-  var comercialStr = '—';
-  var comercialCod = '';
-  if (comercialInfo.nome) { comercialStr = comercialInfo.nome; comercialCod = comercialInfo.usuario || ''; }
-  else if (cor.nome)      { comercialStr = cor.nome;           comercialCod = cor.usuario || ''; }
-
-  var regionalStr = '—';
-  if (regionalInfo.nome) regionalStr = regionalInfo.nome;
-
-  var responsavelStr = cor.nome || '—';
-
-  // Multiloja: parent_id > 0 indica corretor filiado; master fica em loja_sala.nome
-  var multilojaStr = 'Não';
-  var masterNome = '';
-  if (cor.parent_id && parseInt(cor.parent_id, 10) > 0 && sala.nome) {
-    masterNome = sala.nome;
+  var masterNome = '', multilojaStr = 'Não';
+  if (sala.nome && sala.nome !== cor.nome) {
+    masterNome  = sala.nome;
     multilojaStr = 'Sim - Filiado, Master: ' + masterNome;
-  }
-
-  var tcc = c.tabela_coeficiente_comissao || {};
-  var statusNome = (c.status_contrato && c.status_contrato.nome) || '';
-  var sf = deriveSituacao(c);
-  var vb = c.valor_liquido || c.valor_bruto || 0;
-  var recPct     = parseFloat(tcc.comissao_recebida) || 0;
-  var repPct     = parseFloat(tcc.comissao_repassada) || 0;
-  var repVal     = vb * repPct / 100;
-  var adtRecPct  = parseFloat(tcc.comissao_recebida_adiantamento) || 0;
-  var adtRepPct  = parseFloat(tcc.comissao_repassada_adiantamento) || 0;
-  var adtRepVal  = vb * adtRepPct / 100;
-  var totalRep   = repVal + adtRepVal;
-
-  var linhas = [];
-  if (tcc.id) {
-    linhas.push({
-      valorBase: fmtBRL(vb),
-      valorBaseBruto: '—',
-      comissaoRecebida: recPct.toFixed(2) + '%',
-      comissaoValor: fmtBRL(repVal),
-      adiantamento: adtRepPct > 0 ? fmtBRL(adtRepVal) : '—',
-      adiantamentoPct: adtRepPct > 0 ? adtRepPct.toFixed(2) + '%' : '—',
-      importadoPor: '—',
-      observacoes: '',
-      dataImportacao: fmtDate(c.data_pgto_bc) || '—',
-      status: 'Analisada'
-    });
   }
 
   var comissaoPaga = null;
   if (sf.includes('PAGA AO CORRETOR')) {
     comissaoPaga = {
-      dataPagamento: fmtDate(c.data_pgto_bc) || '—',
-      valorBase: fmtBRL(vb),
-      valorComissao: fmtBRL(repVal),
-      valorAdiantamento: adtRepPct > 0 ? fmtBRL(adtRepVal) : '—',
-      totalPercentual: (repPct + adtRepPct).toFixed(2) + '%',
-      valorTotal: fmtBRL(totalRep)
+      dataPagamento:        fmtDate(c.data_pgto_bc) || '—',
+      valorBase:            fmtBRL(vb),
+      valorBaseBruto:       '—',
+      comissaoRepassadaPct: repP.toFixed(2) + ' %',
+      valorComissao:        fmtBRL(repV),
+      adiantamentoPct:      adtP > 0 ? adtP.toFixed(2)+' %' : '—',
+      valorAdiantamento:    adtP > 0 ? fmtBRL(adtV) : '—',
+      totalPctRepassado:    (repP + adtP).toFixed(2) + ' %',
+      valorFiliado:         null,
+      valorMaster:          null,
+      valorTotal:           fmtBRL(repV + adtV)
     };
   }
 
   return {
-    codigo: c.codigo || '—',
-    ade: c.ade || '—',
-    responsavel: responsavelStr,
+    fonte: 'api',
+    codigo: c.codigo || '—', ade: c.ade || '—',
+    responsavel: cor.nome || '—',
     banco: (c.banco && c.banco.nome) || '—',
-    tipo: (c.operacao && c.operacao.nome) || '—',
-    digitacao: fmtDate(c.data_cadastro) || fmtDate(c.data_pgto_bc) || '—',
-    comercial: comercialStr,
-    comercialCod: comercialCod,
-    regional: regionalStr,
-    multiloja: multilojaStr,
-    masterNome: masterNome,
+    tipo:  (c.operacao && c.operacao.nome) || '—',
+    digitacao: fmtDate(c.data_pgto_bc) || '—',
+    comercial: com.nome || cor.nome || '—',
+    comercialCod: com.usuario || cor.usuario || '',
+    regional:  reg.nome || '—',
+    multiloja: multilojaStr, masterNome: masterNome, rateio: null,
     nomeTabela: (tcc.orgao_tabela && tcc.orgao_tabela.nome_tabela) || '—',
-    idTabela: tcc.id ? 'P.' + tcc.id : '—',
+    idTabela:   tcc.id ? 'P.' + tcc.id : '—',
     situacaoFinanceiro: sf,
-    linhasComissao: linhas,
+    linhasComissao: tcc.id ? [{
+      valorBase: fmtBRL(vb), valorBaseBruto: '—',
+      comissaoRecebida: recP.toFixed(2)+' %', adiantamentoPct: '—',
+      importadoPor: '—', dataImportacao: fmtDate(c.data_pgto_bc)||'—', status: 'Analisada'
+    }] : [],
     comissaoPaga: comissaoPaga,
-    dataPagamento: fmtDate(c.data_pgto_bc),
     dadosOperacional: {
-      contratoPendente: /Pend|Sem F/i.test(statusNome) ? 'Sim' : '—',
+      contratoPendente: '—',
       situacaoContrato: (c.status_contrato && c.status_contrato.nome) || '—',
-      dataPgtoCliente: fmtDate(c.data_pgto_bc) || '',
-      historicoSituacao: '—',
-      historicoTrocaAde: '—',
-      historicoPendencia: '—'
+      dataPgtoCliente:  fmtDate(c.data_pgto_bc) || '',
+      historicoSituacao: '—'
     }
   };
 }
 
-function buscarTotalRepassado(token, usuario, dataPgtoBc, hintVal) {
-  var base = dataPgtoBc.split('T')[0];
-  var parts = base.split('-');
-  if (parts.length < 3) return null;
-  var mes = parseInt(parts[1], 10);
-  var ano = parseInt(parts[0], 10);
-  var pgtoMs = new Date(ano, mes - 1, parseInt(parts[2], 10)).getTime();
+// ── Lógica principal ──────────────────────────────────────────
+function processAde(ade) {
+  // Tenta web system primeiro (só funciona quando MFA for removido)
   try {
-    var resp = UrlFetchApp.fetch(
-      STORM_BASE + '/conta_corrente/consulta_lancamentos?usuario=' + encodeURIComponent(usuario) + '&mes=' + mes + '&ano=' + ano,
-      { method: 'get', headers: { 'Authorization': 'Bearer ' + token }, muteHttpExceptions: true }
-    );
-    var json = JSON.parse(resp.getContentText());
-    var lancamentos = (json && json.lancamentos) ? json.lancamentos : [];
-    var matches = lancamentos.filter(function(l) {
-      if (l.categoria !== 'Comissão paga ao Parceiro') return false;
-      var ldMs = new Date(l.data_lancamento + 'T00:00:00').getTime();
-      return Math.abs(ldMs - pgtoMs) <= 3 * 24 * 3600 * 1000;
-    });
-    var pick = null;
-    if (matches.length === 1) {
-      pick = matches[0];
-    } else if (matches.length > 1 && hintVal != null && hintVal > 0) {
-      pick = matches.reduce(function(a, b) {
-        return Math.abs(a.valor - hintVal) <= Math.abs(b.valor - hintVal) ? a : b;
-      });
+    var nf = scrapeNF(ade);
+    if (nf && !nf._erro && nf.ade && nf.ade !== '—') {
+      nf.fonte = 'web';
+      return [nf];
     }
-    if (pick) {
-      return { valor: pick.valor, data: pick.data_lancamento, valorBase: pick.valor_base || null };
-    }
-  } catch(ex) {}
-  return null;
+  } catch(ex) { /* fallback */ }
+
+  // Fallback: OpenAPI Storm
+  var token = getStormToken();
+  var resp  = UrlFetchApp.fetch(STORM_BASE + '/contratos?ade=' + encodeURIComponent(ade), {
+    method: 'get', headers: { 'Authorization': 'Bearer ' + token }, muteHttpExceptions: true
+  });
+  var raw   = JSON.parse(resp.getContentText());
+  var items = (raw && raw.data) ? raw.data : (Array.isArray(raw) ? raw : []);
+  return items.map(normalizeApi);
 }
 
+// ── Handlers GET e POST ───────────────────────────────────────
 function doGet(e) {
-  var output = ContentService.createTextOutput();
-  output.setMimeType(ContentService.MimeType.JSON);
-
+  var out = ContentService.createTextOutput();
+  out.setMimeType(ContentService.MimeType.JSON);
   try {
     var token = e && e.parameter && e.parameter.token;
-    if (token !== GAS_SECRET) {
-      output.setContent(JSON.stringify({ error: 'unauthorized' }));
-      return output;
-    }
-
+    if (token !== GAS_SECRET) { out.setContent(JSON.stringify({error:'unauthorized'})); return out; }
     var ade = e && e.parameter && e.parameter.ade;
-    if (!ade) {
-      output.setContent(JSON.stringify({ error: 'ade obrigatorio' }));
-      return output;
-    }
-
-    var stormToken = getStormToken();
-    var resp = UrlFetchApp.fetch(STORM_BASE + '/contratos?ade=' + encodeURIComponent(ade), {
-      method: 'get',
-      headers: { 'Authorization': 'Bearer ' + stormToken },
-      muteHttpExceptions: true
-    });
-
-    var raw = JSON.parse(resp.getContentText());
-    var items = (raw && raw.data) ? raw.data : (Array.isArray(raw) ? raw : []);
-
-    // Modo debug: retorna campos brutos do contrato e lançamentos da conta corrente
-    if (e.parameter.debug === '1' && items.length > 0) {
-      var c0 = items[0];
-      var debugResult = { _contrato_keys: Object.keys(c0), _contrato: c0 };
-      if (c0.corretor && c0.corretor.usuario && c0.data_pgto_bc) {
-        var stk = getStormToken();
-        var dp = c0.data_pgto_bc.split('T')[0].split('-');
-        var mes = parseInt(dp[1], 10), ano = parseInt(dp[0], 10);
-        try {
-          var lr = UrlFetchApp.fetch(STORM_BASE + '/conta_corrente/consulta_lancamentos?usuario=' + encodeURIComponent(c0.corretor.usuario) + '&mes=' + mes + '&ano=' + ano,
-            { method: 'get', headers: { 'Authorization': 'Bearer ' + stk }, muteHttpExceptions: true });
-          var ld = JSON.parse(lr.getContentText());
-          debugResult._lancamentos = (ld && ld.lancamentos) ? ld.lancamentos : ld;
-        } catch(ex) { debugResult._lancamentos_erro = ex.message; }
-      }
-      output.setContent(JSON.stringify(debugResult));
-      return output;
-    }
-
-    var contratos = items.map(function(c) {
-      var norm = normalizeContrato(c);
-      if (norm.situacaoFinanceiro.indexOf('PAGA AO CORRETOR') >= 0 &&
-          c.corretor && c.corretor.usuario && c.data_pgto_bc) {
-        var tcc = c.tabela_coeficiente_comissao || {};
-        var repPct = parseFloat(tcc.comissao_repassada) || 0;
-        var repVal = (c.valor_liquido || c.valor_bruto || 0) * repPct / 100;
-        if (norm.masterNome) {
-          // Multiloja: busca lançamento do filiado e do master separadamente
-          var masterCod = norm.masterNome.split(' - ')[0].trim();
-          var filRes = buscarTotalRepassado(stormToken, c.corretor.usuario, c.data_pgto_bc, repVal);
-          var masRes = buscarTotalRepassado(stormToken, masterCod, c.data_pgto_bc, null);
-          if (norm.comissaoPaga) {
-            if (filRes) {
-              norm.comissaoPaga.valorFiliado = fmtBRL(filRes.valor);
-              norm.comissaoPaga.valorTotal = fmtBRL(filRes.valor);
-              if (filRes.data) norm.comissaoPaga.dataPagamento = fmtDate(filRes.data) || norm.comissaoPaga.dataPagamento;
-            }
-            if (masRes) norm.comissaoPaga.valorMaster = fmtBRL(masRes.valor);
-          }
-        } else {
-          var result = buscarTotalRepassado(stormToken, c.corretor.usuario, c.data_pgto_bc, repVal);
-          if (result !== null && norm.comissaoPaga) {
-            norm.comissaoPaga.valorTotal = fmtBRL(result.valor);
-            if (result.data) norm.comissaoPaga.dataPagamento = fmtDate(result.data) || norm.comissaoPaga.dataPagamento;
-          }
-        }
-      }
-      return norm;
-    });
-
-    output.setContent(JSON.stringify(contratos));
-  } catch(e) {
-    output.setContent(JSON.stringify({ error: e.message }));
+    if (!ade) { out.setContent(JSON.stringify({error:'ade obrigatorio'})); return out; }
+    out.setContent(JSON.stringify(processAde(ade)));
+  } catch(ex) {
+    out.setContent(JSON.stringify({error: ex.message}));
   }
+  return out;
+}
 
-  return output;
+function doPost(e) {
+  var out = ContentService.createTextOutput();
+  out.setMimeType(ContentService.MimeType.JSON);
+  try {
+    var body = JSON.parse(e.postData.contents || '{}');
+    var ade  = body.ade;
+    if (!ade) { out.setContent(JSON.stringify({error:'ade obrigatorio'})); return out; }
+    out.setContent(JSON.stringify(processAde(ade)));
+  } catch(ex) {
+    out.setContent(JSON.stringify({error: ex.message}));
+  }
+  return out;
 }
