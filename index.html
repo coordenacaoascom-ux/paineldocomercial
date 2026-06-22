@@ -2434,13 +2434,13 @@ async function _portalRenderContrato(p){
   // Reset seções
   document.querySelector('#portalResultado .portal-cards').style.display='';
   document.getElementById('portalSecTabela').style.display='';
-  var rateioItem=p.rateio?'<div class="portal-item">Rateio <b id="portalDRateio" style="color:#a5b4fc;">'+p.rateio+'</b></div>':'';
-  document.getElementById('portalSecDadosGerais').innerHTML='<h2>📄 Dados Gerais</h2><div class="portal-grid"><div class="portal-item">Código Contrato <b id="portalDCodigo">—</b></div><div class="portal-item">ADE <b id="portalDAde">—</b></div><div class="portal-item">Responsável <b id="portalDResponsavel">—</b></div><div class="portal-item">Banco / Convênio <b id="portalDBanco">—</b></div><div class="portal-item">Tipo de Operação <b id="portalDTipo">—</b></div><div class="portal-item">Data Digitação Banco <b id="portalDDigitacao">—</b></div><div class="portal-item">Data Pagamento do Contrato <b id="portalDDataPgto">—</b></div><div class="portal-item">Comercial <b id="portalDComercial">—</b></div><div class="portal-item">Regional <b id="portalDRegional">—</b></div><div class="portal-item">Multiloja <b id="portalDMultiloja">—</b></div>'+rateioItem+'</div>';
+  document.getElementById('portalSecDadosGerais').innerHTML='<h2>📄 Dados Gerais</h2><div class="portal-grid"><div class="portal-item">Código Contrato <b id="portalDCodigo">—</b></div><div class="portal-item">ADE <b id="portalDAde">—</b></div><div class="portal-item">Responsável <b id="portalDResponsavel">—</b></div><div class="portal-item">Banco / Convênio <b id="portalDBanco">—</b></div><div class="portal-item">Tipo de Operação <b id="portalDTipo">—</b></div><div class="portal-item">Data Digitação Banco <b id="portalDDigitacao">—</b></div><div class="portal-item">Data Pagamento do Contrato <b id="portalDDataPgto">—</b></div><div class="portal-item">Comercial <b id="portalDComercial">—</b></div><div class="portal-item">Regional <b id="portalDRegional">—</b></div><div class="portal-item">Multiloja <b id="portalDMultiloja">—</b></div><div class="portal-item">Rateio <b id="portalDRateio" style="color:#a5b4fc;">—</b></div></div>';
   document.getElementById('portalSecTabela').innerHTML='<h2>📋 Dados da Tabela</h2><div class="portal-grid"><div class="portal-item">Nome Tabela <b id="portalDNomeTabela">—</b></div><div class="portal-item">ID Tabela/Prazo <b id="portalDIdTabela">—</b></div></div>';
   portalSet('portalDCodigo',p.codigo);portalSet('portalDAde',p.ade);portalSet('portalDResponsavel',p.responsavel);
   portalSet('portalDBanco',p.banco);portalSet('portalDTipo',p.tipo);portalSet('portalDDigitacao',p.digitacao);
-  portalSet('portalDDataPgto',(p.dadosOperacional&&p.dadosOperacional.dataPgtoCliente)||'—');
+  portalSet('portalDDataPgto',(p.comissaoPaga&&p.comissaoPaga.dataPagamento)||'—');
   portalSet('portalDComercial',p.comercial);portalSet('portalDRegional',p.regional);portalSet('portalDMultiloja',p.multiloja);
+  portalSet('portalDRateio',p.rateio||'—');
   portalSet('portalDNomeTabela',p.nomeTabela);portalSet('portalDIdTabela',p.idTabela);
   var lc=p.linhasComissao&&p.linhasComissao[0]||{};
   portalSet('portalCComissao',p.comissaoPaga&&p.comissaoPaga.valorTotal||'—');
