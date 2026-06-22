@@ -142,23 +142,27 @@ function parseNFHtml(html) {
     });
   }
 
-  // Comissão paga (11 headers)
+  // Tabela Comissão paga — estrutura confirmada no Storm:
+  // row[0]=título, row[1..10]=10 headers, row[11..20]=dados
+  // Headers: Data Pagamento | Valor Base | Valor Base Bruto | Comissão Repassada |
+  //          Valor Comissão | Adiantamento Repassado | Valor Adiantamento |
+  //          Total % Repassado | Valor Total | (coluna vazia)
   var cpVals = parseTdValues(html, 'Comiss.o paga');
   r.comissaoPaga = null;
   if (cpVals.length > 11) {
-    var row = cpVals.slice(11, 22);
+    var row = cpVals.slice(11, 21);
     r.comissaoPaga = {
-      dataPagamento:        row[0]  || '—',
-      valorBase:            row[1]  || '—',
-      valorBaseBruto:       row[2]  || '—',
-      comissaoRepassadaPct: row[3]  || '—',
-      valorComissao:        row[4]  || '—',
-      adiantamentoPct:      row[5]  || '—',
-      valorAdiantamento:    row[6]  || '—',
-      totalPctRepassado:    row[7]  || '—',
-      valorFiliado:         row[8]  || null,
-      valorMaster:          row[9]  || null,
-      valorTotal:           row[10] || '—'
+      dataPagamento:        row[0] || '—',
+      valorBase:            row[1] || '—',
+      valorBaseBruto:       row[2] || '—',
+      comissaoRepassadaPct: row[3] || '—',
+      valorComissao:        row[4] || '—',
+      adiantamentoPct:      row[5] || '—',
+      valorAdiantamento:    row[6] || '—',
+      totalPctRepassado:    row[7] || '—',
+      valorTotal:           row[8] || '—',
+      valorFiliado:         null,
+      valorMaster:          null
     };
   }
 
