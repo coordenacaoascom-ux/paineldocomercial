@@ -2413,11 +2413,23 @@ async function portalBuscar(){
     if(!STORM_PROXY){document.getElementById('portalLoading').style.display='none';erroEl.style.display='block';return;}
     var resp=await fetch(STORM_PROXY+'?token='+encodeURIComponent(STORM_GAS_TOKEN)+'&ade='+encodeURIComponent(valor),{method:'GET'});
     var data=await resp.json();
+    if(data && data.error){
+      var msg=data.error;
+      if(msg==='MFA_REQUIRED'||msg==='SESSION_EXPIRED'||msg==='LOGIN_FAILED'){
+        erroEl.textContent='⚠️ Login na Nova Financeira bloqueado ('+msg+'). Desative o MFA da conta admin.kelly.';
+      } else {
+        erroEl.textContent='❌ Erro ao consultar: '+msg;
+      }
+      erroEl.style.display='block';
+      document.getElementById('portalLoading').style.display='none';
+      window._portalAguardando=false;
+      return;
+    }
     _allContratos=Array.isArray(data)?data.filter(portalInScope):[];
   }catch(e){/* network error - aguarda injeção externa */}
   window._portalAguardando=false;
   document.getElementById('portalLoading').style.display='none';
-  if(_allContratos.length===0){erroEl.style.display='block';return;}
+  if(_allContratos.length===0){erroEl.textContent='❌ Número da ADE incorreto. Verifique e tente novamente.';erroEl.style.display='block';return;}
   if(_allContratos.length>1){
     _PORTAL_CONTRATOS_MULTI=_allContratos;
     var bankCards=_allContratos.map(function(c,i){return '<button onclick="_portalRenderContrato(_PORTAL_CONTRATOS_MULTI['+i+'])" style="width:100%;text-align:left;background:rgba(30,41,59,0.8);border:1px solid rgba(99,102,241,0.3);border-radius:10px;padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;color:#e2e8f0;transition:border-color 0.2s;" onmouseover="this.style.borderColor=\'rgba(99,102,241,0.7)\'" onmouseout="this.style.borderColor=\'rgba(99,102,241,0.3)\'"><div><div style="font-size:15px;font-weight:700;color:#a5b4fc;margin-bottom:4px;">🏦 '+c.banco+'</div><div style="font-size:13px;color:#94a3b8;">'+c.codigo+' &nbsp;·&nbsp; '+c.tipo+'</div></div><span style="color:#6366f1;font-size:20px;">›</span></button>';}).join('');
