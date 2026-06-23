@@ -22,7 +22,7 @@ var NF_PASS         = 'Novapromotora@2026';
 
 // ── Cache keys ────────────────────────────────────────────────
 var STORM_TOKEN_KEY = 'STORM_TOKEN_V2';
-var NF_COOKIE_KEY   = 'NF_COOKIE_V2';
+var NF_COOKIE_KEY   = 'NF_COOKIE_V3';
 
 // ── Storm auth ────────────────────────────────────────────────
 function getStormToken() {
@@ -161,7 +161,7 @@ function parseNFHtml(html) {
       totalPctRepassado:    row[7]  || '—',
       valorFiliado:         isMultilojaTab ? (row[8]  || null) : null,
       valorMaster:          isMultilojaTab ? (row[9]  || null) : null,
-      valorTotal:           isMultilojaTab ? (row[10] || '—') : (row[8] || '—'
+      valorTotal:           isMultilojaTab ? (row[10] || '—') : (row[8] || '—')
     };
   }
 
