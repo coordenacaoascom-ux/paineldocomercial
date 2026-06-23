@@ -1,10 +1,14 @@
 // ════════════════════════════════════════════════════════════════
 //  Google Apps Script — Proxy Storm (Portal Comissões)
-//  Como publicar/atualizar:
-//    1. script.google.com → abrir projeto existente
-//    2. Substituir todo o código por este
-//    3. Implantar > Gerenciar implantações > editar (lápis) > nova versão → Implantar
-//    4. A URL continua a mesma — não precisa atualizar o dashboard
+//  1. script.google.com → abrir projeto existente
+//  2. Substituir todo o código por este
+//  3. Implantar > Gerenciar implantações > editar (lápis) > nova versão → Implantar
+//  4. A URL continua a mesma — não precisa atualizar o dashboard
+//
+//  IMPORTANTE: "COMISSÃO PAGA AO CORRETOR" SÓ é mostrado via web scraping
+//  (Nova Financeira). Via OpenAPI o máximo é "AGUARDANDO IMPORTAÇÃO" ou
+//  "COMISSÃO DISPONÍVEL PARA PAGAMENTO" — nunca PAGA, pois o OpenAPI não
+//  tem os dados de pagamento real de comissão.
 // ════════════════════════════════════════════════════════════════
 
 var GAS_SECRET      = 'stormportal2026np';
@@ -49,7 +53,6 @@ function getNFCookie() {
   var cache = CacheService.getScriptCache();
   var cached = cache.get(NF_COOKIE_KEY);
   if (cached) return cached;
-
   var payload = 'usuario=' + encodeURIComponent(NF_USER) + '&senha=' + encodeURIComponent(NF_PASS) + '&forceLogout=1&logar=Entrar';
   var resp = UrlFetchApp.fetch(NF_BASE + '/index.php', {
     method: 'post',
@@ -58,16 +61,13 @@ function getNFCookie() {
     followRedirects: false,
     muteHttpExceptions: true
   });
-
   var body = resp.getContentText();
   if (body.indexOf('mfaLogin') !== -1) throw new Error('MFA_REQUIRED');
-
-  var headers    = resp.getAllHeaders();
-  var setCookie  = headers['Set-Cookie'] || headers['set-cookie'];
+  var headers   = resp.getAllHeaders();
+  var setCookie = headers['Set-Cookie'] || headers['set-cookie'];
   if (!setCookie) throw new Error('LOGIN_FAILED');
-
-  var cookieArr  = Array.isArray(setCookie) ? setCookie : [setCookie];
-  var cookie     = cookieArr.map(function(c) { return c.split(';')[0]; }).join('; ');
+  var cookieArr = Array.isArray(setCookie) ? setCookie : [setCookie];
+  var cookie    = cookieArr.map(function(c) { return c.split(';')[0]; }).join('; ');
   cache.put(NF_COOKIE_KEY, cookie, 3300);
   return cookie;
 }
@@ -92,7 +92,7 @@ function scrapeNF(ade) {
 }
 
 function stripTags(s) {
-  return (s || '').replace(/<[^>]+>/g, '').replace(/&amp;/g,'&').replace(/&#37;/g,'%').replace(/\s+/g,' ').trim();
+  return (s || '').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&#37;/g, '%').replace(/\s+/g, ' ').trim();
 }
 
 function extractField(html, label) {
@@ -142,8 +142,7 @@ function parseNFHtml(html) {
     });
   }
 
-  // Tabela Comissão paga — 10 colunas (padrão) ou 11 (multiloja: Filiado+Master extras)
-  // Detecta pelo header: se contiver "Filiado" nos primeiros 13 valores = 11 colunas
+  // Tabela Comissão paga — 10 colunas (padrão) ou 11 (multiloja: Filiado+Master)
   var cpVals = parseTdValues(html, 'Comiss.o paga');
   r.comissaoPaga = null;
   if (cpVals.length > 11) {
@@ -165,12 +164,11 @@ function parseNFHtml(html) {
     };
   }
 
-  // Dados Operacional
+  // Dados Operacional — estruturado como o dashboard espera
   var contratoPendente = extractField(html, 'Contrato Pendente');
   var situacaoContrato = extractField(html, 'Situa..o Contrato') || extractField(html, 'Situação Contrato');
   var dataPgtoCliente  = extractField(html, 'Data Pgto Cliente');
   var historicoSit     = extractField(html, 'Hist.rico Situa..o') || extractField(html, 'Histórico Situação');
-
   r.dadosOperacional = {
     contratoPendente:  contratoPendente || '—',
     situacaoContrato:  situacaoContrato || '—',
@@ -178,7 +176,7 @@ function parseNFHtml(html) {
     historicoSituacao: historicoSit     || '—'
   };
 
-  // Master nome + comercialCod (para hierarquia)
+  // Master nome + comercialCod (para hierarquia no dashboard)
   r.masterNome = null;
   if (r.multiloja) {
     var mm = r.multiloja.match(/Master\s*[:\-]?\s*\d+\s*-\s*(.+)/i);
@@ -189,30 +187,38 @@ function parseNFHtml(html) {
   return r;
 }
 
-// ── OpenAPI normalize (fallback) ──────────────────────────────
+// ── OpenAPI normalize (fallback quando web scraping falha) ────
 function isValidDate(s) {
   if (!s) return false;
   var b = s.split('T')[0];
-  return b !== '0000-00-00' && b.replace(/[-0]/g,'') !== '';
+  return b !== '0000-00-00' && b.replace(/[-0]/g, '') !== '';
 }
 function fmtDate(s) {
   if (!isValidDate(s)) return null;
   var d = s.split('T')[0].split('-');
-  return d.length === 3 ? d[2]+'/'+d[1]+'/'+d[0] : null;
+  return d.length === 3 ? d[2] + '/' + d[1] + '/' + d[0] : null;
 }
 function fmtBRL(n) {
   if (!n && n !== 0) return '—';
-  return 'R$ ' + Number(n).toFixed(2).replace('.',',').replace(/(\d)(?=(\d{3})+,)/g,'$1.');
+  return 'R$ ' + Number(n).toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+,)/g, '$1.');
 }
 
+// ATENÇÃO: "COMISSÃO PAGA AO CORRETOR" NUNCA é retornado via OpenAPI.
+// Só o web scraping (Nova Financeira) tem os dados reais de pagamento.
+// Via API: contratos com tcc + data_pgto_bc → AGUARDANDO IMPORTAÇÃO
+//          (pois data_pgto_bc = banco pagou o CLIENTE, não a comissão)
 function deriveSituacao(c) {
   var tcc = c.tabela_coeficiente_comissao, cor = c.corretor;
   var st  = (c.status_contrato && c.status_contrato.nome) || '';
   var temData = isValidDate(c.data_pgto_bc);
   if (!cor || !cor.usuario) return 'DADOS IMPORTADOS — USUÁRIO NÃO VINCULADO';
   if (/TOMAD/i.test(st))    return 'CONTRATO EM TOMADA DE DECISÃO';
-  if (!tcc) return temData ? 'DADOS IMPORTADOS' : 'AGUARDANDO IMPORTAÇÃO (RELATÓRIO BANCO)';
-  return temData ? 'COMISSÃO PAGA AO CORRETOR' : 'COMISSÃO DISPONÍVEL PARA PAGAMENTO';
+  if (!tcc) return 'AGUARDANDO IMPORTAÇÃO (RELATÓRIO BANCO)';
+  // Tem tabela mas não tem data de pagamento do cliente → aguardando o banco
+  if (!temData) return 'AGUARDANDO IMPORTAÇÃO (RELATÓRIO BANCO)';
+  // Tem tabela E tem data de pagamento → banco pagou cliente, mas comissão
+  // pode não ter sido importada ainda. Status conservador via API:
+  return 'AGUARDANDO IMPORTAÇÃO (RELATÓRIO BANCO)';
 }
 
 function normalizeApi(c) {
@@ -221,35 +227,12 @@ function normalizeApi(c) {
   var tcc  = c.tabela_coeficiente_comissao || {};
   var sf   = deriveSituacao(c);
   var vb   = c.valor_liquido || c.valor_bruto || 0;
-  var recP = parseFloat(tcc.comissao_recebida)             || 0;
-  var repP = parseFloat(tcc.comissao_repassada)            || 0;
-  var adtP = parseFloat(tcc.comissao_repassada_adiantamento) || 0;
-  var repV = vb * repP / 100, adtV = vb * adtP / 100;
+  var recP = parseFloat(tcc.comissao_recebida)               || 0;
 
-  // Multiloja: só marcar se API tiver flag explícita (c.multiloja ou similar)
-  // Não derivar de sala.nome vs cor.nome — gera falso positivo
   var multilojaApi = c.multiloja || (c.corretor && c.corretor.multiloja) || null;
-  var masterNome = '', multilojaStr = multilojaApi ? String(multilojaApi) : 'Não';
+  var multilojaStr = multilojaApi ? String(multilojaApi) : 'Não';
 
   function fmtPct(n) { return n ? n.toFixed(2).replace('.', ',') + ' %' : '—'; }
-
-  var comissaoPaga = null;
-  if (sf.includes('PAGA AO CORRETOR')) {
-    var dataPgto = fmtDate(c.data_pagamento || c.data_pgto_comissao || c.data_pgto_bc) || '—';
-    comissaoPaga = {
-      dataPagamento:        dataPgto,
-      valorBase:            fmtBRL(vb),
-      valorBaseBruto:       '—',
-      comissaoRepassadaPct: fmtPct(repP),
-      valorComissao:        fmtBRL(repV),
-      adiantamentoPct:      adtP > 0 ? fmtPct(adtP) : '—',
-      valorAdiantamento:    adtP > 0 ? fmtBRL(adtV) : '—',
-      totalPctRepassado:    fmtPct(repP + adtP),
-      valorFiliado:         null,
-      valorMaster:          null,
-      valorTotal:           fmtBRL(repV + adtV)
-    };
-  }
 
   return {
     fonte: 'api',
@@ -261,16 +244,17 @@ function normalizeApi(c) {
     comercial: com.nome || cor.nome || '—',
     comercialCod: com.usuario || cor.usuario || '',
     regional:  reg.nome || '—',
-    multiloja: multilojaStr, masterNome: masterNome, rateio: null,
+    multiloja: multilojaStr, masterNome: '', rateio: null,
     nomeTabela: (tcc.orgao_tabela && tcc.orgao_tabela.nome_tabela) || '—',
     idTabela:   tcc.id ? 'P.' + tcc.id : '—',
     situacaoFinanceiro: sf,
     linhasComissao: tcc.id ? [{
       valorBase: fmtBRL(vb), valorBaseBruto: '—',
       comissaoRecebida: fmtPct(recP), adiantamentoPct: '—',
-      importadoPor: '—', dataImportacao: fmtDate(c.data_pgto_bc)||'—', status: 'Analisada'
+      importadoPor: '—', dataImportacao: fmtDate(c.data_pgto_bc) || '—', status: 'Analisada'
     }] : [],
-    comissaoPaga: comissaoPaga,
+    // comissaoPaga sempre null via API — só web scraping tem dado real
+    comissaoPaga: null,
     dadosOperacional: {
       contratoPendente: '—',
       situacaoContrato: (c.status_contrato && c.status_contrato.nome) || '—',
@@ -282,11 +266,21 @@ function normalizeApi(c) {
 
 // ── Lógica principal ──────────────────────────────────────────
 function processAde(ade) {
+  // Sempre tenta web scraping primeiro (dados completos e corretos)
   var nf = scrapeNF(ade);
-  if (nf && nf._erro) throw new Error(nf._erro);
-  if (!nf || !nf.ade || nf.ade === '—') throw new Error('ADE não encontrada no sistema');
-  nf.fonte = 'web';
-  return [nf];
+  if (nf && !nf._erro && nf.ade && nf.ade !== '—') {
+    nf.fonte = 'web';
+    return [nf];
+  }
+
+  // Fallback: OpenAPI Storm (dados parciais — sem COMISSÃO PAGA real)
+  var token = getStormToken();
+  var resp  = UrlFetchApp.fetch(STORM_BASE + '/contratos?ade=' + encodeURIComponent(ade), {
+    method: 'get', headers: { 'Authorization': 'Bearer ' + token }, muteHttpExceptions: true
+  });
+  var raw   = JSON.parse(resp.getContentText());
+  var items = (raw && raw.data) ? raw.data : (Array.isArray(raw) ? raw : []);
+  return items.map(normalizeApi);
 }
 
 // ── Handlers GET e POST ───────────────────────────────────────
@@ -295,9 +289,9 @@ function doGet(e) {
   out.setMimeType(ContentService.MimeType.JSON);
   try {
     var token = e && e.parameter && e.parameter.token;
-    if (token !== GAS_SECRET) { out.setContent(JSON.stringify({error:'unauthorized'})); return out; }
+    if (token !== GAS_SECRET) { out.setContent(JSON.stringify({error: 'unauthorized'})); return out; }
     var ade = e && e.parameter && e.parameter.ade;
-    if (!ade) { out.setContent(JSON.stringify({error:'ade obrigatorio'})); return out; }
+    if (!ade) { out.setContent(JSON.stringify({error: 'ade obrigatorio'})); return out; }
     out.setContent(JSON.stringify(processAde(ade)));
   } catch(ex) {
     out.setContent(JSON.stringify({error: ex.message}));
@@ -311,7 +305,7 @@ function doPost(e) {
   try {
     var body = JSON.parse(e.postData.contents || '{}');
     var ade  = body.ade;
-    if (!ade) { out.setContent(JSON.stringify({error:'ade obrigatorio'})); return out; }
+    if (!ade) { out.setContent(JSON.stringify({error: 'ade obrigatorio'})); return out; }
     out.setContent(JSON.stringify(processAde(ade)));
   } catch(ex) {
     out.setContent(JSON.stringify({error: ex.message}));
