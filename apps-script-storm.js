@@ -274,23 +274,11 @@ function normalizeApi(c) {
 
 // ── Lógica principal ──────────────────────────────────────────
 function processAde(ade) {
-  // Tenta web system primeiro (só funciona quando MFA for removido)
-  try {
-    var nf = scrapeNF(ade);
-    if (nf && !nf._erro && nf.ade && nf.ade !== '—') {
-      nf.fonte = 'web';
-      return [nf];
-    }
-  } catch(ex) { /* fallback */ }
-
-  // Fallback: OpenAPI Storm
-  var token = getStormToken();
-  var resp  = UrlFetchApp.fetch(STORM_BASE + '/contratos?ade=' + encodeURIComponent(ade), {
-    method: 'get', headers: { 'Authorization': 'Bearer ' + token }, muteHttpExceptions: true
-  });
-  var raw   = JSON.parse(resp.getContentText());
-  var items = (raw && raw.data) ? raw.data : (Array.isArray(raw) ? raw : []);
-  return items.map(normalizeApi);
+  var nf = scrapeNF(ade);
+  if (nf && nf._erro) throw new Error(nf._erro);
+  if (!nf || !nf.ade || nf.ade === '—') throw new Error('ADE não encontrada no sistema');
+  nf.fonte = 'web';
+  return [nf];
 }
 
 // ── Handlers GET e POST ───────────────────────────────────────
