@@ -166,17 +166,25 @@ function parseNFHtml(html) {
   }
 
   // Dados Operacional
-  r.contratoPendente = extractField(html, 'Contrato Pendente');
-  r.situacaoContrato = extractField(html, 'Situa..o Contrato') || extractField(html, 'Situação Contrato');
-  r.dataPgtoCliente  = extractField(html, 'Data Pgto Cliente');
-  r.historicoSit     = extractField(html, 'Hist.rico Situa..o') || extractField(html, 'Histórico Situação');
+  var contratoPendente = extractField(html, 'Contrato Pendente');
+  var situacaoContrato = extractField(html, 'Situa..o Contrato') || extractField(html, 'Situação Contrato');
+  var dataPgtoCliente  = extractField(html, 'Data Pgto Cliente');
+  var historicoSit     = extractField(html, 'Hist.rico Situa..o') || extractField(html, 'Histórico Situação');
 
-  // Master nome
+  r.dadosOperacional = {
+    contratoPendente:  contratoPendente || '—',
+    situacaoContrato:  situacaoContrato || '—',
+    dataPgtoCliente:   dataPgtoCliente  || '',
+    historicoSituacao: historicoSit     || '—'
+  };
+
+  // Master nome + comercialCod (para hierarquia)
   r.masterNome = null;
   if (r.multiloja) {
     var mm = r.multiloja.match(/Master\s*[:\-]?\s*\d+\s*-\s*(.+)/i);
     if (mm) r.masterNome = mm[1].trim();
   }
+  r.comercialCod = r.comercial ? r.comercial.split(' - ')[0].trim() : '';
 
   return r;
 }
