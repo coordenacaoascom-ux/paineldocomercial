@@ -142,27 +142,26 @@ function parseNFHtml(html) {
     });
   }
 
-  // Tabela Comissão paga — estrutura confirmada no Storm:
-  // row[0]=título, row[1..10]=10 headers, row[11..20]=dados
-  // Headers: Data Pagamento | Valor Base | Valor Base Bruto | Comissão Repassada |
-  //          Valor Comissão | Adiantamento Repassado | Valor Adiantamento |
-  //          Total % Repassado | Valor Total | (coluna vazia)
+  // Tabela Comissão paga — 10 colunas (padrão) ou 11 (multiloja: Filiado+Master extras)
+  // Detecta pelo header: se contiver "Filiado" nos primeiros 13 valores = 11 colunas
   var cpVals = parseTdValues(html, 'Comiss.o paga');
   r.comissaoPaga = null;
   if (cpVals.length > 11) {
-    var row = cpVals.slice(11, 21);
+    var isMultilojaTab = /Filiado|Master/i.test(cpVals.slice(0, 13).join(' '));
+    var dataStart = isMultilojaTab ? 12 : 11;
+    var row = cpVals.slice(dataStart, dataStart + 11);
     r.comissaoPaga = {
-      dataPagamento:        row[0] || '—',
-      valorBase:            row[1] || '—',
-      valorBaseBruto:       row[2] || '—',
-      comissaoRepassadaPct: row[3] || '—',
-      valorComissao:        row[4] || '—',
-      adiantamentoPct:      row[5] || '—',
-      valorAdiantamento:    row[6] || '—',
-      totalPctRepassado:    row[7] || '—',
-      valorTotal:           row[8] || '—',
-      valorFiliado:         null,
-      valorMaster:          null
+      dataPagamento:        row[0]  || '—',
+      valorBase:            row[1]  || '—',
+      valorBaseBruto:       row[2]  || '—',
+      comissaoRepassadaPct: row[3]  || '—',
+      valorComissao:        row[4]  || '—',
+      adiantamentoPct:      row[5]  || '—',
+      valorAdiantamento:    row[6]  || '—',
+      totalPctRepassado:    row[7]  || '—',
+      valorFiliado:         isMultilojaTab ? (row[8]  || null) : null,
+      valorMaster:          isMultilojaTab ? (row[9]  || null) : null,
+      valorTotal:           isMultilojaTab ? (row[10] || '—') : (row[8] || '—'
     };
   }
 
