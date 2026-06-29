@@ -1,5 +1,5 @@
 ﻿﻿<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -15,18 +15,39 @@
 <meta property="og:url" content="https://coordenacaoascom-ux.github.io/paineldocomercial/">
 <meta property="og:type" content="website"><link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Titillium+Web:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{
-  --bg:#060810;--surface:#0d1120;--surface2:#111827;--surface3:#161f35;
-  --border:#1a2540;--border2:#1e2d4a;
-  --text:#e8eeff;--muted:#5a6d94;--muted2:#8a9fc0;
-  --neon:#00c8ff;--neon2:#0060ff;
-  --accent:#e8ff3c;--accent2:#3cffb4;--accent3:#ff6b3c;
-  --concluded:#3cffb4;--refused:#ff4466;--waiting-bank:#00c8ff;
-  --pending:#e8ff3c;--waiting-sign:#ff9f3c;--waiting-reg:#c03cff;
+:root, .dark {
+  --nova-bg:#080B12; --nova-bg-elev:#0E1421; --nova-bg-elev-2:#1A2B40; --nova-border:#22304A;
+  --nova-navy:#1A2B40; --nova-navy-light:#2C4366; --nova-blue:#3D7BFF; --nova-red:#CF190F;
+  --nova-text:#EEF2F8; --nova-text-muted:#9AA6BA; --nova-text-dim:#5D6880;
+  --glass:rgba(255,255,255,.05); --glass-brd:rgba(255,255,255,.10);
+  --c-success:#4ADE80; --c-warning:#FBBF24; --c-danger:#FF6B6B; --c-info:#6F9BFF;
+  /* Legacy aliases for backward compat */
+  --bg:var(--nova-bg); --surface:var(--nova-bg-elev); --surface2:var(--nova-bg-elev-2); --surface3:#1F3356;
+  --border:var(--nova-border); --border2:#2C4366;
+  --text:var(--nova-text); --muted:var(--nova-text-dim); --muted2:var(--nova-text-muted);
+  --neon:var(--nova-blue); --neon2:#2B5CE6;
+  --accent:var(--c-warning); --accent2:var(--c-success); --accent3:var(--c-danger);
+  --concluded:var(--c-success); --refused:var(--c-danger); --waiting-bank:var(--nova-blue);
+  --pending:var(--c-warning); --waiting-sign:#F59E0B; --waiting-reg:#A78BFA;
 }
+.light {
+  --nova-bg:#EEF1F7; --nova-bg-elev:#FFFFFF; --nova-bg-elev-2:#E7EBF3; --nova-border:#D9DFEA;
+  --nova-navy:#1A2B40; --nova-navy-light:#33486A; --nova-blue:#2B62D6; --nova-red:#CF190F;
+  --nova-text:#10182A; --nova-text-muted:#4A586E; --nova-text-dim:#8A93A6;
+  --glass:rgba(16,24,42,.04); --glass-brd:rgba(16,24,42,.12);
+  --c-success:#15803D; --c-warning:#B45309; --c-danger:#DC2626; --c-info:#2B62D6;
+  --bg:var(--nova-bg); --surface:var(--nova-bg-elev); --surface2:var(--nova-bg-elev-2); --surface3:#D1D9E8;
+  --border:var(--nova-border); --border2:#C5CFDF;
+  --text:var(--nova-text); --muted:var(--nova-text-dim); --muted2:var(--nova-text-muted);
+  --neon:var(--nova-blue); --neon2:#1E52C0;
+  --accent:var(--c-warning); --accent2:var(--c-success); --accent3:var(--c-danger);
+  --concluded:var(--c-success); --refused:var(--c-danger); --waiting-bank:var(--nova-blue);
+  --pending:var(--c-warning); --waiting-sign:#D97706; --waiting-reg:#7C3AED;
+}
+* { border-color: var(--nova-border); }
 *{margin:0;padding:0;box-sizing:border-box;}
 html{scrollbar-width:thin;scrollbar-color:#1a2540 #060810;}
 ::-webkit-scrollbar{width:5px;height:5px;}
@@ -36,12 +57,12 @@ body{
   background:var(--bg);
   background-image:radial-gradient(ellipse 60% 40% at 50% -10%,rgba(0,120,255,.08) 0%,transparent 70%),
     radial-gradient(ellipse 30% 30% at 90% 50%,rgba(0,200,255,.04) 0%,transparent 60%);
-  color:var(--text);font-family:'Titillium Web',sans-serif;min-height:100vh;
+  color:var(--text);font-family:'Sora',sans-serif;min-height:100vh;
 }
 /* HEADER */
-.header{padding:26px 40px 18px;border-bottom:1px solid var(--border);display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;position:relative;}
+.header{padding:26px 40px 18px;border-bottom:1px solid var(--nova-border);background:var(--nova-bg-elev);display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;position:relative;}
 .header::after{content:'';position:absolute;bottom:-1px;left:40px;width:220px;height:1px;background:linear-gradient(90deg,var(--neon),transparent);}
-.header-left h1{font-family:'Orbitron',sans-serif;font-size:24px;font-weight:900;letter-spacing:2px;text-transform:uppercase;}
+.header-left h1{font-family:'Sora',sans-serif;font-size:24px;font-weight:900;letter-spacing:2px;text-transform:uppercase;}
 .header-left h1 span{color:var(--accent);}
 .date-wrap{position:relative;display:inline-block;margin-top:6px;}
 .date-btn{display:flex;align-items:center;gap:7px;cursor:pointer;background:none;border:none;color:inherit;}
@@ -49,53 +70,53 @@ body{
 .date-btn svg{color:var(--neon);}
 .date-drop{display:none;position:absolute;top:26px;left:0;z-index:200;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:14px;min-width:200px;box-shadow:0 8px 40px rgba(0,0,0,.6);}
 .date-drop.open{display:block;}
-.date-drop label{font-size:16px;color:var(--muted2);display:block;margin-bottom:5px;font-family:'Titillium Web',sans-serif;letter-spacing:1px;}
-.date-drop input[type=month]{width:100%;background:var(--surface3);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:6px 10px;font-family:'Titillium Web',sans-serif;font-size:12px;outline:none;cursor:pointer;}
+.date-drop label{font-size:16px;color:var(--muted2);display:block;margin-bottom:5px;font-family:'Sora',sans-serif;letter-spacing:1px;}
+.date-drop input[type=month]{width:100%;background:var(--surface3);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:6px 10px;font-family:'Sora',sans-serif;font-size:12px;outline:none;cursor:pointer;}
 .date-drop input[type=month]:focus{border-color:var(--neon);}
 .header-badges{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 /* ANALYTICS PANEL */
 .analytics-section{margin:0 40px 24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;transition:border-color .2s;}
+.stat-card{backdrop-filter:blur(18px) saturate(120%);background:var(--glass);border:1px solid var(--glass-brd);border-radius:18px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;transition:border-color .2s;}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
 .stat-card.aprov::before{background:linear-gradient(90deg,#3cffb4,#00c8ff);}
 .stat-card.recus::before{background:linear-gradient(90deg,#ff4466,#c03cff);}
 .stat-card.pend::before{background:linear-gradient(90deg,#e8ff3c,#ff9f3c);}
 .stat-card:hover{border-color:var(--border2);}
 .stat-header{display:flex;align-items:center;justify-content:space-between;}
-.stat-title{font-family:'Titillium Web',sans-serif;font-size:9px;letter-spacing:2px;color:var(--muted2);}
+.stat-title{font-family:'Sora',sans-serif;font-size:9px;letter-spacing:2px;color:var(--muted2);}
 .stat-icon{font-size:20px;line-height:1;}
-.stat-number{font-family:'Titillium Web',sans-serif;font-size:32px;font-weight:900;line-height:1;}
+.stat-number{font-family:'Sora',sans-serif;font-size:32px;font-weight:900;line-height:1;}
 .stat-number.aprov{color:#3cffb4;} .stat-number.recus{color:#ff4466;} .stat-number.pend{color:#e8ff3c;}
 .stat-pct-row{display:flex;align-items:center;gap:8px;}
 .stat-pct-bar{flex:1;height:5px;background:var(--border2);border-radius:3px;overflow:hidden;}
 .stat-pct-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1);}
-.stat-pct-lbl{font-family:'Titillium Web',sans-serif;font-size:16px;color:var(--muted2);min-width:36px;text-align:right;}
-.stat-sub{font-size:10px;color:var(--muted);font-family:'Titillium Web',sans-serif;}
+.stat-pct-lbl{font-family:'Sora',sans-serif;font-size:16px;color:var(--muted2);min-width:36px;text-align:right;}
+.stat-sub{font-size:10px;color:var(--muted);font-family:'Sora',sans-serif;}
 /* BREAKDOWN TABLE */
 .breakdown-section{margin:0 40px 24px;}
-.breakdown-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
-.breakdown-title{padding:14px 18px;border-bottom:1px solid var(--border);font-family:'Titillium Web',sans-serif;font-size:10px;letter-spacing:2px;color:var(--neon);display:flex;align-items:center;gap:8px;}
+.breakdown-card{backdrop-filter:blur(18px) saturate(120%);background:var(--glass);border:1px solid var(--glass-brd);border-radius:18px;overflow:hidden;}
+.breakdown-title{padding:14px 18px;border-bottom:1px solid var(--border);font-family:'Sora',sans-serif;font-size:10px;letter-spacing:2px;color:var(--neon);display:flex;align-items:center;gap:8px;}
 .breakdown-tabs{display:flex;border-bottom:1px solid var(--border);}
-.btab{padding:9px 16px;font-family:'Titillium Web',sans-serif;font-size:9px;letter-spacing:1px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none;}
+.btab{padding:9px 16px;font-family:'Sora',sans-serif;font-size:9px;letter-spacing:1px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none;}
 .btab.active{color:var(--neon);border-bottom-color:var(--neon);}
 .btab:hover:not(.active){color:var(--text);}
 .breakdown-body{padding:14px 18px;max-height:320px;overflow-y:auto;}
 .brow{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:background .12s;border-radius:6px;padding-left:4px;}
 .brow:hover{background:rgba(0,200,255,.04);}
-.brow-name{font-family:'Titillium Web',sans-serif;font-size:17px;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;}
+.brow-name{font-family:'Sora',sans-serif;font-size:17px;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;}
 .brow-bars{display:flex;gap:3px;align-items:center;flex:2;}
 .mini-bar{height:8px;border-radius:2px;min-width:2px;transition:width .4s;}
-.brow-nums{display:flex;gap:8px;align-items:center;font-family:'Titillium Web',sans-serif;font-size:9px;min-width:120px;justify-content:flex-end;}
+.brow-nums{display:flex;gap:8px;align-items:center;font-family:'Sora',sans-serif;font-size:9px;min-width:120px;justify-content:flex-end;}
 .brow-aprov{color:#3cffb4;} .brow-recus{color:#ff4466;} .brow-pend{color:#e8ff3c;}
-.b-legend{display:flex;gap:14px;padding:8px 18px;border-top:1px solid var(--border);font-family:'Titillium Web',sans-serif;font-size:9px;}
+.b-legend{display:flex;gap:14px;padding:8px 18px;border-top:1px solid var(--border);font-family:'Sora',sans-serif;font-size:9px;}
 .b-leg-dot{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:4px;}
 .badge{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:5px 13px;font-size:15px;color:var(--muted2);}
 .badge span{color:var(--neon);font-weight:600;}
 /* CONVENIO FILTER */
 .conv-bar{padding:10px 40px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:rgba(0,200,255,.02);}
-.conv-label{font-family:'Titillium Web',sans-serif;font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;flex-shrink:0;}
+.conv-label{font-family:'Sora',sans-serif;font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;flex-shrink:0;}
 .conv-search-wrap{position:relative;flex-shrink:0;}
-.conv-search{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 10px;font-size:11px;font-family:'Titillium Web',sans-serif;outline:none;width:220px;}
+.conv-search{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 10px;font-size:11px;font-family:'Sora',sans-serif;outline:none;width:220px;}
 .conv-search:focus{border-color:var(--neon);}
 .conv-dropdown{display:none;position:absolute;top:32px;left:0;z-index:200;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;max-height:240px;overflow-y:auto;width:300px;box-shadow:0 8px 30px rgba(0,0,0,.6);}
 .conv-dropdown.open{display:block;}
@@ -110,26 +131,26 @@ body{
 .filter-section{padding:0 40px;border-bottom:1px solid var(--border);}
 .filter-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid var(--border);}
 .filter-row:last-child{border-bottom:none;}
-.filter-label{font-family:'Titillium Web',sans-serif;font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;width:180px;flex-shrink:0;}
+.filter-label{font-family:'Sora',sans-serif;font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;width:180px;flex-shrink:0;}
 .filter-btns{display:flex;gap:6px;flex-wrap:wrap;flex:1;}
-.fbtn{background:var(--surface);border:1px solid var(--border2);color:var(--muted2);padding:8px 18px;border-radius:16px;cursor:pointer;font-family:'Titillium Web',sans-serif;font-size:16px;font-weight:500;transition:all .15s;white-space:nowrap;}
-.fbtn:hover{border-color:var(--neon);color:var(--neon);}
-.fbtn.active{background:linear-gradient(135deg,rgba(0,200,255,.18),rgba(0,96,255,.18));border-color:var(--neon);color:var(--neon);font-weight:600;}
+.fbtn{background:var(--glass);border:1px solid var(--glass-brd);color:var(--nova-text);padding:8px 18px;border-radius:16px;cursor:pointer;font-family:'Sora',sans-serif;font-size:16px;font-weight:500;transition:all .15s;white-space:nowrap;}
+.fbtn:hover{background:rgba(255,255,255,.07);}
+.fbtn.active{background:rgba(61,123,255,.16);border-color:rgba(61,123,255,.45);color:var(--nova-blue);font-weight:600;}
 .filter-empty{font-size:11px;color:var(--muted);font-style:italic;}
 /* MAIN */
 .main{padding:24px 40px;display:flex;flex-direction:column;gap:22px;}
 /* KPI */
 .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
-.kpi{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:16px 16px 12px;position:relative;overflow:hidden;transition:border-color .2s;}
+.kpi{backdrop-filter:blur(18px) saturate(120%);background:var(--glass);border:1px solid var(--glass-brd);border-radius:18px;padding:16px 16px 12px;position:relative;overflow:hidden;transition:border-color .2s;}
 .kpi:hover{border-color:var(--neon);}
 .kpi-bar{position:absolute;left:0;top:0;bottom:0;width:2px;}
 .kpi-icon{font-size:20px;margin-bottom:6px;display:block;}
-.kpi-label{font-family:'Titillium Web',sans-serif;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px;}
-.kpi-value{font-family:'Titillium Web',sans-serif;font-size:30px;font-weight:900;line-height:1;}
+.kpi-label{font-family:'Sora',sans-serif;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px;}
+.kpi-value{font-family:'Sora',sans-serif;font-size:30px;font-weight:900;line-height:1;}
 .kpi-sub{font-size:15px;color:var(--muted2);margin-top:4px;}
 /* CARD */
-.card{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:18px;overflow:visible;}
-.card-title{font-family:'Titillium Web',sans-serif;font-size:22px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.card{backdrop-filter:blur(18px) saturate(120%);background:var(--glass);border:1px solid var(--glass-brd);border-radius:18px;padding:18px;overflow:visible;}
+.card-title{font-family:'Sora',sans-serif;font-size:22px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
 .ctdot{width:5px;height:5px;border-radius:50%;background:var(--neon);box-shadow:0 0 5px var(--neon);flex-shrink:0;}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 /* FASE */
@@ -141,16 +162,16 @@ body{
 .fase-name{font-size:16px;color:var(--muted2);width:170px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fase-bar-wrap{flex:1;background:var(--surface3);border-radius:2px;height:5px;overflow:hidden;}
 .fase-bar{height:5px;border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1);}
-.fase-count{font-family:'Titillium Web',sans-serif;font-size:16px;width:28px;text-align:right;color:var(--text);}
+.fase-count{font-family:'Sora',sans-serif;font-size:16px;width:28px;text-align:right;color:var(--text);}
 .fase-chevron{color:var(--muted);font-size:14px;width:12px;text-align:center;transition:transform .2s;}
 .fase-row.expanded .fase-chevron{transform:rotate(180deg);}
 /* DRILL */
 .drill-panel{border:1px solid var(--neon);border-top:none;border-radius:0 0 8px 8px;background:var(--surface2);overflow:hidden;display:none;margin-bottom:2px;}
 .drill-panel.open{display:block;}
 .dtbl{width:100%;border-collapse:collapse;font-size:22px;}
-.dtbl th{font-family:'Titillium Web',sans-serif;font-size:16px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:12px 16px;background:var(--surface3);border-bottom:1px solid var(--border);}
+.dtbl th{font-family:'Sora',sans-serif;font-size:16px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:12px 16px;background:var(--surface3);border-bottom:1px solid var(--border);}
 .dtbl td{padding:12px 16px;border-bottom:1px solid var(--border);color:var(--muted2);vertical-align:middle;font-size:22px;}
-.dtbl td:first-child{color:var(--neon);font-weight:600;font-family:'Titillium Web',sans-serif;font-size:22px;}
+.dtbl td:first-child{color:var(--neon);font-weight:600;font-family:'Sora',sans-serif;font-size:22px;}
 .dtbl tr:last-child td{border-bottom:none;}
 .dtbl tr:hover td{background:rgba(0,200,255,.04);}
 .drill-empty{text-align:center;padding:14px;color:var(--muted);font-size:16px;}
@@ -158,47 +179,47 @@ body{
 .donut-row{display:flex;flex-direction:column;align-items:center;gap:16px;}
 .donut-canvas{width:220px!important;height:220px!important;flex-shrink:0;}
 .leg-list{display:flex;flex-direction:column;gap:8px;width:100%;}
-.leg-item{display:flex;align-items:center;gap:7px;font-size:11px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04);}.leg-count{font-family:'Titillium Web',sans-serif;font-size:11px;color:var(--neon);font-weight:700;margin-left:auto;min-width:36px;text-align:right;}
+.leg-item{display:flex;align-items:center;gap:7px;font-size:11px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04);}.leg-count{font-family:'Sora',sans-serif;font-size:11px;color:var(--neon);font-weight:700;margin-left:auto;min-width:36px;text-align:right;}
 .leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.leg-pct{font-family:'Titillium Web',sans-serif;font-size:16px;color:var(--muted2);min-width:30px;text-align:right;}
-.tipo-card{position:relative;}.tipo-card-tip{display:none;position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;width:230px;z-index:999;font-family:sans-serif;font-size:11px;color:var(--muted2);line-height:1.6;box-shadow:0 8px 30px rgba(0,0,0,.7);pointer-events:none;text-align:left;}.tipo-card-tip b{display:block;font-family:'Titillium Web',sans-serif;font-size:9px;letter-spacing:1px;margin-bottom:5px;}.tipo-card:hover .tipo-card-tip{display:block;}/* LOGIN */
-#loginOverlay{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;align-items:center;justify-content:center;background-image:radial-gradient(ellipse 60% 40% at 50% -10%,rgba(0,120,255,.12) 0%,transparent 70%);}
+.leg-pct{font-family:'Sora',sans-serif;font-size:16px;color:var(--muted2);min-width:30px;text-align:right;}
+.tipo-card{position:relative;}.tipo-card-tip{display:none;position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;width:230px;z-index:999;font-family:sans-serif;font-size:11px;color:var(--muted2);line-height:1.6;box-shadow:0 8px 30px rgba(0,0,0,.7);pointer-events:none;text-align:left;}.tipo-card-tip b{display:block;font-family:'Sora',sans-serif;font-size:9px;letter-spacing:1px;margin-bottom:5px;}.tipo-card:hover .tipo-card-tip{display:block;}/* LOGIN */
+#loginOverlay{position:fixed;inset:0;z-index:99999;background:var(--nova-bg);display:flex;align-items:center;justify-content:center;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px),radial-gradient(ellipse at 20% 50%,rgba(61,123,255,.08),transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(207,25,15,.06),transparent 40%);background-size:46px 46px,46px 46px,100% 100%,100% 100%;}
 .login-box{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:50px 56px;width:480px;box-shadow:0 20px 60px rgba(0,0,0,.7);}
-.login-box h2{font-family:'Titillium Web',sans-serif;font-size:26px;font-weight:900;letter-spacing:2px;text-align:center;margin-bottom:8px;}
+.login-box h2{font-family:'Sora',sans-serif;font-size:26px;font-weight:900;letter-spacing:2px;text-align:center;margin-bottom:8px;}
 .login-box h2 span{color:var(--accent);}
-.login-box .sub{text-align:center;font-size:15px;color:var(--muted);margin-bottom:28px;font-family:'Titillium Web',sans-serif;}
-.login-box label{display:block;font-family:'Titillium Web',sans-serif;font-size:13px;color:var(--muted2);letter-spacing:1px;margin-bottom:6px;margin-top:18px;}
-.login-box input{width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:13px 16px;font-size:16px;font-family:'Titillium Web',sans-serif;outline:none;box-sizing:border-box;}
+.login-box .sub{text-align:center;font-size:15px;color:var(--muted);margin-bottom:28px;font-family:'Sora',sans-serif;}
+.login-box label{display:block;font-family:'Sora',sans-serif;font-size:13px;color:var(--muted2);letter-spacing:1px;margin-bottom:6px;margin-top:18px;}
+.login-box input{width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:13px 16px;font-size:16px;font-family:'Sora',sans-serif;outline:none;box-sizing:border-box;}
 .login-box input:focus{border-color:var(--neon);}
-.login-box button.btn-entrar{width:100%;margin-top:26px;background:linear-gradient(90deg,var(--neon2),var(--neon));border:none;color:#fff;border-radius:8px;padding:15px;font-family:'Titillium Web',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;cursor:pointer;}
+.login-box button.btn-entrar{width:100%;margin-top:26px;background:linear-gradient(90deg,var(--neon2),var(--neon));border:none;color:#fff;border-radius:8px;padding:15px;font-family:'Sora',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;cursor:pointer;}
 .login-box button.btn-entrar:hover{opacity:.9;}
-.login-box .btn-link{background:none;border:none;color:var(--muted2);font-size:13px;font-family:'Titillium Web',sans-serif;cursor:pointer;text-decoration:underline;padding:0;margin-top:14px;display:block;text-align:center;width:100%;}
+.login-box .btn-link{background:none;border:none;color:var(--muted2);font-size:13px;font-family:'Sora',sans-serif;cursor:pointer;text-decoration:underline;padding:0;margin-top:14px;display:block;text-align:center;width:100%;}
 .login-box .btn-link:hover{color:var(--neon);}
-.login-err{color:#ff4466;font-size:13px;text-align:center;margin-top:12px;font-family:'Titillium Web',sans-serif;min-height:18px;}
-.login-ok{color:#3cffb4;font-size:13px;text-align:center;margin-top:12px;font-family:'Titillium Web',sans-serif;}
+.login-err{color:#ff4466;font-size:13px;text-align:center;margin-top:12px;font-family:'Sora',sans-serif;min-height:18px;}
+.login-ok{color:#3cffb4;font-size:13px;text-align:center;margin-top:12px;font-family:'Sora',sans-serif;}
 .user-badge{display:flex;align-items:center;gap:8px;}
-.user-badge .ub-name{font-family:'Titillium Web',sans-serif;font-size:15px;color:var(--neon);}
+.user-badge .ub-name{font-family:'Sora',sans-serif;font-size:15px;color:var(--neon);}
 .user-badge .ub-logout{font-size:14px;color:var(--muted2);cursor:pointer;border:1px solid var(--border2);border-radius:5px;padding:3px 8px;}
 .user-badge .ub-logout:hover{color:var(--text);}/* BADGES */
 .pb{display:inline-block;padding:2px 6px;border-radius:10px;font-size:9px;font-weight:600;white-space:nowrap;}
-.pb-c{background:rgba(60,255,180,.12);color:#3cffb4;border:1px solid rgba(60,255,180,.2);}
-.pb-r{background:rgba(255,68,102,.12);color:#ff4466;border:1px solid rgba(255,68,102,.2);}
-.pb-b{background:rgba(0,200,255,.12);color:#00c8ff;border:1px solid rgba(0,200,255,.2);}
-.pb-p{background:rgba(232,255,60,.12);color:#e8ff3c;border:1px solid rgba(232,255,60,.2);}
-.pb-a{background:rgba(255,159,60,.12);color:#ff9f3c;border:1px solid rgba(255,159,60,.2);}
-.pb-rg{background:rgba(192,60,255,.12);color:#c03cff;border:1px solid rgba(192,60,255,.2);}
-.pb-o{background:rgba(136,136,136,.1);color:#888;border:1px solid rgba(136,136,136,.15);}
+.pb-c{background:rgba(74,222,128,.12);color:#4ADE80;border:1px solid rgba(74,222,128,.2);}
+.pb-r{background:rgba(255,107,107,.12);color:#FF6B6B;border:1px solid rgba(255,107,107,.2);}
+.pb-b{background:rgba(61,123,255,.12);color:#6F9BFF;border:1px solid rgba(61,123,255,.2);}
+.pb-p{background:rgba(251,191,36,.12);color:#FBBF24;border:1px solid rgba(251,191,36,.2);}
+.pb-a{background:rgba(251,191,36,.10);color:#F59E0B;border:1px solid rgba(251,191,36,.2);}
+.pb-rg{background:rgba(167,139,250,.12);color:#A78BFA;border:1px solid rgba(167,139,250,.2);}
+.pb-o{background:rgba(157,170,186,.10);color:var(--nova-text-muted);border:1px solid rgba(157,170,186,.15);}
 .parc-sub0{background:rgba(0,200,255,.1);color:#00c8ff;border:1px solid rgba(0,200,255,.2);}
 .parc-sub{background:rgba(192,60,255,.1);color:#c03cff;border:1px solid rgba(192,60,255,.2);}
 .parc-ind{background:rgba(232,255,60,.1);color:#e8ff3c;border:1px solid rgba(232,255,60,.2);}
 .parc-cor{background:rgba(255,107,60,.1);color:#ff6b3c;border:1px solid rgba(255,107,60,.2);}
 .parc-col{background:rgba(60,255,180,.1);color:#3cffb4;border:1px solid rgba(60,255,180,.2);}
 /* STORM TABLE */
-.sec-label{display:flex;align-items:center;gap:10px;font-family:'Titillium Web',sans-serif;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;}
+.sec-label{display:flex;align-items:center;gap:10px;font-family:'Sora',sans-serif;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;}
 .sec-label::before{content:'';display:block;width:18px;height:1px;background:linear-gradient(90deg,var(--neon),transparent);}
 .sec-label::after{content:'';flex:1;height:1px;background:var(--border);}
 .stbl{width:100%;border-collapse:collapse;font-size:18px;}
-.stbl th{font-family:'Titillium Web',sans-serif;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:8px 12px;background:var(--surface2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1;}
+.stbl th{font-family:'Sora',sans-serif;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:8px 12px;background:var(--surface2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1;}
 .stbl td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle;}
 .stbl tr:hover td{background:rgba(0,200,255,.03);cursor:pointer;}
 .stbl tr.expanded-row>td{background:rgba(0,200,255,.04);}
@@ -206,20 +227,20 @@ body{
 .bar-line{display:flex;align-items:center;gap:7px;}
 .bar-track{flex:1;background:var(--surface3);border-radius:2px;height:4px;overflow:hidden;min-width:40px;}
 .bar-fill{height:4px;border-radius:2px;}
-.pct-lbl{font-family:'Titillium Web',sans-serif;font-size:15px;color:var(--muted2);width:50px;}
-.cnt-val{font-family:'Titillium Web',sans-serif;font-size:20px;color:var(--neon);}
+.pct-lbl{font-family:'Sora',sans-serif;font-size:15px;color:var(--muted2);width:50px;}
+.cnt-val{font-family:'Sora',sans-serif;font-size:20px;color:var(--neon);}
 /* BANK DRILL */
 .bank-drill-row{display:none;}
 .bank-drill-row.open{display:table-row;}
 .bank-drill-cell{background:var(--surface3);border-bottom:1px solid var(--border);}
 .bank-drill-inner{padding:12px 14px;}
 .rep-tbl{width:100%;border-collapse:collapse;font-size:16px;}
-.rep-tbl th{font-family:'Titillium Web',sans-serif;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:10px 14px;background:var(--surface2);border-bottom:1px solid var(--border);}
+.rep-tbl th{font-family:'Sora',sans-serif;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:10px 14px;background:var(--surface2);border-bottom:1px solid var(--border);}
 .rep-tbl td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--muted2);font-size:16px;}
 .rep-tbl td:first-child{color:var(--neon);font-weight:600;font-size:17px;}
 .rep-tbl tr:last-child td{border-bottom:none;}
 .rep-tbl tr:hover td{background:rgba(0,200,255,.03);}
-.repasse-pct{font-family:'Titillium Web',sans-serif;color:var(--accent);font-size:12px;font-weight:700;letter-spacing:0.5px;}
+.repasse-pct{font-family:'Sora',sans-serif;color:var(--accent);font-size:12px;font-weight:700;letter-spacing:0.5px;}
 .repasse-na{font-size:10px;color:var(--muted);font-style:italic;}
 .scroll-wrap{max-height:300px;overflow-y:auto;}
 .scroll-wrap2{max-height:480px;overflow-y:auto;}
@@ -271,7 +292,6 @@ body{
   #subTabCad, #subTabSubs { font-size: 11px; padding: 7px 12px; }
   /* Filtros buscar */
   #parcSearchInput, #stormSearch { font-size: 14px; }
-  #parcSearchResult { display: none !important; }
   /* Tipo parceria */
   #legParc { min-width: 100%; }
   #parcTipoDetail { left: 8px; right: 8px; }
@@ -299,6 +319,40 @@ body{
 </style>
 </head>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+// Nova DS: Theme + A11y
+(function(){
+  const scales = {A:'100%','A+':'125%','A++':'155%'};
+  const scaleKeys = ['A','A+','A++'];
+  const savedTheme = localStorage.getItem('nova-theme') || 'dark';
+  document.documentElement.className = savedTheme;
+  const savedScale = localStorage.getItem('nova-a11y') || 'A';
+  document.documentElement.style.fontSize = scales[savedScale];
+  document.addEventListener('DOMContentLoaded', function(){
+    const themeBtn = document.getElementById('theme-toggle');
+    if(themeBtn){
+      themeBtn.textContent = document.documentElement.classList.contains('light') ? 'ðŸŒ™' : 'â˜€ï¸';
+      themeBtn.addEventListener('click', function(){
+        const next = document.documentElement.classList.contains('light') ? 'dark' : 'light';
+        document.documentElement.className = next;
+        localStorage.setItem('nova-theme', next);
+        themeBtn.textContent = next === 'light' ? 'ðŸŒ™' : 'â˜€ï¸';
+      });
+    }
+    const a11yBtn = document.getElementById('a11y-toggle');
+    if(a11yBtn){
+      a11yBtn.textContent = savedScale;
+      a11yBtn.addEventListener('click', function(){
+        const cur = localStorage.getItem('nova-a11y') || 'A';
+        const next = scaleKeys[(scaleKeys.indexOf(cur)+1)%scaleKeys.length];
+        document.documentElement.style.fontSize = scales[next];
+        localStorage.setItem('nova-a11y', next);
+        a11yBtn.textContent = next;
+      });
+    }
+  });
+})();
+</script>
 <body><div id="loginOverlay" style="position:fixed;inset:0;z-index:99999;background:#060810;display:flex;align-items:center;justify-content:center;">
   <!-- TELA LOGIN -->
   <div class="login-box" id="loginBox">
@@ -318,7 +372,7 @@ body{
     <h2>PAINEL <span>COMERCIAL</span></h2>
     <div class="sub">Recuperação de senha</div>
     <label>SEU USUÁRIO</label>
-    <input id="esqueciUser" autocomplete="off" placeholder="Digite seu usuário" style="box-sizing:border-box;width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:13px 16px;font-size:16px;font-family:Titillium Web,sans-serif;outline:none;" />
+    <input id="esqueciUser" autocomplete="off" placeholder="Digite seu usuário" style="box-sizing:border-box;width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:13px 16px;font-size:16px;font-family:Sora,sans-serif;outline:none;" />
     <button class="btn-entrar" style="margin-top:20px;" onclick="enviarSenha()">ENVIAR SENHA POR E-MAIL</button>
     <button class="btn-link" onclick="showLogin()">← Voltar ao login</button>
     <div class="login-err" id="esqueciErr"></div>
@@ -330,9 +384,9 @@ body{
     <h2>PAINEL <span>COMERCIAL</span></h2>
     <div class="sub">Primeiro acesso — crie sua senha</div>
     <label>NOVA SENHA</label>
-    <input id="novaSenha1" type="password" placeholder="Mínimo 6 caracteres" style="box-sizing:border-box;width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:13px 16px;font-size:16px;font-family:Titillium Web,sans-serif;outline:none;" onkeydown="if(event.key==='Enter')confirmarTrocaSenha()" />
+    <input id="novaSenha1" type="password" placeholder="Mínimo 6 caracteres" style="box-sizing:border-box;width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:13px 16px;font-size:16px;font-family:Sora,sans-serif;outline:none;" onkeydown="if(event.key==='Enter')confirmarTrocaSenha()" />
     <label>CONFIRMAR NOVA SENHA</label>
-    <input id="novaSenha2" type="password" placeholder="Repita a senha" style="box-sizing:border-box;width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:13px 16px;font-size:16px;font-family:Titillium Web,sans-serif;outline:none;" onkeydown="if(event.key==='Enter')confirmarTrocaSenha()" />
+    <input id="novaSenha2" type="password" placeholder="Repita a senha" style="box-sizing:border-box;width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:13px 16px;font-size:16px;font-family:Sora,sans-serif;outline:none;" onkeydown="if(event.key==='Enter')confirmarTrocaSenha()" />
     <button class="btn-entrar" style="margin-top:20px;" onclick="confirmarTrocaSenha()">CONFIRMAR NOVA SENHA</button>
     <div class="login-err" id="trocaErr"></div>
   </div>
@@ -347,16 +401,16 @@ body{
     <div class="badge">Pipefy <span id="bPipefy">—</span></div>
     <div class="badge">Subs Ativos <span id="bStorm">—</span></div>
     <div class="badge" id="liveCardsStatus"></div>
-    <div class="user-badge"><span class="ub-name" id="ubName"></span><span class="ub-logout" onclick="doLogout()">SAIR</span></div>
+    <button id="theme-toggle" title="Alternar tema" style="background:var(--glass);border:1px solid var(--glass-brd);color:var(--nova-text);border-radius:8px;padding:5px 12px;cursor:pointer;font-size:1rem;">ðŸŒ™</button><button id="a11y-toggle" title="Tamanho do texto" style="background:var(--glass);border:1px solid var(--glass-brd);color:var(--nova-text);border-radius:8px;padding:5px 12px;cursor:pointer;font-size:0.8125rem;font-family:'Sora',sans-serif;font-weight:600;">A</button><div class="user-badge"><span class="ub-name" id="ubName"></span><span class="ub-logout" onclick="doLogout()">SAIR</span></div>
   </div>
 </div>
 
 <!-- ABAS -->
 <div style="display:flex;gap:4px;padding:0 40px 0;margin-bottom:0;border-bottom:2px solid var(--border);">
-  <button id="tabPortal" onclick="switchTab('portal')" style="background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">PORTAL COMISSÕES</button>
-  <button id="tabSub" onclick="switchTab('sub')" style="background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);border-bottom:2px solid var(--neon);color:var(--neon);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">SUB</button>
-  <button id="tabRegua" onclick="switchTab('regua')" style="background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">RÉGUA PARCEIRO</button>
-  <button id="tabConsulta" onclick="switchTab('consulta')" style="background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">CONSULTA CADASTRO</button>
+  <button id="tabPortal" onclick="switchTab('portal')" style="background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Sora,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">PORTAL COMISSÕES</button>
+  <button id="tabSub" onclick="switchTab('sub')" style="background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);border-bottom:2px solid var(--neon);color:var(--neon);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Sora,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">SUB</button>
+  <button id="tabRegua" onclick="switchTab('regua')" style="background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Sora,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">RÉGUA PARCEIRO</button>
+  <button id="tabConsulta" onclick="switchTab('consulta')" style="background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Sora,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">CONSULTA CADASTRO</button>
 </div>
 
 <!-- CONTEÚDO ABA PORTAL COMISSÕES -->
@@ -462,18 +516,24 @@ body{
 
   <!-- SUB-ABAS -->
   <div style="display:flex;gap:4px;padding:12px 0 0;margin-bottom:0;border-bottom:2px solid var(--border);">
-    <button id="subTabCad" onclick="switchSubTab('cad')" style="background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);border-bottom:2px solid var(--neon);color:var(--neon);border-radius:8px 8px 0 0;padding:7px 22px;font-family:Titillium Web,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;margin-bottom:-2px;">ACOMPANHAMENTO DE CADASTRO</button>
-    <button id="subTabSubs" onclick="switchSubTab('subs')" style="background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:7px 22px;font-family:Titillium Web,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;margin-bottom:-2px;">SUBS ATIVOS</button>
+    <button id="subTabCad" onclick="switchSubTab('cad')" style="background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);border-bottom:2px solid var(--neon);color:var(--neon);border-radius:8px 8px 0 0;padding:7px 22px;font-family:Sora,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;margin-bottom:-2px;">ACOMPANHAMENTO DE CADASTRO</button>
+    <button id="subTabSubs" onclick="switchSubTab('subs')" style="background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:7px 22px;font-family:Sora,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;margin-bottom:-2px;">SUBS ATIVOS</button>
   </div>
 
 <!-- ABA: ACOMPANHAMENTO DE CADASTRO -->
   <div id="subContentCad">
-    <input id="parcSearchInput" type="hidden" style="display:none" />
+    <div class="card" style="margin:16px 0 8px;padding:0;">
+      <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;">
+        <input id="parcSearchInput" type="text" placeholder="Buscar por Código, CNPJ ou Razão Social..." style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:6px 12px;font-size:16px;font-family:Sora,sans-serif;outline:none;" onkeydown="if(event.key==='Enter')searchParceiro()" oninput="searchParceiro()" />
+        <button onclick="searchParceiro()" style="background:rgba(0,200,255,.12);border:1px solid rgba(0,200,255,.3);color:var(--neon);border-radius:6px;padding:6px 14px;font-family:'Sora',sans-serif;font-size:15px;cursor:pointer;letter-spacing:1px;">BUSCAR</button>
+        <button onclick="clearParcSearch()" style="background:none;border:1px solid var(--border2);color:var(--muted2);border-radius:6px;padding:5px 10px;font-size:10px;cursor:pointer;">&#x2715;</button>
+      </div>
+    </div>
     <button id="refreshPipefyBtn" style="display:none"></button>
-    <div id="parcSearchResult" style="display:none!important;"></div>
+    <div id="parcSearchResult" style="margin-bottom:8px;"></div>
     <div class="kpi-row" id="kpiRow" style="display:none"></div><div id="kpiExpandArea" style="margin-top:8px;"></div>
     <div style="padding:0;margin-top:16px;">
-      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;padding:0 0 12px;"><span><span class="ctdot"></span>FASES DO CADASTRO — PIPEFY<span id="pipefyStatus" style="margin-left:8px;font-size:17px;color:var(--muted);font-family:'Titillium Web',sans-serif"></span></span></div>
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;padding:0 0 12px;"><span><span class="ctdot"></span>FASES DO CADASTRO — PIPEFY<span id="pipefyStatus" style="margin-left:8px;font-size:17px;color:var(--muted);font-family:'Sora',sans-serif"></span></span></div>
       <div class="fase-list" id="faseList"></div>
     </div>
   </div>
@@ -494,9 +554,9 @@ body{
 
   <div class="sec-label">CARTEIRA DE SUBS ATIVOS</div>
   <div class="card">
-    <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;"><span style="display:flex;align-items:center;gap:10px;"><span class="ctdot"></span>SUBS ATIVOS POR BANCO — CLIQUE PARA VER PARCEIROS E REPASSE <span style="font-family:'Titillium Web',sans-serif;font-size:14px;color:#3cffb4;letter-spacing:1px;background:rgba(60,255,180,.1);border:1px solid rgba(60,255,180,.25);padding:6px 12px;border-radius:6px;">ATUALIZADO EM 15/06/2026</span></span><span style="display:flex;align-items:center;gap:12px;"></div>
+    <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;"><span style="display:flex;align-items:center;gap:10px;"><span class="ctdot"></span>SUBS ATIVOS POR BANCO — CLIQUE PARA VER PARCEIROS E REPASSE <span style="font-family:'Sora',sans-serif;font-size:14px;color:#3cffb4;letter-spacing:1px;background:rgba(60,255,180,.1);border:1px solid rgba(60,255,180,.25);padding:6px 12px;border-radius:6px;">ATUALIZADO EM 15/06/2026</span></span><span style="display:flex;align-items:center;gap:12px;"></div>
     <div class="scroll-wrap2">
-      <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;"><input id="stormSearch" placeholder="Buscar por Cod Parceiro, Cod Loja, CNPJ ou Razao Social..." style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:6px 12px;font-size:16px;font-family:Titillium Web,sans-serif;outline:none;" onkeydown="if(event.key==='Enter')runStormSearch()" /><button onclick="runStormSearch()" style="background:rgba(0,200,255,.12);border:1px solid rgba(0,200,255,.3);color:var(--neon);border-radius:6px;padding:6px 14px;font-family:'Titillium Web',sans-serif;font-size:15px;cursor:pointer;letter-spacing:1px;">BUSCAR</button><button onclick="clearStormSearch()" style="background:none;border:1px solid var(--border2);color:var(--muted2);border-radius:6px;padding:5px 10px;font-size:10px;cursor:pointer;">&#x2715;</button></div><div id="stormSearchResult" style="display:none;padding:10px 14px;border-bottom:1px solid var(--border);"></div><div class="scroll-wrap2"><table class="stbl" id="stormTbl">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;"><input id="stormSearch" placeholder="Buscar por Cod Parceiro, Cod Loja, CNPJ ou Razao Social..." style="flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:6px 12px;font-size:16px;font-family:Sora,sans-serif;outline:none;" onkeydown="if(event.key==='Enter')runStormSearch()" /><button onclick="runStormSearch()" style="background:rgba(0,200,255,.12);border:1px solid rgba(0,200,255,.3);color:var(--neon);border-radius:6px;padding:6px 14px;font-family:'Sora',sans-serif;font-size:15px;cursor:pointer;letter-spacing:1px;">BUSCAR</button><button onclick="clearStormSearch()" style="background:none;border:1px solid var(--border2);color:var(--muted2);border-radius:6px;padding:5px 10px;font-size:10px;cursor:pointer;">&#x2715;</button></div><div id="stormSearchResult" style="display:none;padding:10px 14px;border-bottom:1px solid var(--border);"></div><div class="scroll-wrap2"><table class="stbl" id="stormTbl">
         <thead><tr><th>#</th><th>Banco</th><th>Ativos</th><th>Participação</th></tr></thead>
         <tbody id="stormBody"></tbody>
       </table>
@@ -513,9 +573,9 @@ body{
 
   <!-- BUSCA RÉGUA -->
   <div style="padding:12px 40px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
-    <span style="font-family:Titillium Web,sans-serif;font-size:13px;color:var(--muted2);letter-spacing:1px;">&#9672; BUSCAR PARCEIRO</span>
-    <input id="reguaSearch" placeholder="Código do parceiro..." style="flex:1;max-width:320px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:6px 12px;font-size:16px;font-family:Titillium Web,sans-serif;outline:none;" onkeydown="if(event.key==='Enter')searchRegua()"/>
-    <button onclick="searchRegua()" style="background:rgba(0,200,255,.12);border:1px solid rgba(0,200,255,.3);color:var(--neon);border-radius:6px;padding:6px 14px;font-family:Titillium Web,sans-serif;font-size:15px;cursor:pointer;letter-spacing:1px;">BUSCAR</button>
+    <span style="font-family:Sora,sans-serif;font-size:13px;color:var(--muted2);letter-spacing:1px;">&#9672; BUSCAR PARCEIRO</span>
+    <input id="reguaSearch" placeholder="Código do parceiro..." style="flex:1;max-width:320px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:6px 12px;font-size:16px;font-family:Sora,sans-serif;outline:none;" onkeydown="if(event.key==='Enter')searchRegua()"/>
+    <button onclick="searchRegua()" style="background:rgba(0,200,255,.12);border:1px solid rgba(0,200,255,.3);color:var(--neon);border-radius:6px;padding:6px 14px;font-family:Sora,sans-serif;font-size:15px;cursor:pointer;letter-spacing:1px;">BUSCAR</button>
     <button onclick="clearReguaSearch()" style="background:none;border:1px solid var(--border2);color:var(--muted2);border-radius:6px;padding:5px 10px;font-size:10px;cursor:pointer;">&#x2715;</button>
     <span id="reguaStatus" style="font-size:15px;margin-left:8px;"></span>
   </div>
@@ -523,24 +583,24 @@ body{
 
   <!-- SUB-ABAS ATIVAS / INATIVAS -->
   <div style="padding:0 40px;display:flex;gap:0;border-bottom:2px solid var(--border);">
-    <button id="subTabAtivas" onclick="switchReguaTab('ativas')" style="background:none;border:none;border-bottom:2px solid var(--neon);color:var(--neon);padding:10px 24px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">RÉGUAS ATIVAS</button>
-    <button id="subTabInativas" onclick="switchReguaTab('inativas')" style="background:none;border:none;border-bottom:2px solid transparent;color:var(--muted2);padding:10px 24px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">RÉGUAS INATIVAS</button>
+    <button id="subTabAtivas" onclick="switchReguaTab('ativas')" style="background:none;border:none;border-bottom:2px solid var(--neon);color:var(--neon);padding:10px 24px;font-family:Sora,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">RÉGUAS ATIVAS</button>
+    <button id="subTabInativas" onclick="switchReguaTab('inativas')" style="background:none;border:none;border-bottom:2px solid transparent;color:var(--muted2);padding:10px 24px;font-family:Sora,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">RÉGUAS INATIVAS</button>
   </div>
 
   <!-- TABELA RÉGUA -->
   <div style="padding:0 40px 40px;">
-    <div id="reguaList" style="font-size:16px;color:var(--muted);font-family:Titillium Web,sans-serif;">Carregando...</div>
+    <div id="reguaList" style="font-size:16px;color:var(--muted);font-family:Sora,sans-serif;">Carregando...</div>
   </div>
 
 </div>
 
 <div id="tabContentConsulta" style="display:none;">
   <div style="padding:18px 40px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-    <span style="font-family:Titillium Web,sans-serif;font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;flex-shrink:0;">&#9672; BUSCAR PARCEIRO</span>
-    <input id="ccSearchInput" placeholder="CNPJ, CPF, e-mail, nome ou código..." autocomplete="off" style="flex:1;max-width:460px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:8px 14px;font-size:16px;font-family:Titillium Web,sans-serif;outline:none;" onkeydown="if(event.key==='Enter')ccSearch()" oninput="if(!this.value.trim())ccClear()" />
-    <button onclick="ccSearch()" style="background:rgba(0,200,255,.12);border:1px solid rgba(0,200,255,.3);color:var(--neon);border-radius:6px;padding:8px 22px;font-family:'Titillium Web',sans-serif;font-size:15px;cursor:pointer;letter-spacing:1px;">&#9654; BUSCAR</button>
+    <span style="font-family:Sora,sans-serif;font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;flex-shrink:0;">&#9672; BUSCAR PARCEIRO</span>
+    <input id="ccSearchInput" placeholder="CNPJ, CPF, e-mail, nome ou código..." autocomplete="off" style="flex:1;max-width:460px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:8px 14px;font-size:16px;font-family:Sora,sans-serif;outline:none;" onkeydown="if(event.key==='Enter')ccSearch()" oninput="if(!this.value.trim())ccClear()" />
+    <button onclick="ccSearch()" style="background:rgba(0,200,255,.12);border:1px solid rgba(0,200,255,.3);color:var(--neon);border-radius:6px;padding:8px 22px;font-family:'Sora',sans-serif;font-size:15px;cursor:pointer;letter-spacing:1px;">&#9654; BUSCAR</button>
     <button onclick="ccClear()" style="background:none;border:1px solid var(--border2);color:var(--muted2);border-radius:6px;padding:7px 12px;font-size:14px;cursor:pointer;">&#x2715;</button>
-    <span id="ccStatus" style="font-size:14px;color:var(--muted);font-family:'Titillium Web',sans-serif;margin-left:4px;"></span>
+    <span id="ccStatus" style="font-size:14px;color:var(--muted);font-family:'Sora',sans-serif;margin-left:4px;"></span>
   </div>
   <div id="ccResults" style="padding:18px 40px;display:flex;flex-wrap:wrap;gap:14px;max-height:calc(100vh - 180px);overflow-y:auto;"></div>
 </div>
@@ -904,7 +964,7 @@ function toggleKpiExpand(fase, rows) {
     return '<tr><td>'+r.cp+'</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+r.rs+'</td><td>'+r.b+'</td><td>'+badge+'</td><td style="color:var(--muted2);font-size:11px;">'+r.cr+'</td></tr>';
   }).join('');
   var more = items.length>50 ? '<p style="text-align:center;color:var(--muted);font-size:11px;margin-top:8px;">Mostrando 50 de '+items.length+' registros. Use o drill-down abaixo para ver todos.</p>' : '';
-  area.innerHTML = '<div class="kpi-expand open"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="color:var(--neon);font-family:Titillium Web,sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;">'+fase+' ('+items.length+')</span><button onclick="toggleKpiExpand(\''+fase.replace(/'/g,"\\'")+'\',[]);_kpiExpandOpen=null;document.getElementById(\'kpiExpandArea\').innerHTML=\'\';" style="background:none;border:1px solid var(--border2);color:var(--muted2);border-radius:5px;padding:3px 10px;font-size:12px;cursor:pointer;">✕</button></div><div style="overflow-x:auto;"><table class="kpi-expand-table"><thead><tr><th>Cód Parceiro</th><th>Razão Social</th><th>Banco</th><th>Tipo</th><th>Criado em</th></tr></thead><tbody>'+rows_html+'</tbody></table></div>'+more+'</div>';
+  area.innerHTML = '<div class="kpi-expand open"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="color:var(--neon);font-family:Sora,sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;">'+fase+' ('+items.length+')</span><button onclick="toggleKpiExpand(\''+fase.replace(/'/g,"\\'")+'\',[]);_kpiExpandOpen=null;document.getElementById(\'kpiExpandArea\').innerHTML=\'\';" style="background:none;border:1px solid var(--border2);color:var(--muted2);border-radius:5px;padding:3px 10px;font-size:12px;cursor:pointer;">✕</button></div><div style="overflow-x:auto;"><table class="kpi-expand-table"><thead><tr><th>Cód Parceiro</th><th>Razão Social</th><th>Banco</th><th>Tipo</th><th>Criado em</th></tr></thead><tbody>'+rows_html+'</tbody></table></div>'+more+'</div>';
 }
 
 function renderKPIs(rows,storm){
@@ -1124,13 +1184,13 @@ function toggleFaseDrill(row,dp,fase,rows){
       var cpKey = (r.cp||'').replace(/^0+/,'')+'|'+(r.b||'');
       var pBtn='', obsRow='';
       if(isPend){
-        pBtn = `<td><button onclick="toggleObs('obs_${idx}','obs')" style="background:rgba(232,255,60,.12);border:1px solid rgba(232,255,60,.3);color:#e8ff3c;border-radius:5px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Titillium Web,sans-serif;">📋 ver</button></td>`;
+        pBtn = `<td><button onclick="toggleObs('obs_${idx}','obs')" style="background:rgba(232,255,60,.12);border:1px solid rgba(232,255,60,.3);color:#e8ff3c;border-radius:5px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Sora,sans-serif;">📋 ver</button></td>`;
         obsRow = `<tr id="obs_${idx}" style="display:none;"><td colspan="8" style="padding:10px 14px;background:rgba(232,255,60,.06);border-left:3px solid #e8ff3c;color:#e8ff3c;font-size:15px;white-space:pre-wrap;" class="obs-cell" data-key="${cpKey}">⟳ carregando...</td></tr>`;
       } else if(isRecus){
-        pBtn = `<td><button onclick="toggleObs('obs_${idx}','motivo')" style="background:rgba(255,68,102,.10);border:1px solid rgba(255,68,102,.35);color:#ff4466;border-radius:5px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Titillium Web,sans-serif;">📋 motivo</button></td>`;
+        pBtn = `<td><button onclick="toggleObs('obs_${idx}','motivo')" style="background:rgba(255,68,102,.10);border:1px solid rgba(255,68,102,.35);color:#ff4466;border-radius:5px;padding:4px 10px;font-size:13px;cursor:pointer;font-family:Sora,sans-serif;">📋 motivo</button></td>`;
         obsRow = `<tr id="obs_${idx}" style="display:none;"><td colspan="8" style="padding:10px 14px;background:rgba(255,68,102,.06);border-left:3px solid #ff4466;color:#ff4466;font-size:15px;white-space:pre-wrap;" class="obs-cell" data-key="${cpKey}">⟳ carregando...</td></tr>`;
       }
-      h+=`<tr><td style="font-size:18px;color:#e8ff3c;font-family:Titillium Web,sans-serif;font-weight:700">${r.cp}</td><td style="font-size:16px;color:var(--text);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.rs}</td><td style="font-size:14px;color:var(--muted)">${r.cnpj}</td><td style="font-size:16px;">${r.b}</td><td><span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;">${r.t==='CADASTRO SUB/INDICADO'?'SUB/IND':'SUB MULT'}</span></td>${extra}${pBtn}</tr>${obsRow}`;
+      h+=`<tr><td style="font-size:18px;color:#e8ff3c;font-family:Sora,sans-serif;font-weight:700">${r.cp}</td><td style="font-size:16px;color:var(--text);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.rs}</td><td style="font-size:14px;color:var(--muted)">${r.cnpj}</td><td style="font-size:16px;">${r.b}</td><td><span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;">${r.t==='CADASTRO SUB/INDICADO'?'SUB/IND':'SUB MULT'}</span></td>${extra}${pBtn}</tr>${obsRow}`;
     });
     h+='</tbody></table></div>'; dp.innerHTML=h;
   }
@@ -1164,12 +1224,12 @@ function renderParceria(storm){
         const cx=(left+right)/2, cy=(top+bottom)/2;
         const total=chart.config.data.datasets[0].data.reduce((a,b)=>a+b,0);
         ctx.save();
-        ctx.font='bold 16px Orbitron,sans-serif';
+        ctx.font='bold 16px Sora,sans-serif';
         ctx.fillStyle='#e8eeff';
         ctx.textAlign='center';
         ctx.textBaseline='middle';
         ctx.fillText(total.toLocaleString('pt-BR'),cx,cy-7);
-        ctx.font='9px Titillium Web,sans-serif';
+        ctx.font='9px Sora,sans-serif';
         ctx.fillStyle='#5a6d94';
         ctx.fillText('ATIVOS',cx,cy+9);
         ctx.restore();
@@ -1195,9 +1255,9 @@ leg.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:
     var tip=TT[k]?'<div class=tipo-card-tip><b style="color:'+col+'">'+TL[k]+'</b><br>'+TT[k]+'</div>':'';
     return '<div class=tipo-card onclick="showParcTipo(\''+k+'\')" style="background:rgba('+rgb+',.12);border:1px solid rgba('+rgb+',.35);border-radius:10px;padding:10px 14px;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;box-sizing:border-box;overflow:visible;">'
       +tip
-      +'<span class="pb '+cls+'" style="font-family:Titillium Web,sans-serif;font-size:13px;color:'+col+';font-weight:700;">'+k+'</span>'
-      +'<span style="font-family:Titillium Web,sans-serif;font-size:22px;font-weight:900;color:'+col+';flex:1;text-align:center;">'+v.toLocaleString('pt-BR')+'</span>'
-      +'<span style="font-family:Titillium Web,sans-serif;font-size:16px;color:'+col+';font-weight:700;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:4px 12px;text-align:center;white-space:nowrap;">'+pct+'% &#9654;</span>'
+      +'<span class="pb '+cls+'" style="font-family:Sora,sans-serif;font-size:13px;color:'+col+';font-weight:700;">'+k+'</span>'
+      +'<span style="font-family:Sora,sans-serif;font-size:22px;font-weight:900;color:'+col+';flex:1;text-align:center;">'+v.toLocaleString('pt-BR')+'</span>'
+      +'<span style="font-family:Sora,sans-serif;font-size:16px;color:'+col+';font-weight:700;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:4px 12px;text-align:center;white-space:nowrap;">'+pct+'% &#9654;</span>'
       +'</div>';
   }).join('')+'</div>';
   // donut removido
@@ -1219,7 +1279,7 @@ function renderStorm(storm,rows){
     const pct=total?(v/total*100).toFixed(1):0;
     const color=BANK_COLORS[i%BANK_COLORS.length];
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td style="color:var(--muted);font-family:Titillium Web,sans-serif;font-size:18px">${String(i+1).padStart(2,'0')}</td><td><span class="bank-dot" style="background:${color}"></span>${bank}</td><td><span class="cnt-val">${v}</span></td><td><div class="bar-line"><div class="bar-track"><div class="bar-fill" style="width:${Math.round(parseFloat(pct))}%;background:${color}"></div></div><span class="pct-lbl">${pct}%</span></div></td>`;
+    tr.innerHTML=`<td style="color:var(--muted);font-family:Sora,sans-serif;font-size:18px">${String(i+1).padStart(2,'0')}</td><td><span class="bank-dot" style="background:${color}"></span>${bank}</td><td><span class="cnt-val">${v}</span></td><td><div class="bar-line"><div class="bar-track"><div class="bar-fill" style="width:${Math.round(parseFloat(pct))}%;background:${color}"></div></div><span class="pct-lbl">${pct}%</span></div></td>`;
     tbody.appendChild(tr);
     // drill row
     const dtr=document.createElement('tr');
@@ -1254,7 +1314,7 @@ function toggleBankDrill(tr,dtr,inner,bank,rows){
     const arr=hasRep?'<span id="'+rid+'_arr" style="color:var(--neon);font-size:10px;cursor:pointer;">&#9654;</span>':'<span style="color:#c03cff;font-weight:700;font-size:10px">GRADE</span>';
     const clk=hasRep?'onclick="toggleRepasse(\''+rid+'\')" style="cursor:pointer;"':'';
     h+='<tr '+clk+'>';
-    h+='<td style="color:#e8ff3c;font-weight:700;font-family:Titillium Web,sans-serif;font-size:15px">'+(p.cod_parceiro||p.cod_loja)+'</td>';
+    h+='<td style="color:#e8ff3c;font-weight:700;font-family:Sora,sans-serif;font-size:15px">'+(p.cod_parceiro||p.cod_loja)+'</td>';
     h+='<td style="color:#7ba4e8;font-weight:600">'+(p.cod_loja||'--')+'</td>';
     h+='<td style="color:var(--text);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(p.empresa||'')+'">'+(p.empresa||'--')+'</td>';
     h+='<td style="font-size:16px;color:var(--muted2)">'+(p.cnpj||'--')+'</td>';
@@ -1263,7 +1323,7 @@ function toggleBankDrill(tr,dtr,inner,bank,rows){
     if(hasRep){
       var repContent='';
       if(isInd){repContent='<div style="padding:8px 12px;font-size:11px;color:#e8ff3c;">Indicado - repasse direto do banco (0% rateio)</div>';}
-      else{repContent='<table style="width:100%;border-collapse:collapse;font-size:17px;"><thead><tr><th style="font-family:Titillium Web,sans-serif;font-size:15px;color:var(--muted);padding:10px 14px;text-align:left;">CONVENIO</th><th style="font-family:Titillium Web,sans-serif;font-size:15px;color:var(--muted);padding:10px 14px;text-align:right;">REPASSE %</th><th style="font-family:Titillium Web,sans-serif;font-size:15px;color:var(--muted);padding:10px 14px;text-align:center;">ATIVO</th></tr></thead><tbody>'+repRows.map(function(re){var atv=(re.ativo==1||re.ativo==='1')?'<span style="color:#3cffb4;font-weight:bold;font-size:17px;">Sim</span>':'<span style="color:#ff4466;font-size:17px;">Nao</span>';return '<tr><td style="padding:10px 14px;color:var(--muted2);font-size:17px;">'+(re.convenio||'--')+'</td><td style="padding:10px 14px;text-align:right"><span class="repasse-pct" style="font-size:17px;">'+(isInd?'0':(re.pct!==undefined&&re.pct!==''?re.pct:'--'))+'%</span></td><td style="padding:10px 14px;text-align:center;">'+atv+'</td></tr>';}).join('')+'</tbody></table>';;}
+      else{repContent='<table style="width:100%;border-collapse:collapse;font-size:17px;"><thead><tr><th style="font-family:Sora,sans-serif;font-size:15px;color:var(--muted);padding:10px 14px;text-align:left;">CONVENIO</th><th style="font-family:Sora,sans-serif;font-size:15px;color:var(--muted);padding:10px 14px;text-align:right;">REPASSE %</th><th style="font-family:Sora,sans-serif;font-size:15px;color:var(--muted);padding:10px 14px;text-align:center;">ATIVO</th></tr></thead><tbody>'+repRows.map(function(re){var atv=(re.ativo==1||re.ativo==='1')?'<span style="color:#3cffb4;font-weight:bold;font-size:17px;">Sim</span>':'<span style="color:#ff4466;font-size:17px;">Nao</span>';return '<tr><td style="padding:10px 14px;color:var(--muted2);font-size:17px;">'+(re.convenio||'--')+'</td><td style="padding:10px 14px;text-align:right"><span class="repasse-pct" style="font-size:17px;">'+(isInd?'0':(re.pct!==undefined&&re.pct!==''?re.pct:'--'))+'%</span></td><td style="padding:10px 14px;text-align:center;">'+atv+'</td></tr>';}).join('')+'</tbody></table>';;}
       h+='<tr id="'+rid+'" style="display:none;"><td colspan="6" style="background:var(--surface3);padding:0;border-bottom:1px solid var(--border2);">'+repContent+'</td></tr>';
     }
   });
@@ -1397,9 +1457,9 @@ function showParcTipo(tipo){
   if(!unique.length){el.style.display='none';return;}
   _currentTipoData={tipo:tipo,dados:unique};
   var col=PARC_COLORS[tipo]||'#888';
-  var rows='<table style="width:100%;border-collapse:collapse;font-size:14px;"><thead><tr style="background:rgba(0,200,255,.06);"><th style="padding:8px 10px;text-align:left;color:var(--muted2);font-size:12px;">CÓD</th><th style="padding:8px 10px;text-align:left;color:var(--muted2);font-size:12px;">LOJA</th><th style="padding:8px 10px;text-align:left;color:var(--muted2);font-size:12px;">EMPRESA</th><th style="padding:8px 10px;text-align:left;color:var(--muted2);font-size:12px;">CNPJ</th><th style="padding:8px 10px;text-align:right;color:var(--muted2);font-size:12px;">BANCO</th></tr></thead><tbody>'+unique.map(function(p){return '<tr style="border-bottom:1px solid rgba(255,255,255,.04);"><td style="padding:7px 10px;color:'+col+';font-family:Titillium Web,sans-serif;font-weight:700;font-size:14px;">'+p.cp+'</td><td style="padding:7px 10px;color:#7ba4e8;font-size:13px;">'+p.cl+'</td><td style="padding:7px 10px;color:var(--text);font-size:14px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+p.em+'</td><td style="padding:7px 10px;color:var(--muted2);font-size:13px;">'+p.cn+'</td><td style="padding:7px 10px;color:var(--neon);text-align:right;font-size:14px;">'+p.banco+'</td></tr>';}).join('')+'</tbody></table>';
+  var rows='<table style="width:100%;border-collapse:collapse;font-size:14px;"><thead><tr style="background:rgba(0,200,255,.06);"><th style="padding:8px 10px;text-align:left;color:var(--muted2);font-size:12px;">CÓD</th><th style="padding:8px 10px;text-align:left;color:var(--muted2);font-size:12px;">LOJA</th><th style="padding:8px 10px;text-align:left;color:var(--muted2);font-size:12px;">EMPRESA</th><th style="padding:8px 10px;text-align:left;color:var(--muted2);font-size:12px;">CNPJ</th><th style="padding:8px 10px;text-align:right;color:var(--muted2);font-size:12px;">BANCO</th></tr></thead><tbody>'+unique.map(function(p){return '<tr style="border-bottom:1px solid rgba(255,255,255,.04);"><td style="padding:7px 10px;color:'+col+';font-family:Sora,sans-serif;font-weight:700;font-size:14px;">'+p.cp+'</td><td style="padding:7px 10px;color:#7ba4e8;font-size:13px;">'+p.cl+'</td><td style="padding:7px 10px;color:var(--text);font-size:14px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+p.em+'</td><td style="padding:7px 10px;color:var(--muted2);font-size:13px;">'+p.cn+'</td><td style="padding:7px 10px;color:var(--neon);text-align:right;font-size:14px;">'+p.banco+'</td></tr>';}).join('')+'</tbody></table>';
   el.style.display='block';
-  el.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><span style="font-family:Titillium Web,sans-serif;font-size:15px;color:'+col+';letter-spacing:1px;font-weight:700;">'+tipo+' ('+unique.length+')</span><button onclick="document.getElementById(\'parcTipoDetail\').style.display=\'none\'" style="background:none;border:1px solid var(--border2);color:var(--muted2);border-radius:5px;padding:4px 10px;font-size:14px;cursor:pointer;">✕</button></div><div style="overflow-x:auto;">'+rows+'</div>';
+  el.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><span style="font-family:Sora,sans-serif;font-size:15px;color:'+col+';letter-spacing:1px;font-weight:700;">'+tipo+' ('+unique.length+')</span><button onclick="document.getElementById(\'parcTipoDetail\').style.display=\'none\'" style="background:none;border:1px solid var(--border2);color:var(--muted2);border-radius:5px;padding:4px 10px;font-size:14px;cursor:pointer;">✕</button></div><div style="overflow-x:auto;">'+rows+'</div>';
 }
 var _currentTipoData={tipo:'',dados:[]};
 
@@ -1436,7 +1496,7 @@ function searchParceiro(){
   var found=(ROWS||[]).filter(function(r){var cp=(r.cp||'').replace(/^0+/,''); return cp===q||cp===qN||((r.cnpj||'').replace(/[.\-\/\s]/g,'').toLowerCase())===q;});
   if(!found.length){el.style.display='block';el.innerHTML='<div style="color:var(--muted);font-size:11px">Sem resultado para: '+raw+'</div>';return;}
   el.style.display='block';
-  el.innerHTML='<div style="font-family:Titillium Web,sans-serif;font-size:9px;color:var(--neon);margin-bottom:6px">'+found.length+' RESULTADO(S)</div>'+found.map(function(r){var cfg=FASE_CFG[r.f]||{icon:'',color:'#5a6d94'};var cor=APPROVED_FASES.has(r.f)?'#3cffb4':REJECTED_FASES.has(r.f)?'#ff4466':'#e8ff3c';return '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:5px;"><span style="font-family:Titillium Web,sans-serif;font-size:18px;color:#e8ff3c;font-weight:700;min-width:70px">'+r.cp+'</span><span style="font-size:17px;color:var(--text);flex:1">'+(r.rs||'')+'</span><span style="font-size:15px;color:var(--muted2);min-width:150px">'+(r.cnpj||'')+'</span><span style="font-size:16px;color:var(--muted2)">'+(r.b||'')+'</span><span style="font-size:16px">'+cfg.icon+'</span><span style="font-family:Titillium Web,sans-serif;font-size:17px;font-weight:700;color:'+cor+'">'+r.f+'</span></div>';}).join('');
+  el.innerHTML='<div style="font-family:Sora,sans-serif;font-size:9px;color:var(--neon);margin-bottom:6px">'+found.length+' RESULTADO(S)</div>'+found.map(function(r){var cfg=FASE_CFG[r.f]||{icon:'',color:'#5a6d94'};var cor=APPROVED_FASES.has(r.f)?'#3cffb4':REJECTED_FASES.has(r.f)?'#ff4466':'#e8ff3c';return '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:5px;"><span style="font-family:Sora,sans-serif;font-size:18px;color:#e8ff3c;font-weight:700;min-width:70px">'+r.cp+'</span><span style="font-size:17px;color:var(--text);flex:1">'+(r.rs||'')+'</span><span style="font-size:15px;color:var(--muted2);min-width:150px">'+(r.cnpj||'')+'</span><span style="font-size:16px;color:var(--muted2)">'+(r.b||'')+'</span><span style="font-size:16px">'+cfg.icon+'</span><span style="font-family:Sora,sans-serif;font-size:17px;font-weight:700;color:'+cor+'">'+r.f+'</span></div>';}).join('');
 }
 function clearParcSearch(){var el=document.getElementById('parcSearchInput');if(el)el.value='';var r=document.getElementById('parcSearchResult');if(r){r.style.display='none';r.innerHTML='';}}
 function runStormSearch(){
@@ -1450,12 +1510,12 @@ function runStormSearch(){
   if(!unique.length){if(panel){panel.style.display='block';panel.innerHTML='<div style="color:var(--muted);font-size:12px;padding:6px">Sem resultado para: '+raw+'</div>';}return;}
   if(!panel)return;
   panel.style.display='block';
-  var html='<div style="font-family:Titillium Web,sans-serif;font-size:16px;color:var(--neon);margin-bottom:8px;font-weight:700">'+unique.length+' RESULTADO(S) — clique para ver repasse</div>';
+  var html='<div style="font-family:Sora,sans-serif;font-size:16px;color:var(--neon);margin-bottom:8px;font-weight:700">'+unique.length+' RESULTADO(S) — clique para ver repasse</div>';
   unique.forEach(function(p,i){
     var cls=PARC_CLS[p.tp]||'';
     var sid='srch_'+i;
     html+='<div onclick="toggleSearchRepasse(\''+sid+'\')" style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;margin-bottom:3px;cursor:pointer;">'
-      +'<span style="font-family:Titillium Web,sans-serif;font-size:17px;color:#e8ff3c;font-weight:700;min-width:65px">'+(p.cp||'--')+'</span>'
+      +'<span style="font-family:Sora,sans-serif;font-size:17px;color:#e8ff3c;font-weight:700;min-width:65px">'+(p.cp||'--')+'</span>'
       +'<span style="font-size:16px;color:#7ba4e8;min-width:65px">'+(p.cl||'--')+'</span>'
       +'<span style="font-size:17px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(p.em||'--')+'</span>'
       +'<span style="font-size:15px;color:var(--muted2);min-width:140px">'+(p.cn||'--')+'</span>'
@@ -1470,7 +1530,7 @@ function runStormSearch(){
     var isInd=p.tp==='INDICADO';
     var repHtml='';
     if(isInd){repHtml='<div style="padding:8px 12px;font-size:12px;color:#e8ff3c;">Indicado - repasse direto do banco (0% rateio)</div>';}
-    else if(reps.length){repHtml='<table style="width:100%;border-collapse:collapse;font-size:17px;"><thead><tr><th style="font-family:Titillium Web,sans-serif;font-size:15px;color:var(--muted);padding:10px 14px;text-align:left;">CONVENIO</th><th style="font-family:Titillium Web,sans-serif;font-size:15px;color:var(--muted);padding:10px 14px;text-align:right;">REPASSE %</th><th style="font-family:Titillium Web,sans-serif;font-size:15px;color:var(--muted);padding:10px 14px;text-align:center;">ATIVO</th></tr></thead><tbody>'+reps.map(function(re){var atv=(re.ativo==1)?'<span style="color:#3cffb4;font-weight:bold;font-size:17px;">Sim</span>':'<span style="color:#ff4466;font-size:17px;">Nao</span>';return '<tr><td style="padding:10px 14px;color:var(--muted2);font-size:17px;">'+(re.convenio||'--')+'</td><td style="padding:10px 14px;text-align:right"><span class="repasse-pct" style="font-size:17px;">'+(re.pct!==undefined&&re.pct!==''?re.pct:'--')+'%</span></td><td style="padding:10px 14px;text-align:center;">'+atv+'</td></tr>';}).join('')+'</tbody></table>';}
+    else if(reps.length){repHtml='<table style="width:100%;border-collapse:collapse;font-size:17px;"><thead><tr><th style="font-family:Sora,sans-serif;font-size:15px;color:var(--muted);padding:10px 14px;text-align:left;">CONVENIO</th><th style="font-family:Sora,sans-serif;font-size:15px;color:var(--muted);padding:10px 14px;text-align:right;">REPASSE %</th><th style="font-family:Sora,sans-serif;font-size:15px;color:var(--muted);padding:10px 14px;text-align:center;">ATIVO</th></tr></thead><tbody>'+reps.map(function(re){var atv=(re.ativo==1)?'<span style="color:#3cffb4;font-weight:bold;font-size:17px;">Sim</span>':'<span style="color:#ff4466;font-size:17px;">Nao</span>';return '<tr><td style="padding:10px 14px;color:var(--muted2);font-size:17px;">'+(re.convenio||'--')+'</td><td style="padding:10px 14px;text-align:right"><span class="repasse-pct" style="font-size:17px;">'+(re.pct!==undefined&&re.pct!==''?re.pct:'--')+'%</span></td><td style="padding:10px 14px;text-align:center;">'+atv+'</td></tr>';}).join('')+'</tbody></table>';}
     else{repHtml='<div style="padding:10px 12px;font-size:14px;font-weight:700;color:#c03cff;">GRADE</div>';}
     html+='<div id="'+sid+'" style="display:none;background:var(--surface3);border:1px solid var(--border2);border-radius:7px;margin:-2px 0 5px 0;">'+repHtml+'</div>';
   });
@@ -1521,7 +1581,7 @@ async function loadLiveCards() {
       ROWS = allCards;
       renderAll();
       var el = document.getElementById('liveCardsStatus');
-      if(el) el.innerHTML = '<span style="color:#3cffb4;font-size:11px;font-family:Titillium Web,sans-serif;">● cards ao vivo (' + ROWS.length + ')</span>';
+      if(el) el.innerHTML = '<span style="color:#3cffb4;font-size:11px;font-family:Sora,sans-serif;">● cards ao vivo (' + ROWS.length + ')</span>';
       // Re-executar buscas ativas com dados atualizados
       // parcSearch removido do SUB
       var stormInput = document.getElementById('stormSearch');
@@ -1759,22 +1819,22 @@ function renderReguaTable(data) {
   var filtered = data.filter(reguaInScope);
   var stEl = document.getElementById('reguaStatus');
   if(stEl) stEl.innerHTML = '<span style="color:#3cffb4">● ' + filtered.length + ' registro(s)</span>';
-  if(!filtered.length) { el.innerHTML='<div style="color:var(--muted);padding:20px;font-family:Titillium Web,sans-serif;">Sem dados para esta seleção</div>'; return; }
+  if(!filtered.length) { el.innerHTML='<div style="color:var(--muted);padding:20px;font-family:Sora,sans-serif;">Sem dados para esta seleção</div>'; return; }
 
   var html = '<div style="overflow-x:auto;">';
   html += '<table style="width:100%;border-collapse:collapse;font-size:16px;">';
   html += '<thead><tr style="background:rgba(0,200,255,.06);">';
-  html += '<th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Titillium Web,sans-serif;letter-spacing:1px;font-size:13px;">CÓD</th><th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Titillium Web,sans-serif;letter-spacing:1px;font-size:13px;">NOME PARCEIRO</th>';
-  html += '<th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Titillium Web,sans-serif;letter-spacing:1px;font-size:13px;">COMERCIAL</th>';
-  html += '<th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Titillium Web,sans-serif;letter-spacing:1px;font-size:13px;">RÉGUA</th>';
-  html += '<th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Titillium Web,sans-serif;letter-spacing:1px;font-size:13px;">BANCO</th>';
-  html += '<th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Titillium Web,sans-serif;letter-spacing:1px;font-size:13px;">DATA INÍCIO</th>';
+  html += '<th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Sora,sans-serif;letter-spacing:1px;font-size:13px;">CÓD</th><th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Sora,sans-serif;letter-spacing:1px;font-size:13px;">NOME PARCEIRO</th>';
+  html += '<th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Sora,sans-serif;letter-spacing:1px;font-size:13px;">COMERCIAL</th>';
+  html += '<th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Sora,sans-serif;letter-spacing:1px;font-size:13px;">RÉGUA</th>';
+  html += '<th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Sora,sans-serif;letter-spacing:1px;font-size:13px;">BANCO</th>';
+  html += '<th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Sora,sans-serif;letter-spacing:1px;font-size:13px;">DATA INÍCIO</th>';
   html += '</tr></thead><tbody>';
   filtered.forEach(function(r) {
     var com = getReguaCom(r);
     var pNome = getReguaNome(r.cod);
     html += '<tr style="border-bottom:1px solid rgba(255,255,255,.04);">';
-    html += '<td style="padding:9px 14px;color:#e8ff3c;font-family:Titillium Web,sans-serif;font-weight:700;font-size:14px;">' + r.cod + '</td>';
+    html += '<td style="padding:9px 14px;color:#e8ff3c;font-family:Sora,sans-serif;font-weight:700;font-size:14px;">' + r.cod + '</td>';
     html += '<td style="padding:9px 14px;color:var(--text);font-size:15px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+pNome+'">' + pNome + '</td>';
     html += '<td style="padding:9px 14px;color:var(--text);font-size:14px;">' + com + '</td>';
     html += '<td style="padding:9px 14px;color:#3cffb4;font-weight:600;font-size:14px;">' + (r.regua||'') + '</td>';
@@ -1833,20 +1893,20 @@ function renderReguaInativas() {
   var filtered = RETIRADA_DATA.filter(function(r){ return retiradaInScope(r.cod); });
   var stEl = document.getElementById('reguaStatus');
   if(stEl) stEl.innerHTML = '<span style="color:#ff6b6b">● ' + filtered.length + ' inativa(s)</span>';
-  if(!filtered.length) { el.innerHTML='<div style="color:var(--muted);padding:20px;font-family:Titillium Web,sans-serif;">Sem registros de retirada</div>'; return; }
+  if(!filtered.length) { el.innerHTML='<div style="color:var(--muted);padding:20px;font-family:Sora,sans-serif;">Sem registros de retirada</div>'; return; }
   var html = '<div style="overflow-x:auto;margin-top:12px;">';
   html += '<table style="width:100%;border-collapse:collapse;font-size:16px;">';
   html += '<thead><tr style="background:rgba(255,107,107,.06);">';
-  html += '<th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Titillium Web,sans-serif;letter-spacing:1px;font-size:13px;">CÓD</th>';
-  html += '<th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Titillium Web,sans-serif;letter-spacing:1px;font-size:13px;">NOME PARCEIRO</th>';
-  html += '<th style="padding:10px 14px;text-align:left;color:#ff6b6b;font-weight:600;border-bottom:1px solid var(--border);font-family:Titillium Web,sans-serif;letter-spacing:1px;font-size:13px;">DATA ENCERRAMENTO</th>';
+  html += '<th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Sora,sans-serif;letter-spacing:1px;font-size:13px;">CÓD</th>';
+  html += '<th style="padding:10px 14px;text-align:left;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);font-family:Sora,sans-serif;letter-spacing:1px;font-size:13px;">NOME PARCEIRO</th>';
+  html += '<th style="padding:10px 14px;text-align:left;color:#ff6b6b;font-weight:600;border-bottom:1px solid var(--border);font-family:Sora,sans-serif;letter-spacing:1px;font-size:13px;">DATA ENCERRAMENTO</th>';
   html += '</tr></thead><tbody>';
   filtered.forEach(function(r) {
     var pNome = getReguaNome(r.cod);
     html += '<tr style="border-bottom:1px solid rgba(255,255,255,.04);">';
-    html += '<td style="padding:9px 14px;color:#e8ff3c;font-family:Titillium Web,sans-serif;font-weight:700;font-size:14px;">' + r.cod + '</td>';
+    html += '<td style="padding:9px 14px;color:#e8ff3c;font-family:Sora,sans-serif;font-weight:700;font-size:14px;">' + r.cod + '</td>';
     html += '<td style="padding:9px 14px;color:var(--text);font-size:15px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+pNome+'">' + (pNome||'—') + '</td>';
-    html += '<td style="padding:9px 14px;color:#ff6b6b;font-family:Titillium Web,sans-serif;font-size:14px;font-weight:600;">' + (r.data||'—') + '</td>';
+    html += '<td style="padding:9px 14px;color:#ff6b6b;font-family:Sora,sans-serif;font-size:14px;font-weight:600;">' + (r.data||'—') + '</td>';
     html += '</tr>';
   });
   html += '</tbody></table></div>';
@@ -1869,9 +1929,9 @@ function searchRegua() {
   found.forEach(function(r) {
     var pn = getReguaNome(r.cod);
     html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border:1px solid rgba(60,255,180,.25);border-radius:6px;margin-bottom:4px;flex-wrap:wrap;">';
-    html += '<span style="font-family:Titillium Web,sans-serif;font-size:14px;color:#e8ff3c;font-weight:700;min-width:60px;">'+r.cod+'</span>';
+    html += '<span style="font-family:Sora,sans-serif;font-size:14px;color:#e8ff3c;font-weight:700;min-width:60px;">'+r.cod+'</span>';
     html += '<span style="font-size:14px;color:var(--text);min-width:160px;font-weight:600;">'+pn+'</span>';
-    html += '<span style="background:rgba(60,255,180,.12);border:1px solid rgba(60,255,180,.3);color:#3cffb4;border-radius:4px;padding:2px 8px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;margin-right:4px;">RÉGUA ATIVA</span>';
+    html += '<span style="background:rgba(60,255,180,.12);border:1px solid rgba(60,255,180,.3);color:#3cffb4;border-radius:4px;padding:2px 8px;font-family:Sora,sans-serif;font-size:11px;font-weight:700;margin-right:4px;">RÉGUA ATIVA</span>';
     html += '<span style="font-size:14px;color:#3cffb4;flex:1;min-width:150px;">'+r.regua+'</span>';
     html += '<span style="font-size:14px;color:#7ba4e8;min-width:120px;">'+r.banco+'</span>';
     html += '<span style="font-size:14px;color:var(--muted2);min-width:80px;">'+formatReguaDate(r.data)+'</span>';
@@ -1880,9 +1940,9 @@ function searchRegua() {
   retirada.forEach(function(r) {
     var pn = getReguaNome(r.cod);
     html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);border:1px solid rgba(255,107,107,.3);border-radius:6px;margin-bottom:6px;flex-wrap:wrap;">';
-    html += '<span style="font-family:Titillium Web,sans-serif;font-size:14px;color:#e8ff3c;font-weight:700;min-width:60px;">'+r.cod+'</span>';
+    html += '<span style="font-family:Sora,sans-serif;font-size:14px;color:#e8ff3c;font-weight:700;min-width:60px;">'+r.cod+'</span>';
     html += '<span style="font-size:15px;color:var(--text);font-weight:600;min-width:200px;flex:1;">'+( pn||'—')+'</span>';
-    html += '<span style="background:rgba(255,107,107,.15);border:1px solid rgba(255,107,107,.4);color:#ff6b6b;border-radius:4px;padding:3px 10px;font-family:Titillium Web,sans-serif;font-size:12px;font-weight:700;white-space:nowrap;">&#9679; RÉGUA INATIVA</span>';
+    html += '<span style="background:rgba(255,107,107,.15);border:1px solid rgba(255,107,107,.4);color:#ff6b6b;border-radius:4px;padding:3px 10px;font-family:Sora,sans-serif;font-size:12px;font-weight:700;white-space:nowrap;">&#9679; RÉGUA INATIVA</span>';
     html += '<span style="font-size:13px;color:var(--muted2);white-space:nowrap;"><span style="color:#ff6b6b;font-weight:700;">DATA ENCERRAMENTO:</span> '+(r.data||'—')+'</span>';
     html += '</div>';
   });
@@ -1987,8 +2047,8 @@ function switchSubTab(tab) {
   var subs = document.getElementById('subContentSubs');
   var btnCad = document.getElementById('subTabCad');
   var btnSubs = document.getElementById('subTabSubs');
-  var activeStyle = 'background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);border-bottom:2px solid var(--neon);color:var(--neon);border-radius:8px 8px 0 0;padding:7px 22px;font-family:Titillium Web,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;margin-bottom:-2px;';
-  var inactiveStyle = 'background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:7px 22px;font-family:Titillium Web,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;margin-bottom:-2px;';
+  var activeStyle = 'background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);border-bottom:2px solid var(--neon);color:var(--neon);border-radius:8px 8px 0 0;padding:7px 22px;font-family:Sora,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;margin-bottom:-2px;';
+  var inactiveStyle = 'background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:7px 22px;font-family:Sora,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;margin-bottom:-2px;';
   if(tab === 'cad') {
     cad.style.display = 'block'; subs.style.display = 'none';
     btnCad.style.cssText = activeStyle; btnSubs.style.cssText = inactiveStyle;
@@ -2006,8 +2066,8 @@ function switchTab(tab){
   var btnSub=document.getElementById('tabSub');
   var btnRegua=document.getElementById('tabRegua');
   var btnPortal=document.getElementById('tabPortal');
-  var activeS='background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);border-bottom:2px solid var(--neon);color:var(--neon);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
-  var inactS='background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Titillium Web,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
+  var activeS='background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);border-bottom:2px solid var(--neon);color:var(--neon);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Sora,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
+  var inactS='background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Sora,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
   var btnConsulta=document.getElementById('tabConsulta');
   // Hide all
   if(sub) sub.style.display='none';
@@ -2739,16 +2799,16 @@ var CC_COLABORADORES = [{"id":1,"codigo":"2782","nome":"ELIANE BATISTA SENES","c
         '<div onclick="ccOpenModal('+r.id+')" style="cursor:pointer;background:var(--surface2);'+borderStyle+'border-radius:10px;padding:14px 16px;min-width:260px;max-width:360px;flex:1 1 260px;transition:border-color .15s;">' +
           '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:4px;">' +
             '<div>' +
-              '<span style="font-family:Titillium Web,sans-serif;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;">CODIGO&nbsp;</span>' +
-              '<span style="font-family:Titillium Web,sans-serif;font-size:17px;font-weight:700;color:var(--neon);">'+esc(r.codigo)+'</span>' +
+              '<span style="font-family:Sora,sans-serif;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;">CODIGO&nbsp;</span>' +
+              '<span style="font-family:Sora,sans-serif;font-size:17px;font-weight:700;color:var(--neon);">'+esc(r.codigo)+'</span>' +
             '</div>' +
             '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">' +
               '<span style="border:1px solid '+statusColor+';color:'+statusColor+';border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap;">'+esc(r.status||'—')+'</span>' +
               firstBadge +
             '</div>' +
           '</div>' +
-          '<div style="font-family:Titillium Web,sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;line-height:1.3;">'+esc(r.nome)+'</div>' +
-          '<div style="display:flex;flex-direction:column;gap:5px;font-family:Titillium Web,sans-serif;font-size:12px;">' +
+          '<div style="font-family:Sora,sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;line-height:1.3;">'+esc(r.nome)+'</div>' +
+          '<div style="display:flex;flex-direction:column;gap:5px;font-family:Sora,sans-serif;font-size:12px;">' +
             row2('COMERCIAL', r.comercial) +
             row2('CPF RESP.', r.cpf_responsavel||r.cpf) +
             row2('CNPJ', r.cnpj) +
@@ -2757,7 +2817,7 @@ var CC_COLABORADORES = [{"id":1,"codigo":"2782","nome":"ELIANE BATISTA SENES","c
           '</div>' +
         '</div>';
     });
-    document.getElementById('ccResults').innerHTML = html || '<span style="color:var(--muted);font-family:Titillium Web,sans-serif;font-size:14px;">Nenhum resultado encontrado.</span>';
+    document.getElementById('ccResults').innerHTML = html || '<span style="color:var(--muted);font-family:Sora,sans-serif;font-size:14px;">Nenhum resultado encontrado.</span>';
   };
 
   function row2(label, val){
@@ -2828,7 +2888,7 @@ var CC_COLABORADORES = [{"id":1,"codigo":"2782","nome":"ELIANE BATISTA SENES","c
     }
 
     var html =
-      '<div style="font-family:Titillium Web,sans-serif;">' +
+      '<div style="font-family:Sora,sans-serif;">' +
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">' +
           '<span style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;">CODIGO&nbsp;</span>' +
           '<span style="font-size:22px;font-weight:900;color:var(--neon);">'+esc(r.codigo)+'</span>' +
