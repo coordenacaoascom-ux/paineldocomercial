@@ -569,7 +569,20 @@ body{
 
 <div id="tabContentRegua" style="display:none;">
   <!-- FILTROS HIERARQUIA RÉGUA -->
-  <div id="reguaFilters" class="filter-section"></div>
+  <div class="filter-section">
+    <div class="filter-row" id="reguaRowSuper" style="display:none;">
+      <span class="filter-label">&#9672; SUPERINTENDENTE</span>
+      <div class="filter-btns" id="reguaSuperBtns"></div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">&#9672; REGIONAL</span>
+      <div class="filter-btns" id="reguaRegBtns"></div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">&#9672; COMERCIAL</span>
+      <div class="filter-btns" id="reguaComBtns"></div>
+    </div>
+  </div>
 
   <!-- BUSCA RÉGUA -->
   <div style="padding:12px 40px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
@@ -1642,12 +1655,10 @@ function regTemRegua(sup, reg, comsSet) {
 }
 
 function renderReguaFilters() {
-  var el = document.getElementById('reguaFilters');
-  if(!el || !CURRENT_USER) return;
+  if(!CURRENT_USER) return;
   var perfil = CURRENT_USER.perfil;
   var parts = CURRENT_USER.escopo.split('|');
   var comsSet = buildComsComRegua();
-  var html = '';
 
   function getComsForSupReg(sup, reg) {
     var base = (HIERARCHY[sup] && HIERARCHY[sup][reg]) ? HIERARCHY[sup][reg].slice() : [];
@@ -1664,57 +1675,58 @@ function renderReguaFilters() {
     }).sort();
   }
 
-  // SUPERINTENDENTE
-  if(perfil==='admin') {
-    var supers = Object.keys(HIERARCHY).filter(function(s){
-      return getRegsForSup(s).length > 0;
-    }).sort();
-    html += mkReguaFilterRow('SUPERINTENDENTE', supers, rSelSuper, 'rSetSuper');
+  function fillBtns(containerId, items, selected, onClickFn) {
+    var c = document.getElementById(containerId);
+    if(!c) return;
+    var html = '<button class="fbtn'+(selected===null?' active':'')+'" data-val="__null__">Todos</button>';
+    items.forEach(function(item){
+      var short = item.length > 22 ? item.split(' ').slice(0,2).join(' ') : item;
+      html += '<button class="fbtn'+(norm(selected)===norm(item)?' active':'')+'" data-val="'+item+'" title="'+item+'">'+short+'</button>';
+    });
+    c.innerHTML = html;
+    c.querySelectorAll('[data-val]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var val = btn.getAttribute('data-val') === '__null__' ? null : btn.getAttribute('data-val');
+        onClickFn(val);
+      });
+    });
   }
 
-  // REGIONAL — sempre visível; filtra pelo super selecionado
+  function setPlaceholder(containerId, msg) {
+    var c = document.getElementById(containerId);
+    if(c) c.innerHTML = '<span class="filter-empty">'+msg+'</span>';
+  }
+
+  // SUPERINTENDENTE (admin apenas)
+  var rowSuper = document.getElementById('reguaRowSuper');
+  if(perfil==='admin') {
+    if(rowSuper) rowSuper.style.display = '';
+    var supers = Object.keys(HIERARCHY).filter(function(s){ return getRegsForSup(s).length > 0; }).sort();
+    fillBtns('reguaSuperBtns', supers, rSelSuper, rSetSuper);
+  } else {
+    if(rowSuper) rowSuper.style.display = 'none';
+  }
+
+  // REGIONAL
   if(perfil==='admin' || perfil==='super') {
     var supKey = perfil==='super' ? parts[0] : rSelSuper;
-    var regs;
     if(supKey) {
-      regs = getRegsForSup(supKey);
+      fillBtns('reguaRegBtns', getRegsForSup(supKey), rSelReg, rSetReg);
     } else {
-      var allRegsSet = {};
-      Object.keys(HIERARCHY).forEach(function(s){ getRegsForSup(s).forEach(function(r){ allRegsSet[r]=1; }); });
-      regs = Object.keys(allRegsSet).sort();
+      setPlaceholder('reguaRegBtns', '— selecione um superintendente —');
     }
-    if(regs.length) html += mkReguaFilterRow('REGIONAL', regs, rSelReg, 'rSetReg');
   }
 
-  // COMERCIAL — sempre visível; filtra pelo super+regional selecionados
+  // COMERCIAL
   if(perfil==='admin' || perfil==='super' || perfil==='regional') {
     var supKey2 = perfil==='super' ? parts[0] : (perfil==='regional' ? parts[0] : rSelSuper);
     var regKey = perfil==='regional' ? parts[1] : rSelReg;
-    var coms;
     if(supKey2 && regKey) {
-      coms = getComsForSupReg(supKey2, regKey);
-    } else if(supKey2) {
-      var allComs = {};
-      getRegsForSup(supKey2).forEach(function(r){ getComsForSupReg(supKey2,r).forEach(function(c){ allComs[c]=1; }); });
-      coms = Object.keys(allComs).sort();
+      fillBtns('reguaComBtns', getComsForSupReg(supKey2, regKey), rSelCom, rSetCom);
     } else {
-      var allComs2 = {};
-      Object.keys(HIERARCHY).forEach(function(s){ getRegsForSup(s).forEach(function(r){ getComsForSupReg(s,r).forEach(function(c){ allComs2[c]=1; }); }); });
-      coms = Object.keys(allComs2).sort();
+      setPlaceholder('reguaComBtns', supKey2 ? '— selecione um regional —' : '— selecione um superintendente —');
     }
-    if(coms.length) html += mkReguaFilterRow('COMERCIAL', coms, rSelCom, 'rSetCom');
   }
-
-  el.innerHTML = html;
-  el.querySelectorAll('[data-fn]').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var fn = btn.getAttribute('data-fn');
-      var val = btn.getAttribute('data-val') === '__null__' ? null : btn.getAttribute('data-val');
-      if(fn==='rSetSuper') rSetSuper(val);
-      else if(fn==='rSetReg') rSetReg(val);
-      else if(fn==='rSetCom') rSetCom(val);
-    });
-  });
 }
 
 function mkReguaFilterRow(label, items, selected, fn) {
