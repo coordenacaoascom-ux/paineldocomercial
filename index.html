@@ -1547,7 +1547,8 @@ function toggleSearchRepasse(sid){
 function downloadTipoCSV(tipo,dados){if(!dados||!dados.length)return;var rows=['Cod Parceiro;Cod Loja;Empresa;CNPJ;Tipo;Banco'];dados.forEach(function(p){rows.push([p.cp,p.cl,(p.em||''),p.cn,p.tp||tipo,p.banco].join(';'));});var uri='data:text/csv;charset=utf-8,'+encodeURIComponent(rows.join('\r\n'));var a=document.createElement('a');a.setAttribute('href',uri);a.setAttribute('download','parceiros_'+tipo.replace(/[^a-zA-Z0-9]/g,'_')+'.csv');document.body.appendChild(a);a.click();document.body.removeChild(a);}
 function downloadStormCSV(){var rows=['Cod Parceiro;Cod Loja;Empresa;CNPJ;Tipo;Banco;Convenio;Repasse %;Ativo'];Object.keys(BANK_PARTNERS).forEach(function(banco){var _scoped=bankPartnersInScope(banco);var bk=banco.toLowerCase().replace('banco ','').replace(' financeira','').replace(' consig scd s.a.','').replace(' scd s.a.','').trim();_scoped.forEach(function(p){var cp=p.cod_parceiro||'';var cpNo0=cp.replace(/^0+/,'');var reps=(REPASSE[cp]||REPASSE[cpNo0]||REPASSE[p.cod_loja]||REPASSE[(p.cod_loja||'').replace(/^0+/,'')]||[]).filter(function(re){return re.banco.toLowerCase().replace('banco ','').replace(' financeira','').replace(' consig scd s.a.','').replace(' scd s.a.','').trim()===bk||re.banco===banco;});var isInd=p.tipo==='INDICADO';if(reps.length){reps.forEach(function(re){rows.push([cp,(p.cod_loja||''),(p.empresa||''),(p.cnpj||''),(p.tipo||''),banco,(re.convenio||''),(isInd?'0':re.pct),(re.ativo==1?'Sim':'Nao')].join(';'));});}else if(isInd){rows.push([cp,(p.cod_loja||''),(p.empresa||''),(p.cnpj||''),(p.tipo||''),banco,'','0',''].join(';'));}});});var uri='data:text/csv;charset=utf-8,'+encodeURIComponent(rows.join('\r\n'));var a=document.createElement('a');a.setAttribute('href',uri);a.setAttribute('download','subs_ativos.csv');document.body.appendChild(a);a.click();document.body.removeChild(a);}
 function toggleRepasse(rid){var row=document.getElementById(rid);var arr=document.getElementById(rid+'_arr');if(!row)return;var isOpen=row.style.display!=='none';row.style.display=isOpen?'none':'table-row';if(arr)arr.innerHTML=isOpen?'&#9654;':'&#9660;';}
-setInterval(()=>{ if(pipefyPipeId) updatePipefyCard(pipefyPipeId,''); }, 5*60*1000);
+function isHorarioComercial(){var now=new Date();var dow=now.getDay();var h=now.getHours();return dow>=1&&dow<=5&&h>=8&&h<18;}
+setInterval(()=>{ if(pipefyPipeId&&isHorarioComercial()) updatePipefyCard(pipefyPipeId,''); }, 5*60*1000);
 
 async function loadLiveCards() {
   var statusEl = document.getElementById('liveCardsStatus');
@@ -2971,9 +2972,9 @@ window.refreshPipefy = function() {
   }
 };
 
-// Auto-refresh a cada 3 minutos
+// Auto-refresh a cada 3 minutos — apenas dias úteis 08h-18h
 setInterval(function(){
-  if(typeof loadLiveCards === 'function'){
+  if(typeof loadLiveCards === 'function' && isHorarioComercial()){
     loadLiveCards().then(function(){ _pipefyLastUpdate = Date.now(); _updateTimestamp(); });
   }
 }, 3 * 60 * 1000);
