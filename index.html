@@ -1672,24 +1672,37 @@ function renderReguaFilters() {
     html += mkReguaFilterRow('SUPERINTENDENTE', supers, rSelSuper, 'rSetSuper');
   }
 
-  // REGIONAL — só aparece depois de selecionar um super
+  // REGIONAL — sempre visível; filtra pelo super selecionado
   if(perfil==='admin' || perfil==='super') {
     var supKey = perfil==='super' ? parts[0] : rSelSuper;
+    var regs;
     if(supKey) {
-      var regs = getRegsForSup(supKey);
-      if(regs.length) html += mkReguaFilterRow('REGIONAL', regs, rSelReg, 'rSetReg');
+      regs = getRegsForSup(supKey);
+    } else {
+      var allRegsSet = {};
+      Object.keys(HIERARCHY).forEach(function(s){ getRegsForSup(s).forEach(function(r){ allRegsSet[r]=1; }); });
+      regs = Object.keys(allRegsSet).sort();
     }
+    if(regs.length) html += mkReguaFilterRow('REGIONAL', regs, rSelReg, 'rSetReg');
   }
 
-  // COMERCIAL — só aparece depois de selecionar um regional
+  // COMERCIAL — sempre visível; filtra pelo super+regional selecionados
   if(perfil==='admin' || perfil==='super' || perfil==='regional') {
     var supKey2 = perfil==='super' ? parts[0] : (perfil==='regional' ? parts[0] : rSelSuper);
     var regKey = perfil==='regional' ? parts[1] : rSelReg;
+    var coms;
     if(supKey2 && regKey) {
-      var coms = getComsForSupReg(supKey2, regKey);
-      if(coms.length) html += mkReguaFilterRow('COMERCIAL', coms, rSelCom, 'rSetCom');
+      coms = getComsForSupReg(supKey2, regKey);
+    } else if(supKey2) {
+      var allComs = {};
+      getRegsForSup(supKey2).forEach(function(r){ getComsForSupReg(supKey2,r).forEach(function(c){ allComs[c]=1; }); });
+      coms = Object.keys(allComs).sort();
+    } else {
+      var allComs2 = {};
+      Object.keys(HIERARCHY).forEach(function(s){ getRegsForSup(s).forEach(function(r){ getComsForSupReg(s,r).forEach(function(c){ allComs2[c]=1; }); }); });
+      coms = Object.keys(allComs2).sort();
     }
-    // Não mostra comercial sem regional selecionado
+    if(coms.length) html += mkReguaFilterRow('COMERCIAL', coms, rSelCom, 'rSetCom');
   }
 
   el.innerHTML = html;
