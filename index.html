@@ -415,6 +415,12 @@ body{
 
 <!-- CONTEÚDO ABA PORTAL COMISSÕES -->
 <div id="tabContentPortal" style="display:none;">
+<div id="portalSemPermissao" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:360px;gap:20px;">
+  <div style="font-size:72px;">&#x1F512;</div>
+  <div style="font-size:24px;font-weight:700;color:#e2e8f0;letter-spacing:1px;">SEM PERMISSÃO</div>
+  <div style="font-size:14px;color:#64748b;text-align:center;max-width:360px;">Esta área é restrita ao perfil <b style="color:#38bdf8;">Admin</b>. Solicite acesso ao responsável.</div>
+  <button onclick="switchTab('sub')" style="padding:10px 32px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);border-radius:10px;color:#f87171;font-family:Sora,sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:1px;">✕ FECHAR</button>
+</div>
 
   <!-- FILTROS HIERARQUIA PORTAL -->
   <div class="filter-section" id="portalFilterSection">
@@ -767,7 +773,15 @@ document.addEventListener('DOMContentLoaded', function(){
   setTimeout(function(){ entrarDashboard(user, s.token); }, 100);
 });
 function applyUserScope(){
-  if(!CURRENT_USER||CURRENT_USER.perfil==='admin'){ return; }
+  if(!CURRENT_USER||CURRENT_USER.perfil==='admin'){
+    // Admin: garante que o overlay SEM PERMISSAO esta oculto
+    var sp=document.getElementById('portalSemPermissao');
+    if(sp) sp.style.display='none';
+    return;
+  }
+  // Nao-admin: ativa overlay de sem permissao dentro do portal
+  var sp=document.getElementById('portalSemPermissao');
+  if(sp) sp.style.display='flex';
   const parts=(CURRENT_USER.escopo||'').split('|');
   if(parts[0]) selSuper=parts[0];
   if(parts[1]) selReg=parts[1];
@@ -2096,26 +2110,6 @@ function switchSubTab(tab) {
 }
 
 function switchTab(tab){
-  // Nao-admin: mostra tela de sem permissao ao abrir Portal
-  if(tab==='portal' && CURRENT_USER && CURRENT_USER.perfil !== 'admin'){
-    var _btnP=document.getElementById('tabPortal');
-    var _activeS='background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);border-bottom:2px solid var(--neon);color:var(--neon);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Sora,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
-    var _inactS='background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Sora,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;';
-    ['tabSub','tabRegua','tabConsulta'].forEach(function(id){var b=document.getElementById(id);if(b)b.style.cssText=_inactS;});
-    if(_btnP) _btnP.style.cssText=_activeS;
-    ['tabContentSub','mainContentSub','tabContentRegua','tabContentConsulta'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
-    var _pc=document.getElementById('tabContentPortal');
-    if(_pc){
-      _pc.style.display='block';
-      _pc.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:340px;gap:18px;">'
-        +'<div style="font-size:64px;line-height:1;">&#x1F512;</div>'
-        +'<div style="font-size:22px;font-weight:700;color:#e2e8f0;letter-spacing:1px;">SEM PERMISSÃO</div>'
-        +'<div style="font-size:14px;color:#64748b;text-align:center;max-width:340px;">Esta área é restrita ao perfil <b style="color:#38bdf8;">Admin</b>. Solicite acesso ao responsável.</div>'
-        +'<button onclick="switchTab('sub')" style="margin-top:8px;padding:10px 28px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);border-radius:10px;color:#f87171;font-family:Sora,sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:1px;">✕ FECHAR</button>'
-        +'</div>';
-    }
-    return;
-  }
   var sub=document.getElementById('tabContentSub');
   var mainSub=document.getElementById('mainContentSub');
   var regua=document.getElementById('tabContentRegua');
