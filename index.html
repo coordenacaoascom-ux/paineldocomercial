@@ -1506,7 +1506,7 @@ function runStormSearch(){
   var q=raw.toLowerCase(),qN=q.replace(/[.\-\/\s]/g,''),qNoZ=q.replace(/^0+/,'');
   var results=[];
   Object.keys(BANK_PARTNERS).forEach(function(banco){bankPartnersInScope(banco).forEach(function(p){var cp=(p.cod_parceiro||'').replace(/^0+/,'');if(cp===q||cp===qNoZ||(p.cod_loja||'').toLowerCase()===q||((p.cnpj||'').replace(/[.\-\/\s]/g,'').toLowerCase())===qN||(p.empresa||'').toLowerCase()===q)results.push({cp:p.cod_parceiro,cl:p.cod_loja,em:p.empresa,cn:p.cnpj,tp:p.tipo,banco:banco});});});
-  var seen={},unique=[];results.forEach(function(r){var k=(r.cp||r.cl)+'|'+r.banco;if(!seen[k]){seen[k]=1;unique.push(r);}});
+  var seen={},unique=[];results.forEach(function(r){var k=(r.cp||'')+'|'+(r.cl||'')+'|'+r.banco;if(!seen[k]){seen[k]=1;unique.push(r);}});
   if(!unique.length){if(panel){panel.style.display='block';panel.innerHTML='<div style="color:var(--muted);font-size:12px;padding:6px">Sem resultado para: '+raw+'</div>';}return;}
   if(!panel)return;
   panel.style.display='block';
@@ -2306,17 +2306,40 @@ function portalInScope(proposta) {
     return true;
   }
   if (perfil === 'super') {
-    if (!hierEntry || !hierEntry.super) return false;
     var supName = (CURRENT_USER.escopo||'').split('/')[0];
-    return normAccent(hierEntry.super.split(' - ').slice(1).join(' - ')) === normAccent(supName);
+    if (hierEntry && hierEntry.super) {
+      return normAccent(hierEntry.super.split(' - ').slice(1).join(' - ')) === normAccent(supName);
+    }
+    // Fallback para dados GAS: busca regional da proposta no PORTAL_HIER_PLANILHA
+    if (proposta.regional) {
+      var propRegName = normAccent(proposta.regional.split(' - ').slice(1).join(' - '));
+      var regHier = PORTAL_HIER_PLANILHA.find(function(h) {
+        return h.regional && normAccent(h.regional.split(' - ').slice(1).join(' - ')) === propRegName;
+      });
+      return regHier && regHier.super && normAccent(regHier.super.split(' - ').slice(1).join(' - ')) === normAccent(supName);
+    }
+    return false;
   }
   if (perfil === 'regional') {
-    if (!hierEntry || !hierEntry.regional) return false;
     var regName = (CURRENT_USER.escopo||'').split('/')[1] || '';
-    return normAccent(hierEntry.regional.split(' - ').slice(1).join(' - ')) === normAccent(regName);
+    if (hierEntry && hierEntry.regional) {
+      return normAccent(hierEntry.regional.split(' - ').slice(1).join(' - ')) === normAccent(regName);
+    }
+    // Fallback para dados GAS: compara campo regional diretamente
+    if (proposta.regional) {
+      var propRegName2 = normAccent(proposta.regional.split(' - ').slice(1).join(' - '));
+      return propRegName2 === normAccent(regName);
+    }
+    return false;
   }
   if (perfil === 'comercial') {
-    return codProp && codProp === (CURRENT_USER.login||'').replace(/^0+/,'');
+    if (codProp && codProp === (CURRENT_USER.login||'').replace(/^0+/,'')) return true;
+    // Fallback para dados GAS: compara pelo nome do comercial no escopo
+    if (proposta.comercial && CURRENT_USER.escopo) {
+      var selCom = (CURRENT_USER.escopo.split('|')[2] || CURRENT_USER.escopo.split('/')[2] || '').trim();
+      if (selCom) return normAccent(proposta.comercial).includes(normAccent(selCom));
+    }
+    return false;
   }
   return false;
 }
@@ -2476,7 +2499,7 @@ async function portalBuscar(){
     if(data && data.error){
       var msg=data.error;
       if(msg==='MFA_REQUIRED'||msg==='SESSION_EXPIRED'||msg==='LOGIN_FAILED'){
-        erroEl.textContent='⚠️ Login na Nova Financeira bloqueado ('+msg+'). Desative o MFA da conta admin.kelly.';
+        erroEl.textContent='⚠️ Login na Nova Financeira bloqueado ('+msg+'). Entre em contato com o suporte para verificar o acesso.';
       } else {
         erroEl.textContent='❌ Erro ao consultar: '+msg;
       }
