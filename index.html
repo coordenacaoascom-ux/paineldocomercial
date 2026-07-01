@@ -407,7 +407,7 @@ body{
 
 <!-- ABAS -->
 <div style="display:flex;gap:4px;padding:0 40px 0;margin-bottom:0;border-bottom:2px solid var(--border);">
-  <button id="tabPortal" onclick="switchTab('portal')" style="background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Sora,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">PORTAL COMISSÕES</button>
+  <button id="tabPortal" onclick="switchTab('portal')" style="display:none;background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Sora,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">PORTAL COMISSÕES</button>
   <button id="tabSub" onclick="switchTab('sub')" style="background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);border-bottom:2px solid var(--neon);color:var(--neon);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Sora,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">SUB</button>
   <button id="tabRegua" onclick="switchTab('regua')" style="background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Sora,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">RÉGUA PARCEIRO</button>
   <button id="tabConsulta" onclick="switchTab('consulta')" style="background:none;border:1px solid var(--border2);border-bottom:2px solid transparent;color:var(--muted2);border-radius:8px 8px 0 0;padding:8px 28px;font-family:Sora,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:-2px;">CONSULTA CADASTRO</button>
@@ -767,7 +767,17 @@ document.addEventListener('DOMContentLoaded', function(){
   setTimeout(function(){ entrarDashboard(user, s.token); }, 100);
 });
 function applyUserScope(){
-  if(!CURRENT_USER||CURRENT_USER.perfil==='admin'){ return; }
+  if(!CURRENT_USER||CURRENT_USER.perfil==='admin'){
+    // Admin vê tudo — garante que a aba Portal apareça
+    var btnP=document.getElementById('tabPortal');
+    if(btnP) btnP.style.display='';
+    return;
+  }
+  // Não-admin: oculta aba Portal Comissões e impede acesso direto
+  var btnPortalEl=document.getElementById('tabPortal');
+  if(btnPortalEl) btnPortalEl.style.display='none';
+  var contentPortalEl=document.getElementById('tabContentPortal');
+  if(contentPortalEl) contentPortalEl.style.display='none';
   const parts=(CURRENT_USER.escopo||'').split('|');
   if(parts[0]) selSuper=parts[0];
   if(parts[1]) selReg=parts[1];
@@ -1703,6 +1713,11 @@ function renderReguaFilters() {
     if(rowSuper) rowSuper.style.display = '';
     var supers = Object.keys(HIERARCHY).filter(function(s){ return getRegsForSup(s).length > 0; }).sort();
     fillBtns('reguaSuperBtns', supers, rSelSuper, rSetSuper);
+  } else if(perfil==='super' || perfil==='regional' || perfil==='comercial') {
+    // Mostra linha do super fixo (apenas leitura)
+    if(rowSuper) rowSuper.style.display = '';
+    var cSup = document.getElementById('reguaSuperBtns');
+    if(cSup) cSup.innerHTML = '<button class="fbtn active">'+shortName(parts[0])+'</button>';
   } else {
     if(rowSuper) rowSuper.style.display = 'none';
   }
@@ -1715,6 +1730,9 @@ function renderReguaFilters() {
     } else {
       setPlaceholder('reguaRegBtns', '— selecione um superintendente —');
     }
+  } else if(perfil==='regional' || perfil==='comercial') {
+    var cReg = document.getElementById('reguaRegBtns');
+    if(cReg) cReg.innerHTML = '<button class="fbtn active">'+shortName(parts[1])+'</button>';
   }
 
   // COMERCIAL
@@ -1726,6 +1744,9 @@ function renderReguaFilters() {
     } else {
       setPlaceholder('reguaComBtns', supKey2 ? '— selecione um regional —' : '— selecione um superintendente —');
     }
+  } else if(perfil==='comercial') {
+    var cCom = document.getElementById('reguaComBtns');
+    if(cCom) cCom.innerHTML = '<button class="fbtn active">'+shortName(parts[2])+'</button>';
   }
 }
 
@@ -2085,6 +2106,8 @@ function switchSubTab(tab) {
 }
 
 function switchTab(tab){
+  // Bloqueia acesso à aba Portal para não-admins
+  if(tab==='portal' && CURRENT_USER && CURRENT_USER.perfil !== 'admin') return;
   var sub=document.getElementById('tabContentSub');
   var mainSub=document.getElementById('mainContentSub');
   var regua=document.getElementById('tabContentRegua');
