@@ -615,7 +615,7 @@ body{
     <button onclick="ccClear()" style="background:none;border:1px solid var(--border2);color:var(--muted2);border-radius:6px;padding:7px 12px;font-size:14px;cursor:pointer;">&#x2715;</button>
     <span id="ccStatus" style="font-size:14px;color:var(--muted);font-family:'Sora',sans-serif;margin-left:4px;"></span>
   </div>
-  <div id="ccResults" style="padding:18px 40px;display:flex;flex-wrap:wrap;gap:14px;max-height:calc(100vh - 180px);overflow-y:auto;"></div>
+  <div id="ccResults" style="padding:18px 40px;display:flex;flex-wrap:wrap;gap:18px;justify-content:center;max-height:calc(100vh - 180px);overflow-y:auto;"></div>
 </div>
 <div id="ccModal" onclick="if(event.target===this)ccCloseModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9000;align-items:center;justify-content:center;">
   <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:14px;padding:28px 32px;max-width:560px;width:92%;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.8);">
@@ -2867,26 +2867,26 @@ const CONTESTACOES = {"1537":6,"3308":1,"9565":3,"5098":7,"44548":1,"4941":1,"54
       var isFirst = r.id===firstId;
       var statusColor = r.status&&r.status.toLowerCase().indexOf('inat')>=0 ? '#ff4466' : '#3cffb4';
       var borderStyle = isFirst ? 'border:1.5px solid #3cffb4;box-shadow:0 0 12px rgba(60,255,180,.18);' : 'border:1px solid var(--border2);';
-      var firstBadge = isFirst ? '<span style="background:rgba(60,255,180,.12);border:1px solid rgba(60,255,180,.3);color:#3cffb4;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:1px;">&#10003; 1&#186; CADASTRO</span>' : '';
+      var firstBadge = isFirst ? '<span style="background:rgba(60,255,180,.12);border:1px solid rgba(60,255,180,.3);color:#3cffb4;border-radius:4px;padding:3px 10px;font-size:12px;font-weight:700;letter-spacing:1px;">&#10003; 1&#186; CADASTRO</span>' : '';
       var dataColor = isFirst ? 'color:#3cffb4;' : 'color:var(--muted2);';
       var codNum = (r.codigo||'').replace(/^0+/,'');
       var qtdCont = (typeof CONTESTACOES!=='undefined' && CONTESTACOES[codNum]) ? CONTESTACOES[codNum] : 0;
-      var contestAlert = qtdCont ? '<div style="background:rgba(255,140,0,.13);border:1px solid rgba(255,140,0,.55);border-radius:7px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">⚠️</span><div><div style="font-size:9px;font-weight:700;color:#ff8c00;letter-spacing:1.5px;margin-bottom:2px;">ATENÇÃO</div><div style="font-size:12px;color:#ffaa44;font-weight:600;">Parceiro possui contestação (' + qtdCont + ')</div></div></div>' : '';
+      var contestAlert = qtdCont ? '<div style="background:rgba(255,140,0,.13);border:1px solid rgba(255,140,0,.55);border-radius:7px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">⚠️</span><div><div style="font-size:12px;font-weight:700;color:#ff8c00;letter-spacing:1.5px;margin-bottom:3px;">ATENÇÃO</div><div style="font-size:14px;color:#ffaa44;font-weight:600;">Parceiro possui contestação (' + qtdCont + ')</div></div></div>' : '';
       html +=
-        '<div onclick="ccOpenModal('+r.id+')" style="cursor:pointer;background:var(--surface2);'+borderStyle+'border-radius:10px;padding:14px 16px;min-width:260px;max-width:360px;flex:1 1 260px;transition:border-color .15s;">' +
+        '<div onclick="ccOpenModal('+r.id+')" style="cursor:pointer;background:var(--surface2);'+borderStyle+'border-radius:10px;padding:14px 16px;min-width:300px;max-width:420px;flex:1 1 300px;transition:border-color .15s;">' +
           '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:4px;">' +
             '<div>' +
-              '<span style="font-family:Sora,sans-serif;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;">CODIGO&nbsp;</span>' +
+              '<span style="font-family:Sora,sans-serif;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:1px;">CODIGO&nbsp;</span>' +
               '<span style="font-family:Sora,sans-serif;font-size:17px;font-weight:700;color:var(--neon);">'+esc(r.codigo)+'</span>' +
             '</div>' +
             '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">' +
-              '<span style="border:1px solid '+statusColor+';color:'+statusColor+';border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap;">'+esc(r.status||'—')+'</span>' +
+              '<span style="border:1px solid '+statusColor+';color:'+statusColor+';border-radius:4px;padding:3px 10px;font-size:12px;font-weight:700;white-space:nowrap;">'+esc(r.status||'—')+'</span>' +
               firstBadge +
             '</div>' +
           '</div>' +
           contestAlert +
-          '<div style="font-family:Sora,sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;line-height:1.3;">'+esc(r.nome)+'</div>' +
-          '<div style="display:flex;flex-direction:column;gap:5px;font-family:Sora,sans-serif;font-size:12px;">' +
+          '<div style="font-family:Sora,sans-serif;font-size:17px;font-weight:700;color:var(--text);margin-bottom:12px;line-height:1.3;">'+esc(r.nome)+'</div>' +
+          '<div style="display:flex;flex-direction:column;gap:7px;font-family:Sora,sans-serif;font-size:14px;">' +
             row2('COMERCIAL', r.comercial) +
             row2('CPF RESP.', r.cpf_responsavel||r.cpf) +
             row2('CNPJ', r.cnpj) +
@@ -2899,7 +2899,7 @@ const CONTESTACOES = {"1537":6,"3308":1,"9565":3,"5098":7,"44548":1,"4941":1,"54
   };
 
   function row2(label, val){
-    return '<div style="display:flex;gap:6px;align-items:baseline;"><span style="color:var(--muted);font-size:10px;letter-spacing:1px;white-space:nowrap;flex-shrink:0;">'+label+'&nbsp;</span><span style="color:var(--muted2);font-size:13px;word-break:break-all;">'+esc(val||'—')+'</span></div>';
+    return '<div style="display:flex;gap:6px;align-items:baseline;"><span style="color:var(--muted);font-size:13px;letter-spacing:1px;white-space:nowrap;flex-shrink:0;">'+label+'&nbsp;</span><span style="color:var(--muted2);font-size:15px;word-break:break-all;">'+esc(val||'—')+'</span></div>';
   }
   function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function fmtDate(s){
