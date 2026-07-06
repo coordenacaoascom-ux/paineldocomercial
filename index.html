@@ -730,8 +730,8 @@ function entrarDashboard(user, token){
   applyUserScope();
   var ub=document.getElementById('ubName'); if(ub) ub.textContent=CURRENT_USER.login.toUpperCase()+' ['+CURRENT_USER.perfil.toUpperCase()+']';
   renderAll();
-  setTimeout(function(){ initPipefy(); }, 300);
-  setTimeout(function(){ loadLiveCards(); }, 600);
+  setTimeout(function(){ if(isHorarioComercial()) initPipefy(); }, 300);
+  setTimeout(function(){ if(isHorarioComercial()) loadLiveCards(); }, 600);
   loadRepasse();
 }
 
