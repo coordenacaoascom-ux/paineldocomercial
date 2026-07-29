@@ -22,60 +22,65 @@ function doGet(e) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// ── Lê a aba principal de réguas (qualquer aba que NÃO seja a de retirada) ──
+// ── Lê TODAS as abas de réguas (qualquer aba que NÃO seja a de retirada) ──
 function readMainSheet(ss) {
   var sheets = ss.getSheets();
-  var sheet  = null;
-  for (var i = 0; i < sheets.length; i++) {
-    if (sheets[i].getSheetId() !== RETIRADA_GID) { sheet = sheets[i]; break; }
-  }
-  if (!sheet) return [];
+  var allData = [];
+  var seen = {};
 
-  var rows    = sheet.getDataRange().getValues();
-  if (rows.length < 2) return [];
-  var headers = rows[0].map(function(h){ return String(h).trim().toLowerCase(); });
+  for (var s = 0; s < sheets.length; s++) {
+    if (sheets[s].getSheetId() === RETIRADA_GID) continue;
+    var sheet = sheets[s];
 
-  function col(names) {
-    for (var n = 0; n < names.length; n++) {
-      var idx = headers.indexOf(names[n]);
-      if (idx >= 0) return idx;
-    }
-    return -1;
-  }
+    var rows = sheet.getDataRange().getValues();
+    if (rows.length < 2) continue;
+    var headers = rows[0].map(function(h){ return String(h).trim().toLowerCase(); });
 
-  var iCod  = col(['código','cod','codigo','código parceiro','cod parceiro']);
-  var iCom  = col(['comercial']);
-  var iReg  = col(['regional']);
-  var iSup  = col(['superintendente','sup']);
-  var iReg2 = col(['régua','regua','tipo','liberação','liberacao']);
-  var iBan  = col(['banco','bancos']);
-  var iDat  = col(['data','data início','data inicio']);
-
-  var data = [];
-  for (var i = 1; i < rows.length; i++) {
-    var row = rows[i];
-    var cod = iCod >= 0 ? String(row[iCod] || '').trim() : '';
-    if (!cod) continue;
-
-    var dataVal = iDat >= 0 ? row[iDat] : '';
-    var dataStr = '';
-    if (dataVal instanceof Date) {
-      dataStr = dataVal.toISOString();
-    } else {
-      dataStr = String(dataVal || '').trim();
+    function col(names) {
+      for (var n = 0; n < names.length; n++) {
+        var idx = headers.indexOf(names[n]);
+        if (idx >= 0) return idx;
+      }
+      return -1;
     }
 
-    data.push({
-      cod:       cod,
-      comercial: iCom >= 0 ? String(row[iCom] || '').trim() : '',
-      regional:  iReg >= 0 ? String(row[iReg] || '').trim() : '',
-      sup:       iSup >= 0 ? String(row[iSup] || '').trim() : '',
-      regua:     iReg2 >= 0 ? String(row[iReg2] || '').trim() : '',
-      banco:     iBan >= 0 ? String(row[iBan] || '').trim() : '',
-      data:      dataStr
-    });
+    var iCod  = col(['código','cod','codigo','código parceiro','cod parceiro']);
+    var iCom  = col(['comercial']);
+    var iReg  = col(['regional']);
+    var iSup  = col(['superintendente','sup']);
+    var iReg2 = col(['régua','regua','tipo','liberação','liberacao']);
+    var iBan  = col(['banco','bancos']);
+    var iDat  = col(['data','data início','data inicio']);
+
+    if (iCod < 0) continue;
+
+    for (var i = 1; i < rows.length; i++) {
+      var row = rows[i];
+      var cod = String(row[iCod] || '').trim();
+      if (!cod) continue;
+      if (seen[cod]) continue;
+      seen[cod] = true;
+
+      var dataVal = iDat >= 0 ? row[iDat] : '';
+      var dataStr = '';
+      if (dataVal instanceof Date) {
+        dataStr = dataVal.toISOString();
+      } else {
+        dataStr = String(dataVal || '').trim();
+      }
+
+      allData.push({
+        cod:       cod,
+        comercial: iCom >= 0 ? String(row[iCom] || '').trim() : '',
+        regional:  iReg >= 0 ? String(row[iReg] || '').trim() : '',
+        sup:       iSup >= 0 ? String(row[iSup] || '').trim() : '',
+        regua:     iReg2 >= 0 ? String(row[iReg2] || '').trim() : '',
+        banco:     iBan >= 0 ? String(row[iBan] || '').trim() : '',
+        data:      dataStr
+      });
+    }
   }
-  return data;
+  return allData;
 }
 
 // ── Lê a aba RETIRADA DE RÉGUA (col A = cod, col H = data) ──
