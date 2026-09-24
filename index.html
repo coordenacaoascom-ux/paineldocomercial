@@ -1034,6 +1034,8 @@ document.addEventListener('DOMContentLoaded', function(){
     } else if(d.np==='enter'){
       /* Login confiável vindo do Portal (já validado no banco central) */
       var user={ login:String(d.codigo||''), perfil:d.perfil||'comercial', escopo:d.escopo||'' };
+      /* Master (Ascom/admin) entra como "admin"; log* diz quem é de verdade (logs da Consulta Cadastro) */
+      window._logIdent = d.logCodigo ? { codigo:String(d.logCodigo), nome:String(d.logNome||''), perfil:String(d.logPerfil||'ascom') } : null;
       if(typeof entrarDashboard==='function'){ entrarDashboard(user); }
       else { window._pendingEnter = user; }
     }
@@ -3324,20 +3326,27 @@ const CONTESTACOES = {"1537":6,"3308":1,"9565":3,"5098":7,"44548":1,"4941":1,"54
     return CC_DATA;
   }
 
-  // Log de uso (indicadores da Ascom) — não registra o admin/Ascom nem a mesma busca repetida em 10s
+  // Log de uso (indicadores da Ascom) — ignora a mesma busca repetida em 10s
   var _ccLast = {k:'', t:0};
   function ccLog(q, results){
     try{
       var u = CURRENT_USER;
-      if(!u || !u.login || u.perfil==='admin') return;
-      var k = u.login+'|'+q.toLowerCase();
+      if(!u || !u.login) return;
+      var cod = u.login, perfil = u.perfil, escp = u.escopo||'', nome = '';
+      if(u.perfil==='admin'){
+        /* Master: registra quem é de verdade (enviado pelo Portal); sem isso fica como "Ascom" */
+        var li = window._logIdent;
+        cod = li ? li.codigo : 'admin'; nome = li ? li.nome : 'Ascom'; perfil = li ? li.perfil : 'admin'; escp = '';
+      } else {
+        var parts = escp.split('|');
+        nome = (u.perfil==='comercial' && CODE_COM[u.login]) ? CODE_COM[u.login] : (parts[parts.length-1]||'');
+      }
+      var k = cod+'|'+q.toLowerCase();
       if(_ccLast.k===k && Date.now()-_ccLast.t<10000) return;
       _ccLast = {k:k, t:Date.now()};
-      var escp = u.escopo||'', parts = escp.split('|');
-      var nome = (u.perfil==='comercial' && CODE_COM[u.login]) ? CODE_COM[u.login] : (parts[parts.length-1]||'');
       fetch('https://portal-ascom.vercel.app/api/parceiros', {
         method:'POST', headers:{'Content-Type':'application/json'}, keepalive:true,
-        body: JSON.stringify({action:'consulta_log', usuario_cod:u.login, usuario_nome:nome, perfil:u.perfil, escopo:escp, termo:q,
+        body: JSON.stringify({action:'consulta_log', usuario_cod:cod, usuario_nome:nome, perfil:perfil, escopo:escp, termo:q,
           qtd_resultados:results.length, parceiros:results.slice(0,30).map(function(r){ return {codigo:r.codigo, nome:r.nome}; })})
       }).catch(function(){});
     }catch(e){}
