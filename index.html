@@ -3324,6 +3324,25 @@ const CONTESTACOES = {"1537":6,"3308":1,"9565":3,"5098":7,"44548":1,"4941":1,"54
     return CC_DATA;
   }
 
+  // Log de uso (indicadores da Ascom) — não registra o admin/Ascom nem a mesma busca repetida em 10s
+  var _ccLast = {k:'', t:0};
+  function ccLog(q, results){
+    try{
+      var u = CURRENT_USER;
+      if(!u || !u.login || u.perfil==='admin') return;
+      var k = u.login+'|'+q.toLowerCase();
+      if(_ccLast.k===k && Date.now()-_ccLast.t<10000) return;
+      _ccLast = {k:k, t:Date.now()};
+      var escp = u.escopo||'', parts = escp.split('|');
+      var nome = (u.perfil==='comercial' && CODE_COM[u.login]) ? CODE_COM[u.login] : (parts[parts.length-1]||'');
+      fetch('https://portal-ascom.vercel.app/api/parceiros', {
+        method:'POST', headers:{'Content-Type':'application/json'}, keepalive:true,
+        body: JSON.stringify({action:'consulta_log', usuario_cod:u.login, usuario_nome:nome, perfil:u.perfil, escopo:escp, termo:q,
+          qtd_resultados:results.length, parceiros:results.slice(0,30).map(function(r){ return {codigo:r.codigo, nome:r.nome}; })})
+      }).catch(function(){});
+    }catch(e){}
+  }
+
   window.ccSearch = function(){
     var q = (document.getElementById('ccSearchInput').value||'').trim();
     if(!q){ document.getElementById('ccStatus').textContent='Digite algo para buscar.'; return; }
@@ -3353,6 +3372,7 @@ const CONTESTACOES = {"1537":6,"3308":1,"9565":3,"5098":7,"44548":1,"4941":1,"54
 
     var st = document.getElementById('ccStatus');
     st.textContent = results.length ? results.length+' resultado(s)' : 'Nenhum resultado.';
+    ccLog(q, results);
 
     var firstId = null;
     if(results.length>1){
