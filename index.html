@@ -926,7 +926,8 @@ function entrarDashboard(user, token){
   _reguaAllowedComs=null;
   var tok = token || gerarToken();
   salvarSessao(user, tok);
-  monitorarSessao();
+  var isEmbed = false; try { isEmbed = (window.self !== window.top); } catch(e) { isEmbed = true; }
+  if (!isEmbed) monitorarSessao();
   document.getElementById('loginOverlay').style.display='none';
   document.getElementById('appContent').style.display='block';
   applyUserScope();
