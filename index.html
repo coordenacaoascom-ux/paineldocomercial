@@ -1037,6 +1037,8 @@ document.addEventListener('DOMContentLoaded', function(){
       var user={ login:String(d.codigo||''), perfil:d.perfil||'comercial', escopo:d.escopo||'' };
       /* Master (Ascom/admin) entra como "admin"; log* diz quem é de verdade (logs da Consulta Cadastro) */
       window._logIdent = d.logCodigo ? { codigo:String(d.logCodigo), nome:String(d.logNome||''), perfil:String(d.logPerfil||'ascom') } : null;
+      /* Token da sessão do Portal: usado na consulta ao vivo da Storm (Consulta Cadastro) */
+      window._portalToken = d.token ? String(d.token) : '';
       if(typeof entrarDashboard==='function'){ entrarDashboard(user); }
       else { window._pendingEnter = user; }
     }
@@ -3353,9 +3355,54 @@ const CONTESTACOES = {"1537":6,"3308":1,"9565":3,"5098":7,"44548":1,"4941":1,"54
     }catch(e){}
   }
 
+  var _ccSeq = 0;
   window.ccSearch = function(){
     var q = (document.getElementById('ccSearchInput').value||'').trim();
     if(!q){ document.getElementById('ccStatus').textContent='Digite algo para buscar.'; return; }
+    var results = ccFiltrar(q, null);
+    ccRender(results);
+    ccLog(q, results);
+    ccLive(q, results, ++_ccSeq);
+  };
+
+  // Consulta ao vivo na Storm: atualiza os cards encontrados e busca códigos/CPF que não estão na base local
+  function ccLive(q, results, seq){
+    var tok = window._portalToken;
+    if(!tok) return;
+    var digits = q.replace(/\D/g,'');
+    var codigos = results.map(function(r){ return r.codigo; }).filter(Boolean).slice(0,30);
+    var pareceCodigo = digits===q && digits.length < 8; /* codigo de parceiro e numerico */
+    if(pareceCodigo && codigos.indexOf(q)<0) codigos.unshift(q);
+    var cpf = digits.length===11 ? digits : '';
+    if(!codigos.length && !cpf) return;
+    var st = document.getElementById('ccStatus');
+    var base = function(n){ return n ? n+' resultado(s)' : 'Nenhum resultado.'; };
+    st.textContent = base(results.length) + ' · consultando Storm...';
+    fetch('https://portal-ascom.vercel.app/api/parceiros', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'storm_cc_buscar', token:tok, codigos:codigos, cpf:cpf})
+    }).then(function(r){ return r.json(); }).then(function(d){
+      if(seq !== _ccSeq) return; /* outra busca já começou */
+      if(!d.ok){ st.textContent = base(results.length) + (d.reason==='storm_nao_configurada' ? '' : ' · Storm indisponível'); return; }
+      var data = getCC(), forcar = {};
+      var norm = function(x){ return String(x||'').replace(/^0+/,''); };
+      (d.colaboradores||[]).forEach(function(c){
+        forcar[norm(c.codigo)] = 1;
+        var loc = data.filter(function(x){ return norm(x.codigo)===norm(c.codigo); });
+        if(!loc.length){ var novo = Object.assign({id: 900000+data.length, cpf_responsavel:'', contrato:''}, c); data.push(novo); loc=[novo]; }
+        loc.forEach(function(x){
+          ['nome','email','status','comercial','comercial_codigo','regional','cnpj','data_criacao'].forEach(function(k){ if(c[k]) x[k]=c[k]; });
+          x.bloqueio_controladoria = c.bloqueio_controladoria; x.bloqueio_controladoria_motivo = c.bloqueio_controladoria_motivo;
+          x._live = 1;
+        });
+      });
+      var res2 = ccFiltrar(q, forcar);
+      ccRender(res2);
+      st.textContent = base(res2.length) + ' · Storm ao vivo ✓';
+    }).catch(function(){ if(seq===_ccSeq) st.textContent = base(results.length) + ' · Storm indisponível'; });
+  }
+
+  function ccFiltrar(q, forcar){
     var onlyDigits = q.replace(/\D/g,'');
     var qL = q.toLowerCase();
     var data = getCC();
@@ -3378,11 +3425,16 @@ const CONTESTACOES = {"1537":6,"3308":1,"9565":3,"5098":7,"44548":1,"4941":1,"54
       if((c.nome||'').toLowerCase().indexOf(qL)>=0) return true;
       if((c.email||'').toLowerCase().indexOf(qL)>=0) return true;
       return false;
-    }).slice(0,100);
+    });
+    if(forcar){
+      data.forEach(function(c){ if(forcar[String(c.codigo||'').replace(/^0+/,'')] && results.indexOf(c)<0) results.push(c); });
+    }
+    return results.slice(0,100);
+  }
 
+  function ccRender(results){
     var st = document.getElementById('ccStatus');
     st.textContent = results.length ? results.length+' resultado(s)' : 'Nenhum resultado.';
-    ccLog(q, results);
 
     var firstId = null;
     if(results.length>1){
@@ -3416,9 +3468,11 @@ const CONTESTACOES = {"1537":6,"3308":1,"9565":3,"5098":7,"44548":1,"4941":1,"54
               '<span style="border:1px solid '+statusColor+';color:'+statusColor+';border-radius:4px;padding:3px 10px;font-size:12px;font-weight:700;white-space:nowrap;">'+esc(r.status||'—')+'</span>' +
               termoBadge +
               firstBadge +
+              (r._live ? '<span title="Dados atualizados agora na Storm" style="border:1px solid rgba(0,200,255,.5);color:var(--neon);border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;white-space:nowrap;">STORM ✓</span>' : '') +
             '</div>' +
           '</div>' +
           contestAlert +
+          (r.bloqueio_controladoria ? '<div style="background:rgba(255,68,102,.1);border:1px solid rgba(255,68,102,.5);border-radius:7px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:#ff4466;font-weight:700;">BLOQUEIO CONTROLADORIA'+(r.bloqueio_controladoria_motivo?' — '+esc(r.bloqueio_controladoria_motivo):'')+'</div>' : '') +
           '<div style="font-family:Sora,sans-serif;font-size:17px;font-weight:700;color:var(--text);margin-bottom:12px;line-height:1.3;">'+esc(r.nome)+'</div>' +
           '<div style="display:flex;flex-direction:column;gap:7px;font-family:Sora,sans-serif;font-size:14px;">' +
             row2('COMERCIAL', r.comercial) +
